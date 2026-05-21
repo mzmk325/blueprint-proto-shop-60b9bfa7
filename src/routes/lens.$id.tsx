@@ -237,20 +237,21 @@ function LensFlow() {
         <div className="h-full bg-sale transition-all" style={{ width: `${progress}%` }} />
       </div>
 
-      <div className="flex-1 grid lg:grid-cols-[1fr_400px] min-h-0">
-        <section className="bg-surface flex flex-col min-h-0 order-2 lg:order-1">
-          <div className="flex items-center justify-between px-6 lg:px-12 py-5 shrink-0 border-b border-border/40">
+      <div className="flex-1 grid lg:grid-cols-[1fr_400px] grid-rows-[auto_1fr] lg:grid-rows-1 min-h-0">
+        <section className="bg-surface flex flex-col min-h-0 order-2 lg:order-1 overflow-hidden">
+          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-12 py-4 lg:py-5 shrink-0 border-b border-border/40">
             {idx > 0 ? (
               <button onClick={back} aria-label="Back" className="size-9 flex items-center justify-center hover:bg-background"><ArrowLeft className="size-5" /></button>
             ) : <Link to="/product/$id" params={{ id: p.id }} aria-label="Back to product" className="size-9 flex items-center justify-center hover:bg-background"><ArrowLeft className="size-5" /></Link>}
             <div className="flex-1 text-center">
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">Step {idx + 1} / {steps.length}</div>
-              <h3 className="font-display text-lg">{stepTitle(step)}</h3>
+              <h3 className="font-display text-base sm:text-lg">{stepTitle(step)}</h3>
             </div>
             <Link to="/product/$id" params={{ id: p.id }} aria-label="Close" className="size-9 flex items-center justify-center hover:bg-background"><X className="size-5" /></Link>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 lg:px-12 py-8">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-12 py-6 lg:py-8">
+
             <div className="max-w-2xl mx-auto space-y-4">
               {step === "rx-type" && (
                 <>
@@ -283,13 +284,13 @@ function LensFlow() {
                   {rxMethod === "manual" && (
                     <div className="bg-background p-5 space-y-5">
                       {/* Compact Rx table */}
-                      <div className="grid grid-cols-[70px_1fr_1fr_1fr] gap-2 items-center text-xs">
+                      <div className="grid grid-cols-[58px_1fr_1fr_1fr] sm:grid-cols-[70px_1fr_1fr_1fr] gap-1.5 sm:gap-2 items-center text-xs">
                         <div></div>
                         <div className="font-semibold text-center text-muted-foreground">SPH</div>
                         <div className="font-semibold text-center text-muted-foreground">CYL</div>
                         <div className="font-semibold text-center text-muted-foreground">Axis</div>
-                        <RxRow label="OD (Right)" val={od} setVal={setOd} />
-                        <RxRow label="OS (Left)" val={os} setVal={setOs} />
+                        <RxRow label="OD (R)" val={od} setVal={setOd} />
+                        <RxRow label="OS (L)" val={os} setVal={setOs} />
                       </div>
 
                       {/* PD */}
@@ -305,15 +306,15 @@ function LensFlow() {
                         </div>
 
                         {!twoPd ? (
-                          <div className="grid grid-cols-[70px_1fr] gap-2 items-center text-xs">
+                          <div className="grid grid-cols-[58px_1fr] sm:grid-cols-[70px_1fr] gap-1.5 sm:gap-2 items-center text-xs">
                             <span className="font-medium">PD</span>
                             <Select value={pd} onChange={setPd} options={["54","56","57","58","59","60","61","62","63","64","65","66","68"]} placeholder="Select PD (mm)" disabled={dontKnowPd} />
                           </div>
                         ) : (
-                          <div className="grid grid-cols-[70px_1fr_1fr] gap-2 items-center text-xs">
+                          <div className="grid grid-cols-[58px_1fr_1fr] sm:grid-cols-[70px_1fr_1fr] gap-1.5 sm:gap-2 items-center text-xs">
                             <span></span>
-                            <span className="text-center text-muted-foreground">Right PD</span>
-                            <span className="text-center text-muted-foreground">Left PD</span>
+                            <span className="text-center text-muted-foreground">R PD</span>
+                            <span className="text-center text-muted-foreground">L PD</span>
                             <span className="font-medium">PD</span>
                             <Select value={pdRight} onChange={setPdRight} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
                             <Select value={pdLeft} onChange={setPdLeft} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
@@ -510,7 +511,7 @@ function LensFlow() {
         </section>
 
         {/* Persistent Order Summary */}
-        <aside className="bg-background border-b lg:border-b-0 lg:border-l border-border/60 px-6 lg:px-10 py-6 lg:py-8 flex flex-col gap-6 overflow-y-auto order-1 lg:order-2">
+        <aside className="bg-background border-b lg:border-b-0 lg:border-l border-border/60 px-4 sm:px-6 lg:px-10 py-4 lg:py-8 flex flex-col gap-4 lg:gap-6 lg:overflow-y-auto order-1 lg:order-2">
           <div className="flex items-center gap-4">
             <div className="size-20 bg-surface shrink-0">
               <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt={p.name} className="w-full h-full object-contain" />
