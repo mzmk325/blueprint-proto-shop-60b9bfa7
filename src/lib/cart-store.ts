@@ -342,12 +342,15 @@ export function computeRisks(o: Order): Risk[] {
       risks.push({ level: "warn", message: "PD unknown — measure from photo or contact customer." });
     }
     const checkAxis = (eye?: { cyl: string; axis: string }) =>
-      eye && eye.cyl && parseFloat(eye.cyl) !== 0 && !eye.axis;
+      eye && eye.cyl && eye.cyl !== "None" && parseFloat(eye.cyl) !== 0 && !eye.axis;
     if (checkAxis(rx.od) || checkAxis(rx.os)) {
       risks.push({ level: "danger", message: "Axis missing while CYL is present." });
     }
     if (rx.hasPrism) {
       risks.push({ level: "warn", message: "Prism prescription — requires manual lab review." });
+    }
+    if (rx.method === "upload" && o.status === "rx-pending") {
+      risks.push({ level: "warn", message: "Uploaded Rx awaiting optician verification." });
     }
     const sphMax = Math.max(
       Math.abs(parseFloat(rx.od?.sph ?? "0") || 0),
@@ -360,11 +363,33 @@ export function computeRisks(o: Order): Risk[] {
   if (!o.address || o.address.length < 10) {
     risks.push({ level: "danger", message: "Shipping address looks incomplete." });
   }
-  if (o.status === "qc" && !o.lab?.qcPhotoName) {
-    risks.push({ level: "warn", message: "QC photo not uploaded yet." });
+  if (o.status === "rx-pending") {
+    const hoursWaiting = (Date.now() - o.createdAt) / 3600_000;
+    if (hoursWaiting > 4) risks.push({ level: "warn", message: `Rx awaiting review for ${Math.round(hoursWaiting)}h.` });
+  }
+  if (o.status === "rx-clarification") {
+    risks.push({ level: "danger", message: "Customer reply needed — order on hold." });
+  }
+  if (o.status === "sent-to-lab" && !o.lab?.expectedCompletionAt) {
+    risks.push({ level: "warn", message: "No expected completion date set with local lab." });
+  }
+  if (o.status === "in-production" && !o.lab?.momReceivedAt) {
+    risks.push({ level: "warn", message: "Mom hasn't confirmed receipt of frame/lenses yet." });
+  }
+  if (o.status === "qc") {
+    if (!o.lab?.qcPhotoName) risks.push({ level: "warn", message: "QC photo not uploaded yet." });
+    const cl = o.lab?.qcChecklist ?? {};
+    const incomplete = !cl.frameMatches || !cl.lensMatches || (ft === "prescription" && !cl.rxChecked) || !cl.noScratches;
+    if (incomplete) risks.push({ level: "warn", message: "QC checklist incomplete." });
   }
   if ((o.status === "ready-to-ship" || o.status === "shipped") && !o.shippingInfo?.tracking) {
     risks.push({ level: "danger", message: "Tracking number missing." });
+  }
+  if (o.status === "ready-to-ship" && !o.shippingInfo?.weightG) {
+    risks.push({ level: "warn", message: "Package weight not recorded — needed for Yanwen label." });
+  }
+  if (o.status === "shipped" && o.shippingInfo?.tracking && !o.shippingInfo?.shippedAt) {
+    risks.push({ level: "warn", message: "Tracking entered but ship date not set." });
   }
   if (o.status === "sourcing") {
     const fc = o.sourcing?.frame?.costRMB ?? o.sourcing?.frame?.costUSD ?? o.sourcing?.frameCost;
