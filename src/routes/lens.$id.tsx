@@ -579,6 +579,47 @@ function SumRow({ label, value, subValue, onEdit }: { label: string; value?: str
   );
 }
 
+type SummaryProps = {
+  p: ReturnType<typeof getProduct> extends infer T ? NonNullable<T> : never;
+  rxType: RxType;
+  fnReached: boolean; fnObj: { label: string }; fnPrice: number;
+  thickReached: boolean; thickObj: { label: string }; thickPrice: number;
+  addonReached: boolean; addonObj: { label: string }; addonPrice: number;
+  shipFree: boolean; shipping: number; total: number;
+  goto: (s: Step) => void;
+  rxTypeLabelOf: (rt: RxType) => string;
+};
+function SummaryBody(props: SummaryProps) {
+  const { p, rxType, fnReached, fnObj, fnPrice, thickReached, thickObj, thickPrice, addonReached, addonObj, addonPrice, shipFree, shipping, total, goto, rxTypeLabelOf } = props;
+  return (
+    <div className="border-t border-border/60 pt-5">
+      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-3">Order summary</div>
+      <div className="space-y-2.5 text-sm">
+        <SumRow label="Frame price" value={`$${p.price.toFixed(2)}`} />
+        <SumRow label="Fulfillment" subValue={rxTypeLabelOf(rxType)} onEdit={() => goto("rx-type")} />
+        {fnReached ? (
+          <SumRow label="Lens function" subValue={fnObj.label} value={fnPrice === 0 ? "Included" : `+$${fnPrice.toFixed(2)}`} onEdit={() => goto("fn")} />
+        ) : rxType !== "frame-only" && (<SumRow label="Lens function" subValue="Not selected yet" />)}
+        {thickReached ? (
+          <SumRow label="Lens thickness" subValue={thickObj.label} value={thickPrice === 0 ? "Included" : `+$${thickPrice.toFixed(2)}`} onEdit={() => goto("thick")} />
+        ) : rxType !== "frame-only" && (<SumRow label="Lens thickness" subValue="Not selected yet" />)}
+        {addonReached ? (
+          <SumRow label="Add-on" subValue={addonObj.label} value={addonPrice === 0 ? "Included" : `+$${addonPrice.toFixed(2)}`} onEdit={() => goto("addon")} />
+        ) : rxType !== "frame-only" && (<SumRow label="Add-on" subValue="Not selected yet" />)}
+        <SumRow label="Shipping" value={shipFree ? "FREE" : `$${shipping.toFixed(2)}`} />
+      </div>
+      <div className="border-t border-border/60 pt-4 mt-4 flex justify-between items-baseline">
+        <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">Total</span>
+        <span className="font-display text-3xl">${total.toFixed(2)}</span>
+      </div>
+      {rxType === "frame-only" && (<p className="text-[11px] text-muted-foreground mt-3">Ships with demo lenses only.</p>)}
+      {rxType === "non-rx" && (<p className="text-[11px] text-muted-foreground mt-3">No prescription required.</p>)}
+      {(rxType === "single-vision" || rxType === "reading") && (<p className="text-[11px] text-muted-foreground mt-3">Every prescription is reviewed by our team before production.</p>)}
+    </div>
+  );
+}
+
+
 function Select({ value, onChange, options, placeholder, disabled }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; disabled?: boolean }) {
   return (
     <div className="relative">
