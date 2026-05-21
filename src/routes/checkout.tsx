@@ -57,12 +57,19 @@ function Checkout() {
               <Section title={t("co.contact.title")}>
                 <Field label={t("co.email")}><input value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} className={input} type="email" /></Field>
                 <Field label={t("co.fullName")}><input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} className={input} /></Field>
+                <Field label={t("co.phone")}><input value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} className={input} type="tel" /></Field>
                 <button onClick={() => setStep(2)} disabled={!contact.email || !contact.name} className={btn}>{t("co.continueShip")}</button>
               </Section>
             )}
             {step === 2 && (
               <Section title={t("co.ship.title")}>
-                <Field label={t("co.address")}><input value={addr.line1} onChange={(e) => setAddr({ ...addr, line1: e.target.value })} className={input} /></Field>
+                <Field label={t("co.country")}>
+                  <select value={addr.country} onChange={(e) => setAddr({ ...addr, country: e.target.value })} className={input}>
+                    {["United States","Canada","United Kingdom","Australia","Germany","France","China","Japan","Other"].map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </Field>
+                <Field label={t("co.address1")}><input value={addr.line1} onChange={(e) => setAddr({ ...addr, line1: e.target.value })} className={input} /></Field>
+                <Field label={t("co.address2")}><input value={addr.line2} onChange={(e) => setAddr({ ...addr, line2: e.target.value })} className={input} /></Field>
                 <div className="grid grid-cols-3 gap-3">
                   <Field label={t("co.city")}><input value={addr.city} onChange={(e) => setAddr({ ...addr, city: e.target.value })} className={input} /></Field>
                   <Field label={t("co.state")}><input value={addr.state} onChange={(e) => setAddr({ ...addr, state: e.target.value })} className={input} /></Field>
