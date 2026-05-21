@@ -1,8 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { type Product, productImage } from "@/lib/products";
-import { Eye } from "lucide-react";
+import { Eye, Heart } from "lucide-react";
+import { useUser, user } from "@/lib/user-store";
 
 export function ProductCard({ p }: { p: Product }) {
+  const { wishlist } = useUser();
+  const wished = wishlist.includes(p.id);
   return (
     <Link to="/product/$id" params={{ id: p.id }} className="group block">
       <div className="relative aspect-square rounded-xl overflow-hidden bg-secondary">
@@ -11,8 +14,15 @@ export function ProductCard({ p }: { p: Product }) {
           <span className="absolute top-2 left-2 bg-sale text-white text-xs font-semibold px-2 py-1 rounded">{p.discountPct}% OFF</span>
         )}
         {p.badge && (
-          <span className="absolute top-2 right-2 bg-background/90 text-foreground text-[10px] font-semibold px-2 py-1 rounded uppercase tracking-wide">{p.badge}</span>
+          <span className="absolute top-2 right-10 bg-background/90 text-foreground text-[10px] font-semibold px-2 py-1 rounded uppercase tracking-wide">{p.badge}</span>
         )}
+        <button
+          onClick={(e) => { e.preventDefault(); user.toggleWish(p.id); }}
+          aria-label="Toggle wishlist"
+          className="absolute top-2 right-2 size-8 rounded-full bg-background/90 hover:bg-background flex items-center justify-center"
+        >
+          <Heart className={`size-4 ${wished ? "fill-sale text-sale" : ""}`} />
+        </button>
         <button className="absolute bottom-2 right-2 bg-background/90 hover:bg-background text-xs px-2.5 py-1.5 rounded-full flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
           <Eye className="size-3" /> Try On
         </button>
