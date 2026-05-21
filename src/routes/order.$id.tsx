@@ -26,7 +26,7 @@ function OrderConfirm() {
     rxStatus: getPrescriptionStatus(l.lens),
   }));
   const hasPrescription = lineSummaries.some((x) => x.ft === "prescription");
-  const hasNonRx = lineSummaries.some((x) => x.ft === "non-rx");
+  const hasNonRx = lineSummaries.some((x) => x.ft === "non-rx"); void hasNonRx;
 
   const headlineType = hasPrescription ? "prescription" : hasNonRx ? "non-rx" : "frame-only";
   const headline =
