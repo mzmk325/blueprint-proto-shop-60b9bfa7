@@ -71,15 +71,16 @@ function Checkout() {
     <Layout>
       <div className="mx-auto max-w-5xl px-4 py-10">
         <h1 className="text-3xl mb-6">Checkout</h1>
-        <div className="flex gap-4 mb-8 text-sm">
+        <div className="flex flex-wrap gap-x-3 gap-y-2 mb-8 text-xs sm:text-sm">
           {steps.map((s, i) => (
-            <div key={s} className={`flex items-center gap-2 ${step === i + 1 ? "font-medium" : "text-muted-foreground"}`}>
-              <span className={`size-6 rounded-full flex items-center justify-center text-xs ${step >= i + 1 ? "bg-foreground text-background" : "bg-secondary"}`}>{i + 1}</span>
+            <div key={s} className={`flex items-center gap-1.5 sm:gap-2 ${step === i + 1 ? "font-medium" : "text-muted-foreground"}`}>
+              <span className={`size-5 sm:size-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs ${step >= i + 1 ? "bg-foreground text-background" : "bg-secondary"}`}>{i + 1}</span>
               {s}
-              {i < 3 && <span className="text-muted-foreground">·</span>}
+              {i < 3 && <span className="text-muted-foreground hidden sm:inline">·</span>}
             </div>
           ))}
         </div>
+
 
         <div className="grid md:grid-cols-[1fr_360px] gap-10">
           <div className="space-y-6">
