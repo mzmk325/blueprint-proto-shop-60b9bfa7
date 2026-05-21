@@ -1,15 +1,22 @@
 import { useSyncExternalStore } from "react";
 
 export type LensChoice = {
-  type: "frame-only" | "non-rx" | "blue-light" | "single-vision";
+  type: "frame-only" | "non-rx" | "blue-light" | "single-vision" | "reading";
   label: string;
   priceAdd: number;
+  rxType?: "single-vision" | "reading" | "non-rx" | "frame-only";
+  rxTypeLabel?: string;
+  fn?: { key: string; label: string; price: number };
+  thickness?: { key: string; label: string; price: number };
+  addon?: { key: string; label: string; price: number };
   rx?: {
     method: "upload" | "manual" | "later";
     fileName?: string;
     od?: { sph: string; cyl: string; axis: string };
     os?: { sph: string; cyl: string; axis: string };
     pd?: string;
+    dontKnowPd?: boolean;
+    hasPrism?: boolean;
   };
 };
 
@@ -18,6 +25,7 @@ export type CartLine = {
   productId: string;
   name: string;
   color: string;
+  size?: string;
   unitPrice: number;
   lens: LensChoice;
   qty: number;
