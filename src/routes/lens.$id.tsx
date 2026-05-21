@@ -276,48 +276,42 @@ function LensFlow() {
 
               {step === "rx-entry" && (
                 <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => setRxMethod("manual")} className={`bg-background p-4 text-sm font-medium border ${rxMethod === "manual" ? "border-sale" : "border-transparent"}`}>Enter manually</button>
-                    <button onClick={() => setRxMethod("upload")} className={`bg-background p-4 text-sm font-medium border ${rxMethod === "upload" ? "border-sale" : "border-transparent"}`}>Upload prescription</button>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    <button onClick={() => setRxMethod("manual")} className={`bg-background p-3 sm:p-4 text-sm font-medium border ${rxMethod === "manual" ? "border-sale" : "border-transparent"}`}>Enter manually</button>
+                    <button onClick={() => setRxMethod("upload")} className={`bg-background p-3 sm:p-4 text-sm font-medium border ${rxMethod === "upload" ? "border-sale" : "border-transparent"}`}>Upload prescription</button>
                   </div>
 
                   {rxMethod === "manual" && (
-                    <div className="bg-background p-5 space-y-5">
-                      {/* Compact Rx table */}
-                      <div className="grid grid-cols-[58px_1fr_1fr_1fr] sm:grid-cols-[70px_1fr_1fr_1fr] gap-1.5 sm:gap-2 items-center text-xs">
-                        <div></div>
-                        <div className="font-semibold text-center text-muted-foreground">SPH</div>
-                        <div className="font-semibold text-center text-muted-foreground">CYL</div>
-                        <div className="font-semibold text-center text-muted-foreground">Axis</div>
-                        <RxRow label="OD (R)" val={od} setVal={setOd} />
-                        <RxRow label="OS (L)" val={os} setVal={setOs} />
-                      </div>
+                    <div className="space-y-3">
+                      {/* OD card */}
+                      <EyeCard label="Right Eye" sub="OD" val={od} setVal={setOd} />
+                      {/* OS card */}
+                      <EyeCard label="Left Eye" sub="OS" val={os} setVal={setOs} />
 
-                      {/* PD */}
-                      <div className="border-t border-border/60 pt-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold flex items-center gap-1">
-                            PD (Pupillary Distance)
+                      {/* PD card */}
+                      <div className="bg-background p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="text-sm font-semibold flex items-center gap-1.5">
+                            PD <span className="text-xs text-muted-foreground font-normal">(Pupillary Distance)</span>
                             <button onClick={() => setShowPd(true)} aria-label="help"><HelpCircle className="size-3.5 text-muted-foreground" /></button>
                           </span>
-                          <label className="text-xs flex items-center gap-1.5">
+                          <label className="text-xs flex items-center gap-1.5 shrink-0">
                             <input type="checkbox" checked={twoPd} onChange={(e) => setTwoPd(e.target.checked)} className="size-3.5" /> Dual PD
                           </label>
                         </div>
 
                         {!twoPd ? (
-                          <div className="grid grid-cols-[58px_1fr] sm:grid-cols-[70px_1fr] gap-1.5 sm:gap-2 items-center text-xs">
-                            <span className="font-medium">PD</span>
-                            <Select value={pd} onChange={setPd} options={["54","56","57","58","59","60","61","62","63","64","65","66","68"]} placeholder="Select PD (mm)" disabled={dontKnowPd} />
-                          </div>
+                          <Select value={pd} onChange={setPd} options={["54","56","57","58","59","60","61","62","63","64","65","66","68"]} placeholder="Select PD (mm)" disabled={dontKnowPd} />
                         ) : (
-                          <div className="grid grid-cols-[58px_1fr_1fr] sm:grid-cols-[70px_1fr_1fr] gap-1.5 sm:gap-2 items-center text-xs">
-                            <span></span>
-                            <span className="text-center text-muted-foreground">R PD</span>
-                            <span className="text-center text-muted-foreground">L PD</span>
-                            <span className="font-medium">PD</span>
-                            <Select value={pdRight} onChange={setPdRight} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
-                            <Select value={pdLeft} onChange={setPdLeft} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <div className="text-[11px] text-muted-foreground mb-1">Right PD</div>
+                              <Select value={pdRight} onChange={setPdRight} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
+                            </div>
+                            <div>
+                              <div className="text-[11px] text-muted-foreground mb-1">Left PD</div>
+                              <Select value={pdLeft} onChange={setPdLeft} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
+                            </div>
                           </div>
                         )}
 
@@ -326,24 +320,25 @@ function LensFlow() {
                           I don't know my PD
                         </label>
                         {dontKnowPd && (
-                          <div className="text-xs text-muted-foreground bg-surface p-3 border-l-2 border-amber-500">
+                          <div className="text-xs text-muted-foreground bg-surface p-2.5 border-l-2 border-amber-500">
                             PD will be marked as <strong>Unknown</strong>. Our team will contact you before production.
                           </div>
                         )}
-                      </div>
 
-                      {/* Prism */}
-                      <div className="border-t border-border/60 pt-4 space-y-3">
-                        <label className="flex items-center gap-2 text-sm">
-                          <input type="checkbox" checked={hasPrism} onChange={(e) => { setHasPrism(e.target.checked); if (e.target.checked) setRxMethod("upload"); }} className="size-4" />
-                          My prescription includes prism
-                          <button onClick={() => setShowPrism(true)} aria-label="help"><HelpCircle className="size-3.5 text-muted-foreground" /></button>
-                        </label>
-                        {hasPrism && (
-                          <div className="text-xs text-muted-foreground bg-surface p-3 border-l-2 border-sale">
-                            Prism prescriptions require manual review. Please upload your prescription image instead of manual entry.
-                          </div>
-                        )}
+                        <div className="border-t border-border/60 pt-3">
+                          <label className="flex items-start gap-2 text-sm">
+                            <input type="checkbox" checked={hasPrism} onChange={(e) => { setHasPrism(e.target.checked); if (e.target.checked) setRxMethod("upload"); }} className="size-4 mt-0.5" />
+                            <span className="flex-1">
+                              My prescription includes prism
+                              <button onClick={() => setShowPrism(true)} aria-label="help" className="ml-1 align-middle"><HelpCircle className="size-3.5 text-muted-foreground inline" /></button>
+                            </span>
+                          </label>
+                          {hasPrism && (
+                            <div className="text-xs text-muted-foreground bg-surface p-2.5 border-l-2 border-sale mt-2">
+                              Prism prescriptions require manual review. Please upload your prescription image.
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {errors.length > 0 && (
@@ -353,6 +348,7 @@ function LensFlow() {
                       )}
                     </div>
                   )}
+
 
                   {rxMethod === "upload" && (
                     <div className="bg-background p-8 space-y-4">
