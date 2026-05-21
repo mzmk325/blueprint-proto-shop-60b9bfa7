@@ -691,15 +691,21 @@ function LabSection({ order }: { order: Order }) {
   const update = (patch: Partial<typeof l>) => cart.updateOrder(order.id, { lab: { ...l, ...patch } });
   const checklist = l.qcChecklist ?? {};
   const updateCheck = (patch: Partial<typeof checklist>) => update({ qcChecklist: { ...checklist, ...patch } });
+  const ft = orderFulfillmentType(order);
 
-  const checks: { key: keyof typeof checklist; label: string }[] = [
-    { key: "frameMatches", label: "Frame color matches order" },
-    { key: "lensMatches",  label: "Lens function matches order" },
-    { key: "rxChecked",    label: "Prescription values checked" },
-    { key: "noScratches",  label: "No visible scratches" },
-    { key: "packingPhoto", label: "Packing photo uploaded" },
-    { key: "readyToShip",  label: "Ready to ship" },
+  const allChecks: { key: keyof typeof checklist; label: string; show: boolean }[] = [
+    { key: "frameModel",      label: "Frame model matches order",         show: true },
+    { key: "frameColor",      label: "Frame color matches order",         show: true },
+    { key: "lensFunction",    label: "Lens function matches order",       show: ft !== "frame-only" },
+    { key: "lensThickness",   label: "Lens thickness / index matches",    show: ft !== "frame-only" },
+    { key: "rxChecked",       label: "Prescription values checked",       show: ft === "prescription" },
+    { key: "pdChecked",       label: "PD checked",                        show: ft === "prescription" },
+    { key: "noScratches",     label: "No visible scratches",              show: true },
+    { key: "hingesAlignment", label: "Hinges and frame alignment checked",show: true },
+    { key: "packingPhoto",    label: "Packing photo uploaded",            show: true },
+    { key: "readyToShip",     label: "Ready to ship",                     show: true },
   ];
+  const checks = allChecks.filter((c) => c.show);
 
   return (
     <Card title="Local lab / production">
@@ -737,6 +743,26 @@ function LabSection({ order }: { order: Order }) {
           ))}
         </div>
       </div>
+      <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3 items-start">
+        <div className="text-muted-foreground pt-1.5">QC result</div>
+        <select
+          value={l.qcResult ?? ""}
+          onChange={(e) => update({ qcResult: (e.target.value || undefined) as typeof l.qcResult })}
+          className="text-sm rounded-md border border-border bg-background px-2.5 py-1.5"
+        >
+          <option value="">— Not decided —</option>
+          <option value="pass">Pass</option>
+          <option value="remake">Needs remake</option>
+          <option value="needs-customer-confirm">Needs customer confirmation</option>
+        </select>
+      </div>
+      {order.status === "qc" && (
+        <div className="flex flex-wrap gap-2 pt-2">
+          <button onClick={() => { update({ qcResult: "pass", qcChecklist: { ...checklist, readyToShip: true } }); cart.addEvent(order.id, "QC passed — all checks complete"); }} className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-600 text-white">Mark QC passed</button>
+          <button onClick={() => { update({ qcResult: "remake" }); cart.setStatus(order.id, "in-production", "QC requested remake — back to production"); }} className="px-3 py-1.5 rounded-md text-xs font-medium bg-red-600 text-white">Request remake</button>
+          <button onClick={() => cart.setStatus(order.id, "ready-to-ship", "QC complete — moved to ready to ship")} className="px-3 py-1.5 rounded-md text-xs font-medium bg-foreground text-background">Move to Ready to Ship</button>
+        </div>
+      )}
     </Card>
   );
 }
