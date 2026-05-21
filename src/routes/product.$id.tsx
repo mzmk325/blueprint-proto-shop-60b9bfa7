@@ -77,7 +77,10 @@ function PDP() {
         {/* Details rail */}
         <div className="order-3 space-y-7">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-2">{p.shape} · {p.collection}</p>
+            <div className="flex items-center gap-2 mb-2">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{p.shape} · {p.collection}</p>
+              {p.badge === "NEW" && <span className="text-[10px] bg-foreground text-background px-2 py-0.5 uppercase tracking-wider">New Arrival</span>}
+            </div>
             <h1 className="font-display text-3xl md:text-4xl tracking-tight leading-tight">{p.name}</h1>
             <p className="text-sm text-muted-foreground mt-2">{p.descriptor}</p>
           </div>
@@ -95,18 +98,19 @@ function PDP() {
           {/* Color */}
           <div>
             <div className="flex justify-between items-baseline mb-3">
-              <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">Color</span>
+              <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">Frame color</span>
               <span className="text-xs text-muted-foreground">{p.colors[colorIdx].name}</span>
             </div>
-            <div className="flex gap-2.5 flex-wrap">
+            <div className="flex gap-2 flex-wrap">
               {p.colors.map((c, i) => (
                 <button
                   key={c.name}
                   onClick={() => { setColorIdx(i); setActiveImg(0); }}
-                  className={`size-10 rounded-full border ${i === colorIdx ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "border-border"}`}
-                  style={{ background: c.hex }}
+                  className={`size-14 overflow-hidden border-2 transition ${i === colorIdx ? "border-foreground" : "border-transparent hover:border-border"}`}
                   aria-label={c.name}
-                />
+                >
+                  <img src={productImage(p, i)} alt={c.name} className="w-full h-full object-cover" />
+                </button>
               ))}
             </div>
           </div>
@@ -136,9 +140,10 @@ function PDP() {
               to="/lens/$id"
               params={{ id: p.id }}
               search={{ color: p.colors[colorIdx].name }}
-              className="block w-full bg-sale text-white text-center py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
+              className="relative block w-full bg-sale text-white text-center py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
             >
-              Select lens color — ${p.price.toFixed(2)}
+              Select lens color
+              <span className="absolute top-0 right-3 -translate-y-1/2 bg-foreground text-background text-[9px] px-2 py-0.5 tracking-wider">15% Off</span>
             </Link>
             <Link
               to="/lens/$id"
@@ -182,23 +187,46 @@ function PDP() {
                   {open && (
                     <div className="pb-5 text-sm text-muted-foreground">
                       {k === "details" && (
-                        <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
-                          {[
-                            ["Model", p.modelCode],
-                            ["Frame width", `${p.dims.frameWidth} mm`],
-                            ["Lens width", `${p.dims.lensWidth} mm`],
-                            ["Lens height", `${p.dims.lensHeight} mm`],
-                            ["Bridge", `${p.dims.bridge} mm`],
-                            ["Temple", `${p.dims.temple} mm`],
-                            ["Material", p.material],
-                            ["Weight", p.weight],
-                          ].map(([k2, v]) => (
-                            <div key={k2 as string}>
-                              <dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">{k2}</dt>
-                              <dd className="text-foreground mt-0.5">{v}</dd>
-                            </div>
-                          ))}
-                        </dl>
+                        <div className="space-y-5">
+                          {/* Measurement diagram */}
+                          <div className="bg-surface/60 border border-border/60 p-4">
+                            <svg viewBox="0 0 300 130" className="w-full h-auto text-foreground/70">
+                              <g fill="none" stroke="currentColor" strokeWidth="1">
+                                <rect x="40" y="40" width="80" height="50" rx="6" />
+                                <rect x="180" y="40" width="80" height="50" rx="6" />
+                                <line x1="120" y1="65" x2="180" y2="65" />
+                                <line x1="40" y1="20" x2="260" y2="20" strokeDasharray="2 3" />
+                                <line x1="40" y1="100" x2="40" y2="115" />
+                                <line x1="120" y1="100" x2="120" y2="115" />
+                                <line x1="120" y1="40" x2="120" y2="25" />
+                                <line x1="180" y1="40" x2="180" y2="25" />
+                              </g>
+                              <g fill="currentColor" fontSize="9" fontFamily="DM Sans" textAnchor="middle">
+                                <text x="150" y="15">{p.dims.frameWidth} mm</text>
+                                <text x="80" y="115">{p.dims.lensWidth} mm</text>
+                                <text x="150" y="60">{p.dims.bridge}</text>
+                                <text x="280" y="65">{p.dims.lensHeight}</text>
+                              </g>
+                            </svg>
+                          </div>
+                          <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+                            {[
+                              ["Model", p.modelCode],
+                              ["Frame width", `${p.dims.frameWidth} mm`],
+                              ["Lens width", `${p.dims.lensWidth} mm`],
+                              ["Lens height", `${p.dims.lensHeight} mm`],
+                              ["Bridge", `${p.dims.bridge} mm`],
+                              ["Temple", `${p.dims.temple} mm`],
+                              ["Material", p.material],
+                              ["Weight", p.weight],
+                            ].map(([k2, v]) => (
+                              <div key={k2 as string}>
+                                <dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">{k2}</dt>
+                                <dd className="text-foreground mt-0.5">{v}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </div>
                       )}
                       {k === "lens" && <p>Recommended: Blue Light Blocking for daily screen use, Photochromic for indoor/outdoor versatility. Configure on the next step.</p>}
                       {k === "shipping" && <p>Ships in 13–20 days. Free over $75. 30-day returns, no questions asked. 365-day quality warranty.</p>}
