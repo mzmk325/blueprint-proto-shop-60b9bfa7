@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link, notFound } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { z } from "zod";
-import { Layout } from "@/components/site/Layout";
+
 import { getProduct, productImage } from "@/lib/products";
 import { cart, type LensChoice } from "@/lib/cart-store";
 import { ArrowLeft, X, Upload, Camera, HelpCircle, Check, Pencil, ChevronDown } from "lucide-react";
