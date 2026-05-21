@@ -713,7 +713,7 @@ const dict = {
     // search
     "search.placeholder": "搜索镜框、款型、颜色…",
     "search.hot": "热门搜索",
-    "search.empty": "抱歉，未找到与"{q}"相关的产品。",
+    "search.empty": "抱歉，未找到与 \"{q}\" 相关的产品。",
     "search.faqTitle": "常见问题",
     "search.viewMore": "查看更多",
     // support
