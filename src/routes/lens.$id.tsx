@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link, notFound } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { z } from "zod";
-import { Layout } from "@/components/site/Layout";
+
 import { getProduct, productImage } from "@/lib/products";
 import { cart, type LensChoice } from "@/lib/cart-store";
 import { ArrowLeft, X, Upload, Camera, HelpCircle, Check, Pencil, ChevronDown } from "lucide-react";
@@ -74,13 +74,6 @@ export default function LensFlow() {
   const techObj = TECHS.find((t) => t.key === tech)!;
   const materialObj = MATERIALS.find((m) => m.key === material)!;
 
-  const lensTotal = useMemo(() => {
-    if (rxType === "frame-only") return 0;
-    return lensTypeObj.priceAdd + (techObj.price - 46.75) + materialObj.priceAdd;
-  }, [rxType, lensTypeObj, techObj, materialObj]);
-
-  const total = p.price + lensTotal;
-
   const steps: Step[] = rxType === "frame-only"
     ? ["rx-type"]
     : rxType === "single-vision" || rxType === "reading"
@@ -89,6 +82,19 @@ export default function LensFlow() {
 
   const idx = steps.indexOf(step);
   const progress = ((idx + 1) / steps.length) * 100;
+
+  const lensTotal = useMemo(() => {
+    if (rxType === "frame-only") return 0;
+    const passedOrCurrent = (s: Step) => steps.indexOf(s) <= idx;
+    let t = 0;
+    if (passedOrCurrent("lens-type")) t += lensTypeObj.priceAdd;
+    if (passedOrCurrent("lens-tech")) t += techObj.price - 46.75;
+    if (passedOrCurrent("material")) t += materialObj.priceAdd;
+    return t;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rxType, lensTypeObj, techObj, materialObj, idx]);
+
+  const total = p.price + lensTotal;
 
   function next() {
     if (idx < steps.length - 1) setStep(steps[idx + 1]);
@@ -112,27 +118,27 @@ export default function LensFlow() {
   }
 
   return (
-    <Layout>
+    <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Progress bar */}
-      <div className="h-1 bg-secondary">
+      <div className="h-1 bg-secondary shrink-0">
         <div className="h-full bg-sale transition-all" style={{ width: `${progress}%` }} />
       </div>
 
-      <div className="grid lg:grid-cols-2 min-h-[calc(100vh-4rem)]">
+      <div className="flex-1 grid lg:grid-cols-2 min-h-0">
         {/* Left panel: product summary */}
-        <aside className="bg-background border-r border-border/60 px-8 lg:px-16 py-10 flex flex-col">
-          <Link to="/product/$id" params={{ id: p.id }} className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground inline-flex items-center gap-2 mb-8">
+        <aside className="bg-background border-r border-border/60 px-8 lg:px-16 py-8 flex flex-col overflow-y-auto">
+          <Link to="/product/$id" params={{ id: p.id }} className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground inline-flex items-center gap-2 mb-6">
             <ArrowLeft className="size-3.5" /> Back to product
           </Link>
 
-          <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="flex-1 flex flex-col items-center justify-center min-h-0 py-6">
             <div className="aspect-[4/3] w-full max-w-md bg-surface flex items-center justify-center">
               <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt={p.name} className="w-full h-full object-contain" />
             </div>
-            <h2 className="font-display text-2xl mt-6">{p.name} <span className="text-muted-foreground">({color})</span></h2>
+            <h2 className="font-display text-2xl mt-6 text-center">{p.name} <span className="text-muted-foreground">({color})</span></h2>
           </div>
 
-          <div className="space-y-3 text-sm mt-6">
+          <div className="space-y-3 text-sm mt-6 shrink-0">
             <Row label="Frame" value={`$${p.price.toFixed(2)}`} />
             {rxType !== "frame-only" && (
               <Row label="Prescription" subValue={rxTypeLabel(rxType)} onEdit={() => setStep("rx-type")} />
@@ -148,8 +154,8 @@ export default function LensFlow() {
         </aside>
 
         {/* Right panel: steps */}
-        <section className="bg-surface px-8 lg:px-16 py-10 relative">
-          <div className="flex items-center justify-between mb-8">
+        <section className="bg-surface flex flex-col min-h-0">
+          <div className="flex items-center justify-between px-8 lg:px-12 py-5 shrink-0 border-b border-border/40">
             {idx > 0 ? (
               <button onClick={back} aria-label="Back" className="size-9 flex items-center justify-center hover:bg-background"><ArrowLeft className="size-5" /></button>
             ) : <div className="size-9" />}
@@ -157,7 +163,8 @@ export default function LensFlow() {
             <Link to="/product/$id" params={{ id: p.id }} aria-label="Close" className="size-9 flex items-center justify-center hover:bg-background"><X className="size-5" /></Link>
           </div>
 
-          <div className="max-w-xl mx-auto pb-32 space-y-4">
+          <div className="flex-1 overflow-y-auto px-8 lg:px-12 py-8">
+            <div className="max-w-xl mx-auto space-y-4">
             {step === "rx-type" && (
               <>
                 {([
@@ -306,10 +313,11 @@ export default function LensFlow() {
                 })}
               </>
             )}
+            </div>
           </div>
 
           {/* Sticky CTA */}
-          <div className="absolute bottom-0 left-0 right-0 bg-surface border-t border-border/60 px-8 lg:px-16 py-5">
+          <div className="shrink-0 bg-surface border-t border-border/60 px-8 lg:px-12 py-5">
             <button
               onClick={step === "rx-entry" ? () => setShowConfirm(true) : next}
               className="w-full bg-sale text-white py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
@@ -352,7 +360,7 @@ export default function LensFlow() {
           </div>
         </Modal>
       )}
-    </Layout>
+    </div>
   );
 }
 
