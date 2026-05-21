@@ -87,14 +87,26 @@ function OrderConfirm() {
         <div className="mt-8 border rounded-xl p-6 bg-background">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-3">What happens next</div>
           <ol className="space-y-2 text-sm">
-            {[
-              "We review the order details",
-              hasPrescription ? "We review your prescription with an optician" : null,
-              hasFrameOnly && !hasPrescription && !hasNonRx ? "We prepare your frame with demo lenses" : "We prepare the frame and lenses",
-              hasPrescription || hasNonRx ? "Your glasses are assembled" : null,
-              "We quality check your order",
-              "We ship with tracking · Estimated 13–20 days",
-            ].filter(Boolean).map((s, i) => (
+            {(headlineType === "prescription" ? [
+              "We review your order details",
+              "Our optician reviews your prescription",
+              "We source the frame and lenses",
+              "Your glasses are assembled at our partner lab",
+              "We quality-check your order",
+              "We ship via Yanwen with tracking · 13–20 days",
+            ] : headlineType === "non-rx" ? [
+              "We review your order details",
+              "We source the frame and lenses",
+              "Your glasses are assembled at our partner lab",
+              "We quality-check your order",
+              "We ship via Yanwen with tracking · 13–20 days",
+            ] : [
+              "We review your order details",
+              "We source your frame from our supplier",
+              "We pack the frame with demo lenses",
+              "We quality-check the frame",
+              "We ship via Yanwen with tracking · 13–20 days",
+            ]).map((s, i) => (
               <li key={i} className="flex gap-3"><span className="size-5 rounded-full bg-secondary text-xs flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span><span>{s}</span></li>
             ))}
           </ol>
