@@ -2,125 +2,271 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
-import { products, shapes, categories, collections } from "@/lib/products";
+import { products, shapes, categories } from "@/lib/products";
+import { ArrowRight, ShieldCheck, RotateCcw, Truck, Star } from "lucide-react";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "MIRAVUE — Designer Eyewear, Honestly Priced" }, { name: "description", content: "Fashion-forward eyeglasses & sunglasses. Try on, find your fit, ship in days." }] }),
+  head: () => ({
+    meta: [
+      { title: "MIRAVUE — Designer Eyewear, Honestly Priced" },
+      { name: "description", content: "Designer eyeglasses & sunglasses. Architectural acetate, hand-finished, virtual try-on." },
+    ],
+  }),
   component: Home,
 });
 
+const heroImg =
+  "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=2000&q=80";
+const tile = {
+  women: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=900&q=80",
+  men: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=900&q=80",
+  sunW: "https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&w=900&q=80",
+  sunM: "https://images.unsplash.com/photo-1577803645773-f96470509666?auto=format&fit=crop&w=900&q=80",
+};
+const editorial = {
+  bold: "https://images.unsplash.com/photo-1577803645773-f96470509666?auto=format&fit=crop&w=1200&q=80",
+  dark: "https://images.unsplash.com/photo-1612817159949-195b6eb9e31a?auto=format&fit=crop&w=1200&q=80",
+  daily: "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=1200&q=80",
+};
+
 function Home() {
-  const featured = products.slice(0, 6);
+  const bestsellers = products.slice(0, 4);
+  const newArrivals = products.slice(4, 8);
+
   return (
     <Layout>
-      {/* Hero */}
-      <section className="relative bg-gradient-to-br from-secondary via-background to-accent/20">
-        <div className="mx-auto max-w-7xl px-4 py-20 md:py-28 grid md:grid-cols-2 gap-10 items-center">
-          <div className="space-y-6">
-            <span className="inline-block text-xs uppercase tracking-widest text-muted-foreground">New Collection · 2026</span>
-            <h1 className="text-5xl md:text-7xl leading-[1.05]">See the world<br/><em className="text-accent not-italic">differently.</em></h1>
-            <p className="text-lg text-muted-foreground max-w-md">Designer frames crafted for the way you actually live. From $35, with free shipping over $75.</p>
-            <div className="flex gap-3">
-              <Link to="/category/$slug" params={{ slug: "all" }} className="inline-flex items-center px-6 py-3 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90">Shop Eyeglasses</Link>
-              <Link to="/category/$slug" params={{ slug: "sunglasses" }} className="inline-flex items-center px-6 py-3 border rounded-full text-sm font-medium hover:bg-secondary">Shop Sunglasses</Link>
+      {/* === Editorial Hero === */}
+      <section className="relative h-[88vh] min-h-[600px] w-full overflow-hidden bg-surface">
+        <img src={heroImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/30" />
+        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+          <span className="text-white/90 text-[11px] uppercase tracking-[0.3em] mb-6 font-medium">
+            Collection 2026 · Out Now
+          </span>
+          <h1 className="text-white text-[14vw] md:text-[9rem] font-bold leading-[0.85] tracking-[-0.04em] uppercase">
+            New<br />Vision
+          </h1>
+          <p className="text-white/80 text-sm md:text-base max-w-md mt-8 font-light">
+            Architectural acetate silhouettes. Hand-finished. Honestly priced.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 mt-10">
+            <Link
+              to="/category/$slug"
+              params={{ slug: "all" }}
+              className="bg-primary text-primary-foreground px-10 py-4 text-[11px] uppercase tracking-[0.2em] font-bold hover:bg-foreground transition-colors"
+            >
+              Shop Eyeglasses
+            </Link>
+            <Link
+              to="/category/$slug"
+              params={{ slug: "sunglasses" }}
+              className="bg-background/90 backdrop-blur text-foreground px-10 py-4 text-[11px] uppercase tracking-[0.2em] font-bold hover:bg-background transition-colors"
+            >
+              Shop Sunglasses
+            </Link>
+          </div>
+        </div>
+        {/* hero slide dots */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {[0, 1, 2].map((i) => (
+            <span key={i} className={`h-0.5 transition-all ${i === 0 ? "w-10 bg-white" : "w-6 bg-white/40"}`} />
+          ))}
+        </div>
+      </section>
+
+      {/* === Section heading strip === */}
+      <section className="bg-surface/60 py-10 text-center">
+        <h2 className="font-display text-2xl md:text-3xl tracking-tight">
+          Eyewear designed for those who see the world differently.
+        </h2>
+      </section>
+
+      {/* === 4-up Gender / Category Tiles === */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 w-full border-b border-border">
+        {[
+          { slug: "women-eyeglasses", label: "Women", img: tile.women },
+          { slug: "men-eyeglasses", label: "Men", img: tile.men },
+          { slug: "sunglasses", label: "Women Sun", img: tile.sunW },
+          { slug: "sunglasses", label: "Men Sun", img: tile.sunM },
+        ].map((t, i) => (
+          <Link
+            key={i}
+            to="/category/$slug"
+            params={{ slug: t.slug }}
+            className={`relative aspect-[3/4] overflow-hidden group ${i < 3 ? "lg:border-r border-border" : ""}`}
+          >
+            <img src={t.img} alt={t.label} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/5 transition-colors" />
+            <div className="absolute bottom-6 left-6">
+              <h3 className="text-white font-display text-2xl uppercase tracking-tight font-bold">{t.label}</h3>
+              <span className="text-white/80 text-[10px] uppercase tracking-[0.25em] mt-1 inline-block">Shop Now →</span>
             </div>
-          </div>
-          <div className="aspect-square rounded-3xl bg-card shadow-xl overflow-hidden">
-            <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23efe6d8'/%3E%3Ccircle cx='140' cy='200' r='70' fill='none' stroke='%231a1a1a' stroke-width='10'/%3E%3Ccircle cx='280' cy='200' r='70' fill='none' stroke='%231a1a1a' stroke-width='10'/%3E%3Cpath d='M210,195 q10,-10 20,0' stroke='%231a1a1a' stroke-width='8' fill='none'/%3E%3C/svg%3E" alt="" className="w-full h-full object-cover" />
-          </div>
-        </div>
+          </Link>
+        ))}
       </section>
 
-      {/* Categories */}
-      <section className="mx-auto max-w-7xl px-4 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {categories.slice(0, 4).map((c, i) => (
-            <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }} className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-secondary to-accent/30 p-6 flex flex-col justify-end hover:shadow-lg transition" style={{ background: ["#efe6d8","#e4dfd3","#d8d2c2","#e8e2d4"][i] }}>
-              <span className="text-xs uppercase tracking-widest text-muted-foreground">Shop</span>
-              <h3 className="text-2xl mt-1">{c.title}</h3>
-            </Link>
-          ))}
+      {/* === Shop by Shape === */}
+      <section className="py-20 lg:py-24 px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl uppercase tracking-tight font-bold">Shop by Shape</h2>
+          <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mt-3">Find your frame silhouette</p>
         </div>
-      </section>
-
-      {/* Shapes */}
-      <section className="mx-auto max-w-7xl px-4 py-12">
-        <div className="flex items-end justify-between mb-8">
-          <h2 className="text-3xl md:text-4xl">Shop by shape</h2>
-          <Link to="/category/$slug" params={{ slug: "all" }} className="text-sm underline">View all</Link>
-        </div>
-        <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
+        <div className="flex justify-start lg:justify-center gap-10 lg:gap-16 overflow-x-auto no-scrollbar pb-4 px-2 max-w-6xl mx-auto">
           {shapes.map((s) => (
-            <Link key={s} to="/category/$slug" params={{ slug: "all" }} search={{ shape: s }} className="text-center group">
-              <div className="aspect-square rounded-full bg-secondary group-hover:bg-accent/40 transition flex items-center justify-center text-xs">{s.split(" ")[0]}</div>
-              <div className="mt-2 text-xs">{s}</div>
+            <Link
+              key={s}
+              to="/category/$slug"
+              params={{ slug: "all" }}
+              search={{ shape: s }}
+              className="group flex-shrink-0 flex flex-col items-center gap-4"
+            >
+              <div className="w-24 h-24 rounded-full bg-surface flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                <ShapeIcon shape={s} />
+              </div>
+              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold">{s}</span>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Collections */}
-      <section className="mx-auto max-w-7xl px-4 py-16">
-        <div className="grid md:grid-cols-3 gap-4">
-          {collections.slice(0, 3).map((col, i) => (
-            <Link key={col} to="/category/$slug" params={{ slug: "all" }} search={{ collection: col }} className="aspect-[4/5] rounded-2xl p-8 flex flex-col justify-between text-white" style={{ background: ["#1a1a1a","#5e3a2f","#a82424"][i] }}>
-              <span className="text-xs uppercase tracking-widest opacity-70">Collection {String(i+1).padStart(2,'0')}</span>
-              <div>
-                <h3 className="text-4xl text-white">{col}</h3>
-                <p className="text-sm opacity-80 mt-2">{["Unconventional & experimental","Monochrome & edgy","Daily originals"][i]}</p>
+      {/* === Bestsellers === */}
+      <section className="px-6 lg:px-8 pb-20 lg:pb-24">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4 border-b border-border pb-6">
+            <h2 className="text-4xl md:text-5xl uppercase tracking-tight font-bold">Bestsellers</h2>
+            <Link to="/category/$slug" params={{ slug: "best-sellers" }} className="text-[11px] uppercase tracking-[0.2em] font-bold flex items-center gap-2 hover:opacity-60">
+              Shop all <ArrowRight className="size-3" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+            {bestsellers.map((p) => <ProductCard key={p.id} p={p} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* === New Arrivals === */}
+      <section className="px-6 lg:px-8 pb-24 bg-surface/40 pt-20">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4 border-b border-border pb-6">
+            <h2 className="text-4xl md:text-5xl uppercase tracking-tight font-bold">New Arrivals</h2>
+            <Link to="/category/$slug" params={{ slug: "new-arrivals" }} className="text-[11px] uppercase tracking-[0.2em] font-bold flex items-center gap-2 hover:opacity-60">
+              Shop all <ArrowRight className="size-3" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+            {newArrivals.map((p) => <ProductCard key={p.id} p={p} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* === 3-up Personal Style Editorial === */}
+      <section className="py-24 lg:py-32 px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-5xl uppercase tracking-tight font-bold">A Frame for Every Self</h2>
+          <p className="text-sm text-muted-foreground mt-4 max-w-md mx-auto">
+            Three perspectives. One shared obsession with quiet, considered design.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
+          {[
+            { title: "Bold", desc: "Statement frames for the unafraid.", img: editorial.bold, slug: "all", filter: "Bold" },
+            { title: "Dark", desc: "Monochrome edge for the after-hours.", img: editorial.dark, slug: "all", filter: "Dark" },
+            { title: "Daily", desc: "Quiet originals you'll wear forever.", img: editorial.daily, slug: "all", filter: "Daily" },
+          ].map((e) => (
+            <Link
+              key={e.title}
+              to="/category/$slug"
+              params={{ slug: e.slug }}
+              search={{ collection: e.filter }}
+              className="relative aspect-[3/4] overflow-hidden group"
+            >
+              <img src={e.img} alt={e.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+              <div className="absolute bottom-8 left-8 right-8 text-white">
+                <h3 className="font-display text-3xl uppercase tracking-tight font-bold">{e.title}</h3>
+                <p className="text-sm opacity-90 mt-1 max-w-xs">{e.desc}</p>
+                <span className="inline-block mt-4 text-[10px] uppercase tracking-[0.25em] font-bold border-b border-white pb-0.5">Discover</span>
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Featured */}
-      <section className="mx-auto max-w-7xl px-4 py-12">
-        <div className="flex items-end justify-between mb-8">
-          <h2 className="text-3xl md:text-4xl">Featured frames</h2>
-          <Link to="/category/$slug" params={{ slug: "all" }} className="text-sm underline">Shop all</Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {featured.map((p) => <ProductCard key={p.id} p={p} />)}
-        </div>
-      </section>
-
       <RecentlyViewed />
 
-      {/* Lens education */}
-      <section className="mx-auto max-w-7xl px-4 py-16">
-        <h2 className="text-3xl md:text-4xl mb-8">Multi-purpose lenses</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* === Lens features 3-up === */}
+      <section className="py-20 px-6 lg:px-8 bg-surface/50">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl uppercase tracking-tight font-bold">Multi-purpose Lenses</h2>
+          <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mt-3">Blue light · Photochromic · Polarized</p>
+        </div>
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            ["Blue Light", "Cut digital glare"],
-            ["Photochromic", "Indoor to outdoor"],
-            ["Polarized", "Crisp & glare-free"],
-            ["Progressive", "Near, mid, far"],
-          ].map(([t, d]) => (
-            <div key={t} className="rounded-2xl border p-6 bg-card">
-              <h3 className="text-lg">{t}</h3>
-              <p className="text-sm text-muted-foreground mt-2">{d}</p>
+            { t: "Polarized", d: "Crisp, glare-free clarity outdoors.", img: "https://images.unsplash.com/photo-1577803645773-f96470509666?auto=format&fit=crop&w=800&q=80" },
+            { t: "Progressive", d: "Near, mid, and far in one seamless lens.", img: "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=800&q=80" },
+            { t: "Blue Light", d: "Reduce digital eye strain, sleep better.", img: "https://images.unsplash.com/photo-1556306535-0f09a537f0a3?auto=format&fit=crop&w=800&q=80" },
+          ].map((l) => (
+            <div key={l.t} className="group">
+              <div className="aspect-[4/5] overflow-hidden bg-surface">
+                <img src={l.img} alt={l.t} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              </div>
+              <div className="mt-5">
+                <h3 className="font-display text-xl font-semibold">{l.t}</h3>
+                <p className="text-sm text-muted-foreground mt-1">{l.d}</p>
+                <button className="mt-3 text-[11px] uppercase tracking-[0.2em] font-bold border-b border-foreground pb-0.5">Learn more</button>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Trust strip */}
-      <section className="mx-auto max-w-7xl px-4 py-12 border-t">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      {/* === Trust strip === */}
+      <section className="py-14 px-6 lg:px-8 border-t border-border">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
-            ["30-Day", "Easy Returns"],
-            ["365-Day", "Quality Warranty"],
-            ["FSA/HSA", "Eligible"],
-            ["4.6 ★", "20,000+ reviews"],
-          ].map(([a, b]) => (
-            <div key={a}>
-              <div className="text-2xl font-display">{a}</div>
-              <div className="text-xs uppercase tracking-widest text-muted-foreground mt-1">{b}</div>
+            { icon: RotateCcw, t: "30-Day Returns", s: "No questions asked" },
+            { icon: ShieldCheck, t: "365-Day Warranty", s: "Quality guaranteed" },
+            { icon: Truck, t: "Free Shipping", s: "Over $75" },
+            { icon: Star, t: "4.6 / 5", s: "20,000+ reviews" },
+          ].map((b) => (
+            <div key={b.t} className="flex flex-col items-center gap-2">
+              <b.icon className="size-5" strokeWidth={1.5} />
+              <div className="font-display text-sm font-semibold tracking-tight">{b.t}</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{b.s}</div>
             </div>
           ))}
         </div>
+      </section>
+
+      {/* category links for SEO / catalog discovery */}
+      <section className="hidden">
+        {categories.map((c) => (
+          <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }}>{c.title}</Link>
+        ))}
       </section>
     </Layout>
   );
+}
+
+function ShapeIcon({ shape }: { shape: string }) {
+  const common = "fill-none stroke-current";
+  switch (shape) {
+    case "Round":
+      return <svg viewBox="0 0 60 30" className="w-12 h-6"><circle cx="14" cy="15" r="11" strokeWidth="2" className={common} /><circle cx="46" cy="15" r="11" strokeWidth="2" className={common} /><line x1="25" y1="15" x2="35" y2="15" strokeWidth="2" className={common} /></svg>;
+    case "Square":
+      return <svg viewBox="0 0 60 30" className="w-12 h-6"><rect x="3" y="5" width="22" height="20" strokeWidth="2" className={common} /><rect x="35" y="5" width="22" height="20" strokeWidth="2" className={common} /><line x1="25" y1="15" x2="35" y2="15" strokeWidth="2" className={common} /></svg>;
+    case "Cat eye":
+      return <svg viewBox="0 0 60 30" className="w-12 h-6"><path d="M2,18 Q5,5 25,8 Q27,18 14,22 Z" strokeWidth="2" className={common} /><path d="M35,8 Q55,5 58,18 Q46,22 33,18 Z" strokeWidth="2" className={common} /></svg>;
+    case "Aviator":
+      return <svg viewBox="0 0 60 30" className="w-12 h-6"><path d="M3,8 L25,5 L22,25 L8,25 Z" strokeWidth="2" className={common} /><path d="M35,5 L57,8 L52,25 L38,25 Z" strokeWidth="2" className={common} /></svg>;
+    case "Rectangle":
+      return <svg viewBox="0 0 60 30" className="w-12 h-6"><rect x="3" y="9" width="22" height="14" strokeWidth="2" className={common} /><rect x="35" y="9" width="22" height="14" strokeWidth="2" className={common} /></svg>;
+    case "Geometric":
+      return <svg viewBox="0 0 60 30" className="w-12 h-6"><polygon points="3,8 25,6 22,25 5,23" strokeWidth="2" className={common} /><polygon points="35,6 57,8 55,23 38,25" strokeWidth="2" className={common} /></svg>;
+    case "Butterfly":
+      return <svg viewBox="0 0 60 30" className="w-12 h-6"><path d="M3,12 Q5,5 25,7 Q26,22 8,24 Z" strokeWidth="2" className={common} /><path d="M35,7 Q55,5 57,12 Q52,24 34,22 Z" strokeWidth="2" className={common} /></svg>;
+    case "Oval":
+    default:
+      return <svg viewBox="0 0 60 30" className="w-12 h-6"><ellipse cx="14" cy="15" rx="11" ry="8" strokeWidth="2" className={common} /><ellipse cx="46" cy="15" rx="11" ry="8" strokeWidth="2" className={common} /></svg>;
+  }
 }
