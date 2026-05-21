@@ -49,7 +49,7 @@ const MATERIALS = [
 const SPH = ["+6.00","+5.00","+4.00","+3.00","+2.00","+1.50","+1.00","+0.75","+0.50","+0.25","0.00","-0.25","-0.50","-0.75","-1.00","-1.25","-1.50","-1.75","-2.00","-2.25","-2.50","-3.00","-4.00","-5.00","-6.00"];
 const CYL = ["None","-0.25","-0.50","-0.75","-1.00","-1.25","-1.50","-1.75","-2.00","-2.50","-3.00"];
 
-export default function LensFlow() {
+function LensFlow() {
   const p = Route.useLoaderData();
   const search = Route.useSearch();
   const navigate = useNavigate();
