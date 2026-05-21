@@ -306,15 +306,15 @@ function LensFlow() {
                         </div>
 
                         {!twoPd ? (
-                          <div className="grid grid-cols-[70px_1fr] gap-2 items-center text-xs">
+                          <div className="grid grid-cols-[58px_1fr] sm:grid-cols-[70px_1fr] gap-1.5 sm:gap-2 items-center text-xs">
                             <span className="font-medium">PD</span>
                             <Select value={pd} onChange={setPd} options={["54","56","57","58","59","60","61","62","63","64","65","66","68"]} placeholder="Select PD (mm)" disabled={dontKnowPd} />
                           </div>
                         ) : (
-                          <div className="grid grid-cols-[70px_1fr_1fr] gap-2 items-center text-xs">
+                          <div className="grid grid-cols-[58px_1fr_1fr] sm:grid-cols-[70px_1fr_1fr] gap-1.5 sm:gap-2 items-center text-xs">
                             <span></span>
-                            <span className="text-center text-muted-foreground">Right PD</span>
-                            <span className="text-center text-muted-foreground">Left PD</span>
+                            <span className="text-center text-muted-foreground">R PD</span>
+                            <span className="text-center text-muted-foreground">L PD</span>
                             <span className="font-medium">PD</span>
                             <Select value={pdRight} onChange={setPdRight} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
                             <Select value={pdLeft} onChange={setPdLeft} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
