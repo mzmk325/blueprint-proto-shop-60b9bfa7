@@ -25,7 +25,7 @@ function Checkout() {
   function placeOrder() {
     const order = cart.placeOrder({
       email: contact.email, name: contact.name,
-      address: `${addr.line1}, ${addr.city}, ${addr.state} ${addr.zip}`,
+      address: `${addr.line1}${addr.line2 ? ", " + addr.line2 : ""}, ${addr.city}, ${addr.state} ${addr.zip}, ${addr.country}`,
       shipping, shippingCost: shipCost, subtotal, total,
     });
     navigate({ to: "/order/$id", params: { id: order.id } });
