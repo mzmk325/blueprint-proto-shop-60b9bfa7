@@ -25,7 +25,7 @@ export function MiniCart() {
             <ShoppingBag className="size-[18px]" strokeWidth={1.5} />
           </span>
           {mounted && count > 0 && (
-            <span className="absolute -top-2 -right-2 bg-sale text-white text-[10px] leading-none rounded-full min-w-4 h-4 px-1 inline-flex items-center justify-center font-medium">{count}</span>
+            <span className="absolute -top-2 -right-2 bg-sale text-white text-[10px] leading-none rounded-full min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center font-medium tabular-nums">{count > 99 ? "99+" : count}</span>
           )}
         </button>
       </SheetTrigger>
