@@ -1,0 +1,23 @@
+import { useUser } from "@/lib/user-store";
+import { getProduct } from "@/lib/products";
+import { ProductCard } from "./ProductCard";
+
+export function RecentlyViewed({ excludeId }: { excludeId?: string }) {
+  const { recent } = useUser();
+  const items = recent
+    .filter((id) => id !== excludeId)
+    .map(getProduct)
+    .filter((p): p is NonNullable<typeof p> => !!p)
+    .slice(0, 4);
+
+  if (items.length === 0) return null;
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-12">
+      <h2 className="text-2xl md:text-3xl mb-6">Recently viewed</h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {items.map((p) => <ProductCard key={p.id} p={p} />)}
+      </div>
+    </section>
+  );
+}
