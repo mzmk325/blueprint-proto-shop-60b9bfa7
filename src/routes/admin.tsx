@@ -907,11 +907,7 @@ function LabSection({ order }: { order: Order }) {
         </select>
       </div>
       {order.status === "qc" && (
-        <div className="flex flex-wrap gap-2 pt-2">
-          <button onClick={() => { update({ qcResult: "pass", qcChecklist: { ...checklist, readyToShip: true } }); cart.addEvent(order.id, "QC passed — all checks complete"); }} className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-600 text-white">Mark QC passed</button>
-          <button onClick={() => { update({ qcResult: "remake" }); cart.setStatus(order.id, "in-production", "QC requested remake — back to production"); }} className="px-3 py-1.5 rounded-md text-xs font-medium bg-red-600 text-white">Request remake</button>
-          <button onClick={() => cart.setStatus(order.id, "ready-to-ship", "QC complete — moved to ready to ship")} className="px-3 py-1.5 rounded-md text-xs font-medium bg-foreground text-background">Move to Ready to Ship</button>
-        </div>
+        <p className="text-[11px] text-muted-foreground pt-1">QC actions (Mark passed / Request remake / Move to Ready to Ship) are in the <span className="font-medium text-foreground">Next action</span> panel above.</p>
       )}
     </Card>
   );

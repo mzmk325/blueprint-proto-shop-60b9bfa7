@@ -74,7 +74,7 @@ function Checkout() {
         <div className="flex flex-wrap gap-x-3 gap-y-2 mb-8 text-xs sm:text-sm">
           {steps.map((s, i) => (
             <div key={s} className={`flex items-center gap-1.5 sm:gap-2 ${step === i + 1 ? "font-medium" : "text-muted-foreground"}`}>
-              <span className={`size-5 sm:size-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs ${step >= i + 1 ? "bg-foreground text-background" : "bg-secondary"}`}>{i + 1}</span>
+              <span className={`shrink-0 inline-flex min-w-5 h-5 sm:min-w-6 sm:h-6 px-1 rounded-full items-center justify-center text-[10px] sm:text-xs leading-none ${step >= i + 1 ? "bg-foreground text-background" : "bg-secondary"}`}>{i + 1}</span>
               {s}
               {i < 3 && <span className="text-muted-foreground hidden sm:inline">·</span>}
             </div>
