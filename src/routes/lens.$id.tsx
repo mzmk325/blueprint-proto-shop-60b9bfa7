@@ -414,3 +414,15 @@ function RxRow({ label, val, setVal }: { label: string; val: { sph: string; cyl:
     </>
   );
 }
+
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="bg-background max-w-lg w-full p-6 relative" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 p-1"><X className="size-4" /></button>
+        <h3 className="text-lg font-medium mb-3 pr-8">{title}</h3>
+        {children}
+      </div>
+    </div>
+  );
+}
