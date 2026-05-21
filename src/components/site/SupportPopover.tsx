@@ -16,12 +16,6 @@ export function SupportPopover() {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  const items: { label: string; to: string; params?: Record<string, string> }[] = [
-    { label: t("support.track"), to: "/admin" },
-    { label: t("support.help"), to: "/faq" },
-    { label: t("support.contact"), to: "/faq" },
-  ];
-
   return (
     <div ref={ref} className="relative">
       <button
@@ -33,16 +27,9 @@ export function SupportPopover() {
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-2 min-w-[220px] bg-background border border-border shadow-lg z-50 py-2">
-          {items.map((it) => (
-            <Link
-              key={it.label}
-              to={it.to}
-              onClick={() => setOpen(false)}
-              className="block px-5 py-3 text-sm hover:bg-secondary transition-colors text-center"
-            >
-              {it.label}
-            </Link>
-          ))}
+          <Link to="/admin" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm hover:bg-secondary transition-colors text-center">{t("support.track")}</Link>
+          <Link to="/faq" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm hover:bg-secondary transition-colors text-center">{t("support.help")}</Link>
+          <Link to="/faq" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm hover:bg-secondary transition-colors text-center">{t("support.contact")}</Link>
         </div>
       )}
     </div>

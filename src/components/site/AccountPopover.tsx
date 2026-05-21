@@ -16,17 +16,8 @@ export function AccountPopover() {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  const items: { label: string; to: string; badge?: string }[] = [
-    { label: t("acct.rewards"), to: "/admin" },
-    { label: t("acct.profile"), to: "/admin", badge: "+Points" },
-    { label: t("acct.orders"), to: "/admin" },
-    { label: t("acct.address"), to: "/admin" },
-    { label: t("acct.rx"), to: "/admin" },
-    { label: t("acct.coupons"), to: "/admin" },
-    { label: t("acct.wishlist"), to: "/wishlist" },
-    { label: t("acct.points"), to: "/admin" },
-    { label: t("acct.recent"), to: "/admin" },
-  ];
+  const close = () => setOpen(false);
+  const itemCls = "flex items-center justify-between py-2.5 text-sm hover:text-foreground text-foreground/80";
 
   return (
     <div ref={ref} className="relative">
@@ -44,20 +35,20 @@ export function AccountPopover() {
             <div className="font-bold text-sm">Miravue Member</div>
           </div>
           <ul className="py-2">
-            {items.map((it) => (
-              <li key={it.label}>
-                <Link
-                  to={it.to}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-between py-2.5 text-sm hover:text-foreground text-foreground/80"
-                >
-                  <span>{it.label}</span>
-                  {it.badge && (
-                    <span className="text-[10px] bg-sale text-white px-1.5 py-0.5 rounded font-bold">{it.badge}</span>
-                  )}
-                </Link>
-              </li>
-            ))}
+            <li><Link to="/admin" onClick={close} className={itemCls}>{t("acct.rewards")}</Link></li>
+            <li>
+              <Link to="/admin" onClick={close} className={itemCls}>
+                <span>{t("acct.profile")}</span>
+                <span className="text-[10px] bg-sale text-white px-1.5 py-0.5 rounded font-bold">+Points</span>
+              </Link>
+            </li>
+            <li><Link to="/admin" onClick={close} className={itemCls}>{t("acct.orders")}</Link></li>
+            <li><Link to="/admin" onClick={close} className={itemCls}>{t("acct.address")}</Link></li>
+            <li><Link to="/admin" onClick={close} className={itemCls}>{t("acct.rx")}</Link></li>
+            <li><Link to="/admin" onClick={close} className={itemCls}>{t("acct.coupons")}</Link></li>
+            <li><Link to="/wishlist" onClick={close} className={itemCls}>{t("acct.wishlist")}</Link></li>
+            <li><Link to="/admin" onClick={close} className={itemCls}>{t("acct.points")}</Link></li>
+            <li><Link to="/admin" onClick={close} className={itemCls}>{t("acct.recent")}</Link></li>
           </ul>
           <div className="pt-3 border-t border-border">
             <button className="text-sm text-sale font-medium underline">{t("acct.signOut")}</button>
