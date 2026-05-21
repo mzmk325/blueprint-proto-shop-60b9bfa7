@@ -104,11 +104,12 @@ function Checkout() {
                 </Field>
                 <Field label="Address line 1"><input value={addr.line1} onChange={(e) => setAddr({ ...addr, line1: e.target.value })} className={input} /></Field>
                 <Field label="Address line 2 (optional)"><input value={addr.line2} onChange={(e) => setAddr({ ...addr, line2: e.target.value })} className={input} /></Field>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Field label="City"><input value={addr.city} onChange={(e) => setAddr({ ...addr, city: e.target.value })} className={input} /></Field>
                   <Field label="State / Region"><input value={addr.state} onChange={(e) => setAddr({ ...addr, state: e.target.value })} className={input} /></Field>
                   <Field label="ZIP / Postal code"><input value={addr.zip} onChange={(e) => setAddr({ ...addr, zip: e.target.value })} className={input} /></Field>
                 </div>
+
                 <div className="space-y-2 pt-2">
                   <p className="text-sm font-medium">Shipping method · Estimated delivery 13–20 days</p>
                   {([["standard", "Standard (13–20 days)", subtotal >= FREE_SHIPPING_THRESHOLD ? "FREE" : "$6.95"], ["express", "Express (5–8 days)", "$14.95"]] as const).map(([k, label, price]) => (
