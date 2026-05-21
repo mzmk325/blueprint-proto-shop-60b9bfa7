@@ -1,6 +1,6 @@
 import { Search, Flame, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useI18n } from "@/lib/i18n";
 import { products } from "@/lib/products";
 
@@ -14,7 +14,6 @@ export function SearchPopover() {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -58,9 +57,8 @@ export function SearchPopover() {
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && q.trim()) {
+                    if (e.key === "Enter" && q.trim() && results[0]) {
                       setOpen(false);
-                      navigate({ to: "/category/$slug", params: { slug: "all" }, search: { q: q.trim() } as never });
                     }
                   }}
                   placeholder={t("search.placeholder")}
