@@ -84,14 +84,18 @@ function PDP() {
             <p className="text-sm text-muted-foreground mt-2">{p.descriptor}</p>
           </div>
 
-          <div className="flex items-center gap-3 pb-5 border-b border-border/60">
-            <span className="font-display text-2xl">${p.price.toFixed(2)}</span>
-            {p.originalPrice && <span className="text-sm text-muted-foreground line-through">${p.originalPrice.toFixed(2)}</span>}
-            {p.discountPct && <span className="text-[10px] bg-sale text-white px-2 py-0.5 font-bold uppercase tracking-tighter">{p.discountPct}% {t("common.off")}</span>}
-            <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-              <div className="flex">{[1,2,3,4,5].map((i) => <Star key={i} className="size-3 fill-foreground text-foreground" />)}</div>
-              <span>(1,284)</span>
+          <div className="pb-5 border-b border-border/60 space-y-2">
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{t("pdp.frameFrom")}</span>
+              <span className="font-display text-2xl">${p.price.toFixed(2)}</span>
+              {p.originalPrice && <span className="text-sm text-muted-foreground line-through">${p.originalPrice.toFixed(2)}</span>}
+              {p.discountPct && <span className="text-[10px] bg-sale text-white px-2 py-0.5 font-bold uppercase tracking-tighter">{p.discountPct}% {t("common.off")}</span>}
+              <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+                <div className="flex">{[1,2,3,4,5].map((i) => <Star key={i} className="size-3 fill-foreground text-foreground" />)}</div>
+                <span>(1,284)</span>
+              </div>
             </div>
+            <p className="text-xs text-muted-foreground">{t("pdp.framePriceNote")}</p>
           </div>
 
           <div>
@@ -100,14 +104,14 @@ function PDP() {
               <span className="text-xs text-muted-foreground">{p.colors[colorIdx].name}</span>
             </div>
             <div className="flex gap-2 flex-wrap">
-              {p.colors.map((c, i) => (
+              {p.colors.map((cc, i) => (
                 <button
-                  key={c.name}
+                  key={cc.name}
                   onClick={() => { setColorIdx(i); setActiveImg(0); }}
                   className={`size-14 overflow-hidden border-2 transition ${i === colorIdx ? "border-foreground" : "border-transparent hover:border-border"}`}
-                  aria-label={c.name}
+                  aria-label={cc.name}
                 >
-                  <img src={productImage(p, i)} alt={c.name} className="w-full h-full object-cover" />
+                  <img src={productImage(p, i)} alt={cc.name} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -138,7 +142,7 @@ function PDP() {
               search={{ color: p.colors[colorIdx].name }}
               className="relative block w-full bg-sale text-white text-center py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
             >
-              {t("pdp.selectLens")}
+              {t("pdp.selectLenses")}
               <span className="absolute top-0 right-3 -translate-y-1/2 bg-foreground text-background text-[9px] px-2 py-0.5 tracking-wider">15% {t("common.off")}</span>
             </Link>
             <Link
@@ -149,7 +153,8 @@ function PDP() {
             >
               {t("pdp.frameOnly")}
             </Link>
-            <p className="text-[11px] text-muted-foreground text-center pt-1">
+            <p className="text-[11px] text-muted-foreground text-center pt-1">{t("pdp.lensesAvailable")}</p>
+            <p className="text-[11px] text-muted-foreground text-center">
               {t("pdp.klarna")} ${(p.price / 4).toFixed(2)} {t("pdp.klarnaWith")}
             </p>
           </div>
@@ -215,25 +220,30 @@ function PDP() {
                             Specifications
                           </div>
                           <dl className="flex-1 grid grid-cols-2 gap-x-10 gap-y-7 content-center">
-                            {[
-                              [t("pdp.spec.model"), p.modelCode],
-                              [t("pdp.spec.frameW"), `${p.dims.frameWidth}`, "mm"],
-                              [t("pdp.spec.lensW"), `${p.dims.lensWidth}`, "mm"],
-                              [t("pdp.spec.lensH"), `${p.dims.lensHeight}`, "mm"],
-                              [t("pdp.spec.bridge"), `${p.dims.bridge}`, "mm"],
-                              [t("pdp.spec.temple"), `${p.dims.temple}`, "mm"],
-                              [t("pdp.spec.material"), p.material],
-                              [t("pdp.spec.weight"), p.weight],
-                            ].map(([k2, v, unit]) => (
+                            {([
+                              [t("pdp.spec.model"), p.modelCode, undefined, undefined],
+                              [t("pdp.spec.frameW"), `${p.dims.frameWidth}`, "mm", t("pdp.specHelp.frameW")],
+                              [t("pdp.spec.lensW"), `${p.dims.lensWidth}`, "mm", t("pdp.specHelp.lensW")],
+                              [t("pdp.spec.lensH"), `${p.dims.lensHeight}`, "mm", t("pdp.specHelp.lensH")],
+                              [t("pdp.spec.bridge"), `${p.dims.bridge}`, "mm", t("pdp.specHelp.bridge")],
+                              [t("pdp.spec.temple"), `${p.dims.temple}`, "mm", t("pdp.specHelp.temple")],
+                              [t("pdp.spec.material"), p.material, undefined, undefined],
+                              [t("pdp.spec.weight"), p.weight, undefined, undefined],
+                            ] as const).map(([k2, v, unit, help]) => (
                               <div key={k2 as string}>
                                 <dt className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">{k2}</dt>
                                 <dd className="font-display text-2xl text-foreground mt-1.5 leading-none">
                                   {v}
                                   {unit && <span className="text-xs text-muted-foreground ml-1 font-sans tracking-normal">{unit}</span>}
                                 </dd>
+                                {help && <p className="text-[11px] text-muted-foreground mt-1.5 font-sans leading-snug">{help}</p>}
                               </div>
                             ))}
                           </dl>
+                          <div className="mt-6 pt-5 border-t border-border/60 text-[11px] text-muted-foreground space-y-1.5">
+                            <p>{p.dims.frameWidth < 135 ? t("pdp.fitNarrow") : p.dims.frameWidth < 142 ? t("pdp.fitMedium") : p.dims.frameWidth < 150 ? t("pdp.fitWide") : t("pdp.fitXWide")}</p>
+                            <p>{t("pdp.tipCompare")}</p>
+                          </div>
                         </div>
                       </div>
                     )}

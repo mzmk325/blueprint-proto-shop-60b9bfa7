@@ -50,31 +50,68 @@ function CartPage() {
             <div className="space-y-4">
               {lines.map((l) => {
                 const p = getProduct(l.productId);
+                const rxMethodLabel = l.lens.rx
+                  ? l.lens.rx.method === "upload" ? t("cart.rxUploaded")
+                  : l.lens.rx.method === "manual" ? t("cart.rxManual")
+                  : t("cart.rxLater")
+                  : null;
                 return (
                   <div key={l.lineId} className="flex gap-4 border rounded-xl p-4 bg-card">
-                    <img src={p ? productImage(p) : ""} alt="" className="size-24 rounded-lg bg-secondary" />
+                    <img src={p ? productImage(p) : ""} alt="" className="size-28 rounded-lg bg-secondary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between gap-2">
-                        <div>
-                          <div className="font-medium">{l.name}</div>
-                          <div className="text-xs text-muted-foreground">{l.color} · {l.lens.label}</div>
-                          {l.lens.rx && <div className="text-xs text-muted-foreground mt-1">Rx: {l.lens.rx.method === "upload" ? `${t("cart.rxUploaded")} (${l.lens.rx.fileName ?? "file"})` : l.lens.rx.method === "manual" ? t("cart.rxManual") : t("cart.rxLater")} · {t("cart.rxPending")}</div>}
+                        <div className="min-w-0">
+                          <div className="font-medium text-base">{l.name}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">{l.color}{l.size ? ` · ${l.size}` : ""}</div>
                         </div>
-                        <button onClick={() => cart.remove(l.lineId)} className="text-muted-foreground hover:text-foreground"><Trash2 className="size-4" /></button>
+                        <button onClick={() => cart.remove(l.lineId)} className="text-muted-foreground hover:text-foreground shrink-0"><Trash2 className="size-4" /></button>
                       </div>
-                      <div className="flex items-center justify-between mt-3">
+
+                      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+                        <dt className="text-muted-foreground">{t("cart.framePrice")}</dt>
+                        <dd className="text-right">${l.unitPrice.toFixed(2)}</dd>
+                        {l.lens.rxTypeLabel && <>
+                          <dt className="text-muted-foreground">{t("cart.rxType")}</dt>
+                          <dd className="text-right">{l.lens.rxTypeLabel}</dd>
+                        </>}
+                        {l.lens.fn && <>
+                          <dt className="text-muted-foreground">{t("cart.fn")}</dt>
+                          <dd className="text-right">{l.lens.fn.label} <span className="text-muted-foreground">{l.lens.fn.price > 0 ? `+$${l.lens.fn.price}` : ""}</span></dd>
+                        </>}
+                        {l.lens.thickness && <>
+                          <dt className="text-muted-foreground">{t("cart.thick")}</dt>
+                          <dd className="text-right">{l.lens.thickness.label} <span className="text-muted-foreground">{l.lens.thickness.price > 0 ? `+$${l.lens.thickness.price}` : t("common.included")}</span></dd>
+                        </>}
+                        {l.lens.addon && l.lens.addon.key !== "none" && <>
+                          <dt className="text-muted-foreground">{t("cart.addon")}</dt>
+                          <dd className="text-right">{l.lens.addon.label} <span className="text-muted-foreground">{l.lens.addon.price > 0 ? `+$${l.lens.addon.price}` : ""}</span></dd>
+                        </>}
+                        {rxMethodLabel && <>
+                          <dt className="text-muted-foreground">{t("cart.rxMethod")}</dt>
+                          <dd className="text-right">{rxMethodLabel}</dd>
+                          <dt className="text-muted-foreground">{t("cart.rxStatus")}</dt>
+                          <dd className="text-right text-sale">{t("cart.rxPending")}</dd>
+                        </>}
+                      </dl>
+
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/60">
                         <div className="flex items-center border rounded-full">
                           <button onClick={() => cart.setQty(l.lineId, l.qty - 1)} className="size-8">−</button>
                           <span className="w-8 text-center text-sm">{l.qty}</span>
                           <button onClick={() => cart.setQty(l.lineId, l.qty + 1)} className="size-8">+</button>
                         </div>
-                        <div className="font-medium">${lineTotal(l).toFixed(2)}</div>
+                        <div className="text-right">
+                          <div className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{t("cart.itemTotal")}</div>
+                          <div className="font-medium text-base">${lineTotal(l).toFixed(2)}</div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 );
               })}
             </div>
+
+            <p className="mt-4 text-xs text-muted-foreground bg-secondary/40 border-l-2 border-sale p-3">{t("cart.trustNote")}</p>
           </div>
 
           <aside className="border rounded-xl p-6 h-fit bg-card space-y-4">

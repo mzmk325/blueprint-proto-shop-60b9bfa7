@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { z } from "zod";
 
 import { getProduct, productImage } from "@/lib/products";
-import { cart, type LensChoice } from "@/lib/cart-store";
+import { cart, type LensChoice, FREE_SHIPPING_THRESHOLD } from "@/lib/cart-store";
 import { ArrowLeft, X, Upload, Camera, HelpCircle, Check, Pencil, ChevronDown } from "lucide-react";
 import { useI18n, type TKey } from "@/lib/i18n";
 
@@ -24,27 +24,29 @@ export const Route = createFileRoute("/lens/$id")({
 });
 
 type RxType = "single-vision" | "reading" | "non-rx" | "frame-only";
-type Step = "rx-type" | "rx-entry" | "lens-type" | "lens-tech" | "material";
+type Step = "rx-type" | "rx-entry" | "fn" | "thick" | "addon";
 
-type LensTypeKey = "standard" | "blue-light" | "photochromic" | "photo-blue" | "sun-tint";
-const LENS_TYPES: { key: LensTypeKey; labelKey: TKey; descKey: TKey; priceAdd: number; promo?: boolean; icon: string }[] = [
-  { key: "standard", labelKey: "lt.standard", descKey: "lt.standardD", priceAdd: 0, icon: "◐" },
-  { key: "blue-light", labelKey: "lt.blue", descKey: "lt.blueD", priceAdd: 35, icon: "◑" },
-  { key: "photochromic", labelKey: "lt.photo", descKey: "lt.photoD", priceAdd: 75, promo: true, icon: "◐" },
-  { key: "photo-blue", labelKey: "lt.photoBlue", descKey: "lt.photoBlueD", priceAdd: 95, promo: true, icon: "◓" },
-  { key: "sun-tint", labelKey: "lt.sunTint", descKey: "lt.sunTintD", priceAdd: 45, icon: "●" },
+type FnKey = "clear" | "blue" | "photo" | "photo-blue" | "tint";
+const FNS: { key: FnKey; labelKey: TKey; descKey: TKey; price: number }[] = [
+  { key: "clear", labelKey: "lens.fn.clear", descKey: "lens.fn.clearD", price: 29 },
+  { key: "blue", labelKey: "lens.fn.blue", descKey: "lens.fn.blueD", price: 39 },
+  { key: "photo", labelKey: "lens.fn.photo", descKey: "lens.fn.photoD", price: 79 },
+  { key: "photo-blue", labelKey: "lens.fn.photoBlue", descKey: "lens.fn.photoBlueD", price: 99 },
+  { key: "tint", labelKey: "lens.fn.tint", descKey: "lens.fn.tintD", price: 49 },
 ];
 
-type TechKey = "standard" | "advanced" | "premium";
-const TECHS: { key: TechKey; labelKey: TKey; oldPrice: number; price: number; features: TKey[]; recommended?: boolean }[] = [
-  { key: "standard", labelKey: "tech.standard", oldPrice: 55, price: 46.75, features: ["tech.f.mid", "tech.f.uv"] },
-  { key: "advanced", labelKey: "tech.advanced", oldPrice: 75, price: 63.75, features: ["tech.f.high", "tech.f.uv", "tech.f.water", "tech.f.dust"], recommended: true },
-  { key: "premium", labelKey: "tech.premium", oldPrice: 100, price: 85, features: ["tech.f.highest", "tech.f.uv", "tech.f.water", "tech.f.dust"] },
+type ThickKey = "std" | "thin" | "ultra";
+const THICKS: { key: ThickKey; labelKey: TKey; descKey: TKey; price: number }[] = [
+  { key: "std", labelKey: "lens.thick.std", descKey: "lens.thick.stdD", price: 0 },
+  { key: "thin", labelKey: "lens.thick.thin", descKey: "lens.thick.thinD", price: 20 },
+  { key: "ultra", labelKey: "lens.thick.ultra", descKey: "lens.thick.ultraD", price: 50 },
 ];
 
-const MATERIALS: { key: string; labelKey: TKey; descKey: TKey; priceAdd: number; recommended?: boolean }[] = [
-  { key: "mr-pro", labelKey: "mat.pro", descKey: "mat.proD", priceAdd: 17, recommended: true },
-  { key: "standard", labelKey: "mat.std", descKey: "mat.stdD", priceAdd: 0 },
+type AddonKey = "none" | "mrpro" | "premium";
+const ADDONS: { key: AddonKey; labelKey: TKey; descKey: TKey; price: number }[] = [
+  { key: "none", labelKey: "lens.addon.none", descKey: "lens.addon.noneD", price: 0 },
+  { key: "mrpro", labelKey: "lens.addon.mrPro", descKey: "lens.addon.mrProD", price: 17 },
+  { key: "premium", labelKey: "lens.addon.premium", descKey: "lens.addon.premiumD", price: 15 },
 ];
 
 const SPH = ["+6.00","+5.00","+4.00","+3.00","+2.00","+1.50","+1.00","+0.75","+0.50","+0.25","0.00","-0.25","-0.50","-0.75","-1.00","-1.25","-1.50","-1.75","-2.00","-2.25","-2.50","-3.00","-4.00","-5.00","-6.00"];
@@ -59,80 +61,122 @@ function LensFlow() {
 
   const [step, setStep] = useState<Step>("rx-type");
   const [rxType, setRxType] = useState<RxType>(search.frameOnly ? "frame-only" : "single-vision");
-  const [rxMethod, setRxMethod] = useState<"manual" | "upload" | "scan" | "later">("manual");
+  const [rxMethod, setRxMethod] = useState<"manual" | "upload" | "later">("manual");
   const [od, setOd] = useState({ sph: "0.00", cyl: "None", axis: "" });
   const [os, setOs] = useState({ sph: "0.00", cyl: "None", axis: "" });
   const [pd, setPd] = useState("");
   const [twoPd, setTwoPd] = useState(false);
-  const [savedRx, setSavedRx] = useState(false);
+  const [dontKnowPd, setDontKnowPd] = useState(false);
+  const [hasPrism, setHasPrism] = useState(false);
   const [showPd, setShowPd] = useState(false);
   const [showPrism, setShowPrism] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [lensType, setLensType] = useState<LensTypeKey>("photochromic");
-  const [tech, setTech] = useState<TechKey>("advanced");
-  const [material, setMaterial] = useState<string>("mr-pro");
+  const [errors, setErrors] = useState<string[]>([]);
 
-  const lensTypeObj = LENS_TYPES.find((l) => l.key === lensType)!;
-  const techObj = TECHS.find((tt) => tt.key === tech)!;
-  const materialObj = MATERIALS.find((m) => m.key === material)!;
+  const [fnKey, setFnKey] = useState<FnKey>("clear");
+  const [thickKey, setThickKey] = useState<ThickKey>("std");
+  const [addonKey, setAddonKey] = useState<AddonKey>("none");
 
+  const fnObj = FNS.find((f) => f.key === fnKey)!;
+  const thickObj = THICKS.find((tt) => tt.key === thickKey)!;
+  const addonObj = ADDONS.find((a) => a.key === addonKey)!;
+
+  // Step order
   const steps: Step[] = rxType === "frame-only"
-    ? ["rx-type"]
-    : rxType === "single-vision" || rxType === "reading"
-    ? ["rx-type", "rx-entry", "lens-type", "lens-tech", "material"]
-    : ["rx-type", "lens-type", "lens-tech", "material"];
+    ? ["rx-type", "addon"]
+    : rxType === "non-rx"
+    ? ["rx-type", "fn", "thick", "addon"]
+    : ["rx-type", "rx-entry", "fn", "thick", "addon"];
 
   const idx = steps.indexOf(step);
   const progress = ((idx + 1) / steps.length) * 100;
 
-  const lensTotal = useMemo(() => {
-    if (rxType === "frame-only") return 0;
-    const passedOrCurrent = (s: Step) => steps.indexOf(s) <= idx;
-    let tt = 0;
-    if (passedOrCurrent("lens-type")) tt += lensTypeObj.priceAdd;
-    if (passedOrCurrent("lens-tech")) tt += techObj.price - 46.75;
-    if (passedOrCurrent("material")) tt += materialObj.priceAdd;
-    return tt;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rxType, lensTypeObj, techObj, materialObj, idx]);
+  // Pricing summary always shows committed selections
+  const fnPrice = rxType === "frame-only" ? 0 : fnObj.price;
+  const thickPrice = rxType === "frame-only" ? 0 : thickObj.price;
+  const addonPrice = addonObj.price;
+  const subtotal = p.price + fnPrice + thickPrice + addonPrice;
+  const shipFree = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const shipping = shipFree ? 0 : 6.95;
+  const total = subtotal + shipping;
+  const lensTotal = fnPrice + thickPrice + addonPrice;
 
-  const total = p.price + lensTotal;
+  function validateRxEntry(): string[] {
+    const errs: string[] = [];
+    if (rxMethod === "manual") {
+      // Axis required if CYL != None
+      const check = (eye: typeof od, label: string) => {
+        if (eye.cyl !== "None") {
+          const a = parseInt(eye.axis, 10);
+          if (!a || a < 1 || a > 180) errs.push(`${label}: ${t("lens.err.axis")}`);
+        }
+      };
+      check(od, "OD");
+      check(os, "OS");
+      if (!pd && !dontKnowPd) errs.push(t("lens.err.pd"));
+    }
+    return errs;
+  }
 
   function next() {
+    if (step === "rx-entry") {
+      const errs = validateRxEntry();
+      if (errs.length) { setErrors(errs); return; }
+      setErrors([]);
+    }
     if (idx < steps.length - 1) setStep(steps[idx + 1]);
     else addToCart();
   }
-  function back() {
-    if (idx > 0) setStep(steps[idx - 1]);
-  }
+  function back() { if (idx > 0) setStep(steps[idx - 1]); }
+
+  function goto(s: Step) { if (steps.includes(s)) setStep(s); }
 
   function addToCart() {
+    const rxTypeLabel = rxTypeLabelOf(rxType);
+    const parts: string[] = [];
+    if (rxType !== "frame-only") {
+      parts.push(t(fnObj.labelKey));
+      parts.push(t(thickObj.labelKey));
+    }
+    if (addonObj.price > 0) parts.push(t(addonObj.labelKey));
+
     const lens: LensChoice = {
-      type: rxType === "frame-only" ? "frame-only" : rxType === "non-rx" ? "non-rx" : lensType === "blue-light" ? "blue-light" : "single-vision",
-      label: rxType === "frame-only" ? t("lens.rx.frame") : `${t(lensTypeObj.labelKey)} · ${t(techObj.labelKey)}${materialObj.priceAdd ? ` · ${t(materialObj.labelKey)}` : ""}`,
+      type: rxType === "frame-only" ? "frame-only"
+        : rxType === "non-rx" ? "non-rx"
+        : rxType === "reading" ? "reading"
+        : "single-vision",
+      label: rxType === "frame-only" ? t("lens.rx.frame") : parts.join(" · "),
       priceAdd: lensTotal,
+      rxType,
+      rxTypeLabel,
+      ...(rxType !== "frame-only" ? {
+        fn: { key: fnObj.key, label: t(fnObj.labelKey), price: fnObj.price },
+        thickness: { key: thickObj.key, label: t(thickObj.labelKey), price: thickObj.price },
+      } : {}),
+      addon: { key: addonObj.key, label: t(addonObj.labelKey), price: addonObj.price },
       ...(rxType === "single-vision" || rxType === "reading"
-        ? { rx: { method: rxMethod === "scan" ? "upload" : rxMethod, od, os, pd } }
+        ? { rx: { method: rxMethod, od, os, pd, dontKnowPd, hasPrism } }
         : {}),
     };
-    cart.add({ productId: p.id, name: p.name, color, unitPrice: p.price, lens });
+    cart.add({ productId: p.id, name: p.name, color, size: "M", unitPrice: p.price, lens });
     navigate({ to: "/cart" });
   }
 
   const stepTitle = (s: Step) => ({
     "rx-type": t("lens.step.rxType"),
     "rx-entry": t("lens.step.rxEntry"),
-    "lens-type": t("lens.step.lensType"),
-    "lens-tech": t("lens.step.lensTech"),
-    "material": t("lens.step.material"),
+    "fn": t("lens.step.fn"),
+    "thick": t("lens.step.thick"),
+    "addon": t("lens.step.addon"),
   }[s]);
 
-  const rxTypeLabel = (rt: RxType) => ({
-    "single-vision": t("lens.rxLabel.single"),
-    "reading": t("lens.rxLabel.reading"),
-    "non-rx": t("lens.rxLabel.non"),
-    "frame-only": t("lens.rxLabel.frame"),
-  }[rt]);
+  function rxTypeLabelOf(rt: RxType): string {
+    return ({
+      "single-vision": t("lens.rxLabel.single"),
+      "reading": t("lens.rxLabel.reading"),
+      "non-rx": t("lens.rxLabel.non"),
+      "frame-only": t("lens.rxLabel.frame"),
+    } as const)[rt];
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
@@ -140,211 +184,220 @@ function LensFlow() {
         <div className="h-full bg-sale transition-all" style={{ width: `${progress}%` }} />
       </div>
 
-      <div className="flex-1 grid lg:grid-cols-2 min-h-0">
-        <aside className="bg-background border-r border-border/60 px-8 lg:px-16 py-8 flex flex-col overflow-y-auto">
-          <Link to="/product/$id" params={{ id: p.id }} className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground inline-flex items-center gap-2 mb-6">
-            <ArrowLeft className="size-3.5" /> {t("lens.back")}
-          </Link>
-
-          <div className="flex-1 flex flex-col items-center justify-center min-h-0 py-6">
-            <div className="aspect-[4/3] w-full max-w-md bg-surface flex items-center justify-center">
-              <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt={p.name} className="w-full h-full object-contain" />
+      <div className="flex-1 grid lg:grid-cols-[1fr_400px] min-h-0">
+        {/* Main panel — step content */}
+        <section className="bg-surface flex flex-col min-h-0 order-2 lg:order-1">
+          <div className="flex items-center justify-between px-6 lg:px-12 py-5 shrink-0 border-b border-border/40">
+            {idx > 0 ? (
+              <button onClick={back} aria-label={t("common.back")} className="size-9 flex items-center justify-center hover:bg-background"><ArrowLeft className="size-5" /></button>
+            ) : <Link to="/product/$id" params={{ id: p.id }} aria-label={t("lens.back")} className="size-9 flex items-center justify-center hover:bg-background"><ArrowLeft className="size-5" /></Link>}
+            <div className="flex-1 text-center">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">Step {idx + 1} / {steps.length}</div>
+              <h3 className="font-display text-lg">{stepTitle(step)}</h3>
             </div>
-            <h2 className="font-display text-2xl mt-6 text-center">{p.name} <span className="text-muted-foreground">({color})</span></h2>
+            <Link to="/product/$id" params={{ id: p.id }} aria-label={t("common.close")} className="size-9 flex items-center justify-center hover:bg-background"><X className="size-5" /></Link>
           </div>
 
-          <div className="space-y-3 text-sm mt-6 shrink-0">
-            <Row label={t("lens.frame")} value={`$${p.price.toFixed(2)}`} />
-            {rxType !== "frame-only" && (
-              <Row label={t("lens.prescription")} subValue={rxTypeLabel(rxType)} onEdit={() => setStep("rx-type")} />
-            )}
-            {idx >= steps.indexOf("lens-type") && lensType && (
-              <Row label={t("lens.lenses")} value={lensTotal > 0 ? `$${lensTotal.toFixed(2)}` : t("common.included")} subValue={t(lensTypeObj.labelKey)} onEdit={() => setStep("lens-type")} />
-            )}
-            <div className="border-t border-border/60 pt-4 flex justify-between items-baseline">
+          <div className="flex-1 overflow-y-auto px-6 lg:px-12 py-8">
+            <div className="max-w-2xl mx-auto space-y-4">
+              {/* Step 1: Rx Type */}
+              {step === "rx-type" && (
+                <>
+                  {([
+                    { k: "single-vision", tt: t("lens.rx.single"), d: t("lens.rx.singleD2") },
+                    { k: "reading", tt: t("lens.rx.reading"), d: t("lens.rx.readingD2") },
+                    { k: "non-rx", tt: t("lens.rx.non"), d: t("lens.rx.nonD2") },
+                    { k: "frame-only", tt: t("lens.rx.frame"), d: t("lens.rx.frameD2") },
+                  ] as const).map((o) => (
+                    <button key={o.k} onClick={() => setRxType(o.k as RxType)} className={`w-full text-left bg-background p-5 border-2 transition ${rxType === o.k ? "border-sale" : "border-transparent hover:border-border"}`}>
+                      <div className="font-medium">{o.tt}</div>
+                      <div className="text-sm text-muted-foreground mt-1">{o.d}</div>
+                    </button>
+                  ))}
+                </>
+              )}
+
+              {/* Step 2: Rx Entry */}
+              {step === "rx-entry" && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={() => setRxMethod("manual")} className={`bg-background p-4 text-sm font-medium border ${rxMethod === "manual" ? "border-sale" : "border-transparent"}`}>{t("lens.enterManual")}</button>
+                    <button onClick={() => setRxMethod("upload")} className={`bg-background p-4 text-sm font-medium border ${rxMethod === "upload" ? "border-sale" : "border-transparent"}`}>{t("lens.uploadRx")}</button>
+                  </div>
+
+                  {rxMethod === "manual" && (
+                    <div className="bg-background p-5 space-y-4">
+                      <div className="grid grid-cols-[60px_1fr_1fr_1fr] gap-2 items-center text-xs">
+                        <div></div>
+                        <div className="font-semibold text-center">SPH</div>
+                        <div className="font-semibold text-center">CYL</div>
+                        <div className="font-semibold text-center">Axis</div>
+                        <RxRow label={t("lens.odRight")} val={od} setVal={setOd} />
+                        <RxRow label={t("lens.osLeft")} val={os} setVal={setOs} />
+                      </div>
+
+                      <div className="grid grid-cols-[60px_1fr] gap-2 items-center text-xs">
+                        <div className="font-semibold">PD</div>
+                        <Select value={pd} onChange={setPd} options={["54","56","57","58","60","62","64","66","68"]} placeholder="Select PD (mm)" disabled={dontKnowPd} />
+                      </div>
+
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={twoPd} onChange={(e) => setTwoPd(e.target.checked)} className="size-4" /> Dual PD
+                      </label>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={dontKnowPd} onChange={(e) => setDontKnowPd(e.target.checked)} className="size-4" />
+                        {t("lens.dontKnowPd")}
+                        <button onClick={() => setShowPd(true)} aria-label="help"><HelpCircle className="size-3.5 text-muted-foreground" /></button>
+                      </label>
+                      {dontKnowPd && (
+                        <div className="text-xs text-muted-foreground bg-surface p-3">{t("lens.dontKnowPd.note")}</div>
+                      )}
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={hasPrism} onChange={(e) => setHasPrism(e.target.checked)} className="size-4" />
+                        {t("lens.hasPrism")}
+                        <button onClick={() => setShowPrism(true)} aria-label="help"><HelpCircle className="size-3.5 text-muted-foreground" /></button>
+                      </label>
+                      {hasPrism && (
+                        <div className="text-xs text-muted-foreground bg-surface p-3 border-l-2 border-sale">{t("lens.prism.note")}</div>
+                      )}
+
+                      {errors.length > 0 && (
+                        <ul className="text-xs text-sale space-y-1 bg-sale/10 p-3">
+                          {errors.map((e) => <li key={e}>• {e}</li>)}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+
+                  {rxMethod === "upload" && (
+                    <div className="bg-background p-8 space-y-4">
+                      <p className="text-sm text-muted-foreground">{t("lens.upload.note")}</p>
+                      <label className="border-2 border-dashed border-border block p-10 cursor-pointer hover:border-foreground transition text-center">
+                        <Upload className="size-6 mx-auto mb-3" />
+                        <div className="text-sm">{t("lens.dropRx")} <span className="text-sale underline">{t("lens.clickUpload")}</span></div>
+                        <div className="text-xs text-muted-foreground mt-1">{t("lens.maxSize")}</div>
+                        <input type="file" className="sr-only" accept="image/*,.pdf" />
+                      </label>
+                      <div className="text-center text-xs text-muted-foreground">{t("lens.or")}</div>
+                      <button className="w-full bg-sale text-white py-3 text-[11px] uppercase tracking-[0.18em] font-semibold flex items-center justify-center gap-2"><Camera className="size-4" /> {t("lens.takePhoto")}</button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Step 3: Lens Function */}
+              {step === "fn" && (
+                <>
+                  <p className="text-sm text-muted-foreground mb-2">{t("lens.fn.desc")}</p>
+                  {FNS.map((f) => {
+                    const active = fnKey === f.key;
+                    return (
+                      <button key={f.key} onClick={() => setFnKey(f.key)} className={`relative w-full text-left bg-background p-5 border-2 transition ${active ? "border-sale" : "border-transparent hover:border-border"}`}>
+                        <div className="flex justify-between items-baseline">
+                          <span className="font-medium">{t(f.labelKey)}</span>
+                          <span className="text-sm">+${f.price}</span>
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">{t(f.descKey)}</div>
+                      </button>
+                    );
+                  })}
+                </>
+              )}
+
+              {/* Step 4: Thickness */}
+              {step === "thick" && (
+                <>
+                  <p className="text-sm text-muted-foreground mb-1">{t("lens.thick.desc")}</p>
+                  <p className="text-xs text-muted-foreground bg-background border-l-2 border-sale p-3 mb-2">{t("lens.thick.rec")}</p>
+                  {THICKS.map((th) => {
+                    const active = thickKey === th.key;
+                    return (
+                      <button key={th.key} onClick={() => setThickKey(th.key)} className={`relative w-full text-left bg-background p-5 border-2 transition ${active ? "border-sale" : "border-transparent hover:border-border"}`}>
+                        <div className="flex justify-between items-baseline">
+                          <span className="font-medium">{t(th.labelKey)}</span>
+                          <span className="text-sm">{th.price === 0 ? t("common.included") : `+$${th.price}`}</span>
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">{t(th.descKey)}</div>
+                      </button>
+                    );
+                  })}
+                </>
+              )}
+
+              {/* Step 5: Add-ons */}
+              {step === "addon" && (
+                <>
+                  <div className="bg-background/60 border border-border p-3 text-xs flex items-center gap-2 mb-2">
+                    <Check className="size-3.5 text-sale" /> {t("lens.addon.coatings")} — {t("common.included")}
+                  </div>
+                  {ADDONS.map((a) => {
+                    const active = addonKey === a.key;
+                    return (
+                      <button key={a.key} onClick={() => setAddonKey(a.key)} className={`relative w-full text-left bg-background p-5 border-2 transition ${active ? "border-sale" : "border-transparent hover:border-border"}`}>
+                        <div className="flex justify-between items-baseline">
+                          <span className="font-medium">{t(a.labelKey)}</span>
+                          <span className="text-sm">{a.price === 0 ? t("common.included") : `+$${a.price}`}</span>
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">{t(a.descKey)}</div>
+                      </button>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="shrink-0 bg-surface border-t border-border/60 px-6 lg:px-12 py-5">
+            <button
+              onClick={next}
+              className="w-full bg-sale text-white py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
+            >
+              {idx === steps.length - 1 ? t("lens.addCart") : t("common.next")}
+            </button>
+          </div>
+        </section>
+
+        {/* Persistent Order Summary */}
+        <aside className="bg-background border-b lg:border-b-0 lg:border-l border-border/60 px-6 lg:px-10 py-6 lg:py-8 flex flex-col gap-6 overflow-y-auto order-1 lg:order-2">
+          <div className="flex items-center gap-4">
+            <div className="size-20 bg-surface shrink-0">
+              <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt={p.name} className="w-full h-full object-contain" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="font-display text-lg leading-tight">{p.name}</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">{color} · M</p>
+            </div>
+          </div>
+
+          <div className="border-t border-border/60 pt-5">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-3">{t("lens.summary")}</div>
+            <div className="space-y-2.5 text-sm">
+              <SumRow label={t("lens.frame")} value={`$${p.price.toFixed(2)}`} onEdit={() => goto("rx-type")} />
+              {rxType !== "frame-only" && (
+                <SumRow label={t("lens.prescription")} subValue={rxTypeLabelOf(rxType)} onEdit={() => goto("rx-type")} />
+              )}
+              {rxType !== "frame-only" && idx >= steps.indexOf("fn") && (
+                <SumRow label={t("lens.fnLabel")} subValue={t(fnObj.labelKey)} value={`+$${fnPrice.toFixed(2)}`} onEdit={() => goto("fn")} />
+              )}
+              {rxType !== "frame-only" && idx >= steps.indexOf("thick") && (
+                <SumRow label={t("lens.thickLabel")} subValue={t(thickObj.labelKey)} value={thickPrice === 0 ? t("common.included") : `+$${thickPrice.toFixed(2)}`} onEdit={() => goto("thick")} />
+              )}
+              {idx >= steps.indexOf("addon") && (
+                <SumRow label={t("lens.addonLabel")} subValue={t(addonObj.labelKey)} value={addonPrice === 0 ? t("common.included") : `+$${addonPrice.toFixed(2)}`} onEdit={() => goto("addon")} />
+              )}
+              <SumRow label={t("lens.shipping")} value={shipFree ? t("cart.free") : `$${shipping.toFixed(2)}`} />
+            </div>
+            <div className="border-t border-border/60 pt-4 mt-4 flex justify-between items-baseline">
               <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">{t("lens.total")}</span>
               <span className="font-display text-3xl">${total.toFixed(2)}</span>
             </div>
           </div>
         </aside>
-
-        <section className="bg-surface flex flex-col min-h-0">
-          <div className="flex items-center justify-between px-8 lg:px-12 py-5 shrink-0 border-b border-border/40">
-            {idx > 0 ? (
-              <button onClick={back} aria-label={t("common.back")} className="size-9 flex items-center justify-center hover:bg-background"><ArrowLeft className="size-5" /></button>
-            ) : <div className="size-9" />}
-            <h3 className="font-display text-lg">{stepTitle(step)}</h3>
-            <Link to="/product/$id" params={{ id: p.id }} aria-label={t("common.close")} className="size-9 flex items-center justify-center hover:bg-background"><X className="size-5" /></Link>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-8 lg:px-12 py-8">
-            <div className="max-w-xl mx-auto space-y-4">
-            {step === "rx-type" && (
-              <>
-                {([
-                  { k: "single-vision", tt: t("lens.rx.single"), d: t("lens.rx.singleD") },
-                  { k: "reading", tt: t("lens.rx.reading"), d: t("lens.rx.readingD") },
-                  { k: "non-rx", tt: t("lens.rx.non"), d: t("lens.rx.nonD") },
-                  { k: "frame-only", tt: t("lens.rx.frame"), d: t("lens.rx.frameD") },
-                ] as const).map((o) => (
-                  <button key={o.k} onClick={() => setRxType(o.k as RxType)} className={`w-full text-left bg-background p-5 border-2 transition ${rxType === o.k ? "border-sale" : "border-transparent hover:border-border"}`}>
-                    <div className="font-medium">{o.tt}</div>
-                    <div className="text-sm text-muted-foreground mt-1">{o.d}</div>
-                  </button>
-                ))}
-              </>
-            )}
-
-            {step === "rx-entry" && (
-              <>
-                <div className="grid grid-cols-2 gap-3">
-                  <button onClick={() => setRxMethod("manual")} className={`bg-background p-4 flex justify-between items-center border ${rxMethod === "manual" ? "border-sale" : "border-transparent"}`}>
-                    <span className="text-sm font-medium">{t("lens.enterManual")}</span>
-                  </button>
-                  <button onClick={() => setRxMethod("scan")} className={`bg-background p-4 flex justify-between items-center border ${rxMethod === "scan" ? "border-sale" : "border-transparent"}`}>
-                    <span className="text-sm font-medium">{t("lens.uploadRx")}</span>
-                  </button>
-                </div>
-
-                {rxMethod === "manual" && (
-                  <div className="bg-background p-5">
-                    <div className="flex items-center gap-1 text-sm font-semibold mb-4">
-                      {t("lens.prescription")}
-                      <button onClick={() => setShowPrism(true)} aria-label={t("lens.prismTitle")}><HelpCircle className="size-3.5 text-muted-foreground" /></button>
-                    </div>
-                    <div className="grid grid-cols-[60px_1fr_1fr_1fr] gap-2 items-center text-xs">
-                      <div></div>
-                      <div className="font-semibold text-center">SPH</div>
-                      <div className="font-semibold text-center">CYL</div>
-                      <div className="font-semibold text-center">Axis</div>
-                      {([[t("lens.odRight"), od, setOd], [t("lens.osLeft"), os, setOs]] as const).map(([label, val, setVal]) => (
-                        <RxRow key={label} label={label} val={val} setVal={setVal} />
-                      ))}
-                    </div>
-
-                    <div className="grid grid-cols-[60px_1fr_1fr_1fr] gap-2 items-center text-xs mt-3">
-                      <div className="font-semibold">PD</div>
-                      <Select value={pd} onChange={setPd} options={["54","56","57","58","60","62","64","66","68"]} placeholder="PD" />
-                      <div></div>
-                      <div></div>
-                    </div>
-
-                    <label className="flex items-center gap-2 text-sm mt-4">
-                      <input type="checkbox" checked={twoPd} onChange={(e) => setTwoPd(e.target.checked)} className="size-4" />
-                      {t("lens.twoPd")}
-                      <button onClick={() => setShowPd(true)} className="text-xs underline ml-auto">{t("lens.dontKnowPd")}</button>
-                    </label>
-                    <label className="flex items-center gap-2 text-sm mt-2">
-                      <input type="checkbox" className="size-4" />
-                      {t("lens.hasPrism")}
-                      <button onClick={() => setShowPrism(true)}><HelpCircle className="size-3.5 text-muted-foreground" /></button>
-                    </label>
-                    <label className="flex items-center gap-2 text-sm mt-2">
-                      <input type="checkbox" checked={savedRx} onChange={(e) => setSavedRx(e.target.checked)} className="size-4" />
-                      {t("lens.saveRx")}
-                    </label>
-                  </div>
-                )}
-
-                {rxMethod === "scan" && (
-                  <div className="bg-background p-8 text-center">
-                    <label className="border-2 border-dashed border-border block p-10 cursor-pointer hover:border-foreground transition">
-                      <Upload className="size-6 mx-auto mb-3" />
-                      <div className="text-sm">{t("lens.dropRx")} <span className="text-sale underline">{t("lens.clickUpload")}</span></div>
-                      <div className="text-xs text-muted-foreground mt-1">{t("lens.maxSize")}</div>
-                      <input type="file" className="sr-only" accept="image/*,.pdf" />
-                    </label>
-                    <div className="my-4 text-xs text-muted-foreground">{t("lens.or")}</div>
-                    <button className="w-full bg-sale text-white py-3 text-[11px] uppercase tracking-[0.18em] font-semibold flex items-center justify-center gap-2"><Camera className="size-4" /> {t("lens.takePhoto")}</button>
-                  </div>
-                )}
-              </>
-            )}
-
-            {step === "lens-type" && (
-              <>
-                {LENS_TYPES.map((l) => {
-                  const active = lensType === l.key;
-                  return (
-                    <button key={l.key} onClick={() => setLensType(l.key)} className={`relative w-full text-left bg-background p-5 border-2 transition ${active ? "border-sale" : "border-transparent hover:border-border"}`}>
-                      {l.promo && <span className="absolute top-0 right-4 bg-foreground text-background text-[10px] px-2 py-0.5 uppercase tracking-wider">15% {t("common.off")}</span>}
-                      <div className="flex items-start gap-4">
-                        <div className="size-12 rounded-full bg-surface flex items-center justify-center text-2xl text-muted-foreground">{l.icon}</div>
-                        <div className="flex-1">
-                          <div className="flex justify-between items-baseline">
-                            <span className="font-medium">{t(l.labelKey)}</span>
-                            <span className="text-sm">{l.priceAdd === 0 ? t("common.included") : `+$${l.priceAdd}`}</span>
-                          </div>
-                          <div className="text-sm text-muted-foreground mt-1">{t(l.descKey)}</div>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </>
-            )}
-
-            {step === "lens-tech" && (
-              <>
-                <div className="bg-background/60 border border-border p-3 text-xs flex items-center gap-2 mb-2">
-                  <Check className="size-3.5 text-sale" /> {t("lens.coatingNote")}
-                </div>
-                {TECHS.map((tt) => {
-                  const active = tech === tt.key;
-                  return (
-                    <button key={tt.key} onClick={() => setTech(tt.key)} className={`relative w-full text-left bg-background p-5 border-2 transition ${active ? "border-sale" : "border-transparent hover:border-border"}`}>
-                      {tt.recommended && <span className="absolute -top-2 right-4 bg-sale text-white text-[10px] px-2 py-0.5 uppercase tracking-wider">{t("common.recommended")}</span>}
-                      <div className="flex justify-between items-baseline mb-3">
-                        <span className="font-medium">{t(tt.labelKey)}</span>
-                        <div className="text-sm">
-                          <span className="text-muted-foreground line-through mr-2">${tt.oldPrice.toFixed(2)}</span>
-                          <span className="text-sale font-semibold">${tt.price.toFixed(2)}</span>
-                        </div>
-                      </div>
-                      <ul className="grid grid-cols-2 gap-y-1 text-xs text-muted-foreground">
-                        {tt.features.map((f) => <li key={f} className="flex items-center gap-1.5"><Check className="size-3 text-sale" /> {t(f)}</li>)}
-                      </ul>
-                    </button>
-                  );
-                })}
-              </>
-            )}
-
-            {step === "material" && (
-              <>
-                {MATERIALS.map((m) => {
-                  const active = material === m.key;
-                  return (
-                    <button key={m.key} onClick={() => setMaterial(m.key)} className={`relative w-full text-left bg-background p-5 border-2 transition ${active ? "border-sale" : "border-transparent hover:border-border"}`}>
-                      {m.recommended && <span className="absolute -top-2 right-4 bg-sale text-white text-[10px] px-2 py-0.5 uppercase tracking-wider">{t("common.recommended")}</span>}
-                      <div className="flex justify-between items-baseline">
-                        <span className="font-medium">{t(m.labelKey)}</span>
-                        <span className="text-sm">{m.priceAdd === 0 ? t("common.free") : `+$${m.priceAdd.toFixed(2)}`}</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1">{t(m.descKey)}</div>
-                    </button>
-                  );
-                })}
-              </>
-            )}
-            </div>
-          </div>
-
-          <div className="shrink-0 bg-surface border-t border-border/60 px-8 lg:px-12 py-5">
-            <button
-              onClick={step === "rx-entry" ? () => setShowConfirm(true) : next}
-              className="w-full bg-sale text-white py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
-            >
-              {step === "material" ? t("lens.addCart") : step === "rx-entry" ? t("lens.submitRx") : t("common.next")}
-            </button>
-          </div>
-        </section>
       </div>
 
       {showPd && (
         <Modal onClose={() => setShowPd(false)} title={t("lens.pdTitle")}>
           <p className="text-sm text-muted-foreground">{t("lens.pdDesc")}</p>
-          <div className="aspect-video bg-surface mt-4 flex items-center justify-center text-xs text-muted-foreground">{t("lens.pdVideo")}</div>
         </Modal>
       )}
       {showPrism && (
@@ -352,51 +405,31 @@ function LensFlow() {
           <p className="text-sm text-muted-foreground">{t("lens.prismDesc")}</p>
         </Modal>
       )}
-      {showConfirm && (
-        <Modal onClose={() => setShowConfirm(false)} title={t("lens.confirmTitle")}>
-          <table className="w-full text-sm border-collapse mt-2">
-            <thead>
-              <tr className="bg-surface text-xs">
-                <th className="p-3 text-left"></th><th className="p-3">SPH</th><th className="p-3">CYL</th><th className="p-3">Axis</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-t border-border/60"><td className="p-3 font-medium">OD</td><td className="p-3 text-center">{od.sph}</td><td className="p-3 text-center">{od.cyl}</td><td className="p-3 text-center">{od.axis || "—"}</td></tr>
-              <tr className="border-t border-border/60"><td className="p-3 font-medium">OS</td><td className="p-3 text-center">{os.sph}</td><td className="p-3 text-center">{os.cyl}</td><td className="p-3 text-center">{os.axis || "—"}</td></tr>
-              <tr className="border-t border-border/60"><td className="p-3 font-medium">PD</td><td colSpan={3} className="p-3 text-center">{pd || "—"}</td></tr>
-            </tbody>
-          </table>
-          <div className="flex gap-3 mt-5">
-            <button onClick={() => setShowConfirm(false)} className="flex-1 border border-border py-3 text-sm">{t("common.edit")}</button>
-            <button onClick={() => { setShowConfirm(false); next(); }} className="flex-1 bg-sale text-white py-3 text-sm font-medium">{t("common.confirm")}</button>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }
 
-function Row({ label, value, subValue, onEdit }: { label: string; value?: string; subValue?: string; onEdit?: () => void }) {
+function SumRow({ label, value, subValue, onEdit }: { label: string; value?: string; subValue?: string; onEdit?: () => void }) {
   return (
-    <div className="flex justify-between items-start">
-      <div>
-        <div className="font-medium">{label}</div>
+    <div className="flex justify-between items-start gap-3">
+      <div className="min-w-0">
+        <div className="text-xs text-muted-foreground">{label}</div>
         {subValue && (
-          <button onClick={onEdit} className="text-xs text-muted-foreground underline underline-offset-2 inline-flex items-center gap-1 mt-0.5">
-            {subValue} {onEdit && <Pencil className="size-3" />}
+          <button onClick={onEdit} className="text-sm text-foreground inline-flex items-center gap-1 mt-0.5">
+            {subValue} {onEdit && <Pencil className="size-3 text-muted-foreground" />}
           </button>
         )}
       </div>
-      {value && <span>{value}</span>}
+      {value && <span className="text-sm shrink-0">{value}</span>}
     </div>
   );
 }
 
-function Select({ value, onChange, options, placeholder }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string }) {
+function Select({ value, onChange, options, placeholder, disabled }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; disabled?: boolean }) {
   return (
     <div className="relative">
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full appearance-none bg-surface border border-border px-3 py-2 text-sm pr-7">
-        {placeholder && !value && <option value="">{placeholder}</option>}
+      <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled} className="w-full appearance-none bg-surface border border-border px-3 py-2 text-sm pr-7 disabled:opacity-50">
+        {placeholder && <option value="">{placeholder}</option>}
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
       <ChevronDown className="size-3.5 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
@@ -410,7 +443,7 @@ function RxRow({ label, val, setVal }: { label: string; val: { sph: string; cyl:
       <div className="font-medium">{label}</div>
       <Select value={val.sph} onChange={(v) => setVal({ ...val, sph: v })} options={SPH} />
       <Select value={val.cyl} onChange={(v) => setVal({ ...val, cyl: v })} options={CYL} />
-      <input value={val.axis} onChange={(e) => setVal({ ...val, axis: e.target.value })} placeholder="None" className="bg-surface border border-border px-3 py-2 text-sm text-center" />
+      <input value={val.axis} onChange={(e) => setVal({ ...val, axis: e.target.value.replace(/[^0-9]/g, "").slice(0, 3) })} placeholder={val.cyl === "None" ? "—" : "1–180"} disabled={val.cyl === "None"} className="bg-surface border border-border px-3 py-2 text-sm text-center disabled:opacity-50" />
     </>
   );
 }
