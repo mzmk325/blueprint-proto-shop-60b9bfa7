@@ -76,8 +76,14 @@ export default function LensFlow() {
 
   const lensTotal = useMemo(() => {
     if (rxType === "frame-only") return 0;
-    return lensTypeObj.priceAdd + (techObj.price - 46.75) + materialObj.priceAdd;
-  }, [rxType, lensTypeObj, techObj, materialObj]);
+    const passed = (s: Step) => steps.indexOf(s) >= 0 && steps.indexOf(s) < steps.indexOf(step) || step === s;
+    let t = 0;
+    if (passed("lens-type")) t += lensTypeObj.priceAdd;
+    if (passed("lens-tech")) t += techObj.price - 46.75;
+    if (passed("material")) t += materialObj.priceAdd;
+    return t;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rxType, lensTypeObj, techObj, materialObj, step]);
 
   const total = p.price + lensTotal;
 
