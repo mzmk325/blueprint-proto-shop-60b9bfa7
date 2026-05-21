@@ -393,6 +393,9 @@ function OrderDetail({ order, onBack }: { order: Order; onBack: () => void }) {
         </div>
       </div>
 
+      <StatusActions order={order} />
+
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2 space-y-5">
           <Card title="Customer information">
