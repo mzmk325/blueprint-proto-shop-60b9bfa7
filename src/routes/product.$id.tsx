@@ -95,7 +95,7 @@ function PDP() {
           <div className="flex gap-3">
             <Link to="/lens/$id" params={{ id: p.id }} search={{ color: p.colors[colorIdx].name }} className="flex-1 bg-primary text-primary-foreground py-4 rounded-full text-center font-medium hover:opacity-90">Select Lenses</Link>
             <Link to="/lens/$id" params={{ id: p.id }} search={{ color: p.colors[colorIdx].name, frameOnly: true }} className="flex-1 border-2 py-4 rounded-full text-center font-medium hover:bg-secondary">Frame Only</Link>
-            <button className="border-2 px-4 rounded-full hover:bg-secondary" aria-label="Wishlist"><Heart className="size-5" /></button>
+            <button onClick={() => user.toggleWish(p.id)} className={`border-2 px-4 rounded-full hover:bg-secondary ${wished ? "border-sale" : ""}`} aria-label="Wishlist"><Heart className={`size-5 ${wished ? "fill-sale text-sale" : ""}`} /></button>
           </div>
 
           <div className="text-xs text-muted-foreground">or 4 interest-free payments of ${(p.price / 4).toFixed(2)} with Klarna / Afterpay</div>
@@ -165,11 +165,13 @@ function PDP() {
         </div>
       </div>
 
+      <RecentlyViewed excludeId={p.id} />
+
       {/* You may also like */}
       <section className="mx-auto max-w-7xl px-4 py-16">
         <h2 className="text-2xl md:text-3xl mb-8">You may also like</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {recs.map((r) => <ProductCard key={r.id} p={r} />)}
+          {products.filter((x) => x.id !== p.id).slice(0, 4).map((r) => <ProductCardCompact key={r.id} p={r} />)}
         </div>
       </section>
     </Layout>
