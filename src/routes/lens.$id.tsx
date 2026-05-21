@@ -118,27 +118,27 @@ export default function LensFlow() {
   }
 
   return (
-    <Layout>
+    <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Progress bar */}
-      <div className="h-1 bg-secondary">
+      <div className="h-1 bg-secondary shrink-0">
         <div className="h-full bg-sale transition-all" style={{ width: `${progress}%` }} />
       </div>
 
-      <div className="grid lg:grid-cols-2 min-h-[calc(100vh-4rem)]">
+      <div className="flex-1 grid lg:grid-cols-2 min-h-0">
         {/* Left panel: product summary */}
-        <aside className="bg-background border-r border-border/60 px-8 lg:px-16 py-10 flex flex-col">
-          <Link to="/product/$id" params={{ id: p.id }} className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground inline-flex items-center gap-2 mb-8">
+        <aside className="bg-background border-r border-border/60 px-8 lg:px-16 py-8 flex flex-col overflow-y-auto">
+          <Link to="/product/$id" params={{ id: p.id }} className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground inline-flex items-center gap-2 mb-6">
             <ArrowLeft className="size-3.5" /> Back to product
           </Link>
 
-          <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="flex-1 flex flex-col items-center justify-center min-h-0 py-6">
             <div className="aspect-[4/3] w-full max-w-md bg-surface flex items-center justify-center">
               <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt={p.name} className="w-full h-full object-contain" />
             </div>
-            <h2 className="font-display text-2xl mt-6">{p.name} <span className="text-muted-foreground">({color})</span></h2>
+            <h2 className="font-display text-2xl mt-6 text-center">{p.name} <span className="text-muted-foreground">({color})</span></h2>
           </div>
 
-          <div className="space-y-3 text-sm mt-6">
+          <div className="space-y-3 text-sm mt-6 shrink-0">
             <Row label="Frame" value={`$${p.price.toFixed(2)}`} />
             {rxType !== "frame-only" && (
               <Row label="Prescription" subValue={rxTypeLabel(rxType)} onEdit={() => setStep("rx-type")} />
@@ -154,8 +154,8 @@ export default function LensFlow() {
         </aside>
 
         {/* Right panel: steps */}
-        <section className="bg-surface px-8 lg:px-16 py-10 relative">
-          <div className="flex items-center justify-between mb-8">
+        <section className="bg-surface flex flex-col min-h-0">
+          <div className="flex items-center justify-between px-8 lg:px-12 py-5 shrink-0 border-b border-border/40">
             {idx > 0 ? (
               <button onClick={back} aria-label="Back" className="size-9 flex items-center justify-center hover:bg-background"><ArrowLeft className="size-5" /></button>
             ) : <div className="size-9" />}
