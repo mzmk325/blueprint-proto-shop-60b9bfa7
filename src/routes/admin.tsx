@@ -297,7 +297,6 @@ const NEXT_ACTIONS: { from: OrderStatus[]; to: OrderStatus; label: string; tone?
 
 function OrderDetail({ order, onBack }: { order: Order; onBack: () => void }) {
   const m = estimateMargin(order);
-  const l = order.lines[0];
   const actions = NEXT_ACTIONS.filter((a) => a.from.includes(order.status));
 
   return (
@@ -367,7 +366,6 @@ function OrderDetail({ order, onBack }: { order: Order; onBack: () => void }) {
         </div>
       </div>
 
-      {l && null /* keep linter happy */}
     </div>
   );
 }
