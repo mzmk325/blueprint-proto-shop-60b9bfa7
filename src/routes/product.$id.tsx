@@ -77,7 +77,10 @@ function PDP() {
         {/* Details rail */}
         <div className="order-3 space-y-7">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-2">{p.shape} · {p.collection}</p>
+            <div className="flex items-center gap-2 mb-2">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{p.shape} · {p.collection}</p>
+              {p.badge === "NEW" && <span className="text-[10px] bg-foreground text-background px-2 py-0.5 uppercase tracking-wider">New Arrival</span>}
+            </div>
             <h1 className="font-display text-3xl md:text-4xl tracking-tight leading-tight">{p.name}</h1>
             <p className="text-sm text-muted-foreground mt-2">{p.descriptor}</p>
           </div>
