@@ -19,14 +19,15 @@ export function SupportPopover() {
   return (
     <div ref={ref} className="relative">
       <button
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => setOpen((v) => !v)}
         aria-label={t("support.label")}
-        className="hover:text-foreground transition-colors text-foreground/80 hidden sm:block"
+        className="hidden size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground sm:grid"
       >
         <Headphones className="size-[18px]" strokeWidth={1.5} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 min-w-[220px] bg-background border border-border shadow-lg z-50 py-2">
+        <div className="absolute right-0 top-full mt-2 w-[240px] bg-background border border-border shadow-lg z-50 p-2">
           <Link to="/admin" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm hover:bg-secondary transition-colors text-center">{t("support.track")}</Link>
           <Link to="/faq" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm hover:bg-secondary transition-colors text-center">{t("support.help")}</Link>
           <Link to="/faq" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm hover:bg-secondary transition-colors text-center">{t("support.contact")}</Link>
