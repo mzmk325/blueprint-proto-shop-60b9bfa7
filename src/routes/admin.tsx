@@ -500,12 +500,19 @@ function CopyButtons({ order }: { order: Order }) {
         case "sent-to-lab":
         case "in-production":
           lines.push(`Quick update — your glasses are being assembled at our partner lab. Expected completion ${fmtShort(order.lab?.expectedCompletionAt) === "—" ? "soon" : fmtShort(order.lab?.expectedCompletionAt)}.`); break;
-        case "qc":
-          lines.push(`Your glasses are in final quality check. We'll ship as soon as they pass.`); break;
+        case "qc": {
+          const daysInQc = order.lab?.expectedCompletionAt ? (Date.now() - order.lab.expectedCompletionAt) / 86400_000 : 0;
+          if (daysInQc > 2) lines.push(`Quick heads-up — your glasses are in our final quality check and we're being a little extra picky. Shipping is delayed by a couple of days but you'll have a perfect pair, promise.`);
+          else lines.push(`Your glasses are in final quality check. We'll ship as soon as they pass.`); break;
+        }
         case "ready-to-ship":
           lines.push(`Good news — your order is packed and ready to hand off to Yanwen today.`); break;
-        case "shipped":
-          lines.push(`Your order has shipped via ${order.shippingInfo?.carrier ?? "Yanwen"}. Tracking: ${order.shippingInfo?.tracking ?? "—"}${order.shippingInfo?.trackingUrl ? ` (${order.shippingInfo.trackingUrl})` : ""}. Estimated arrival 13–20 days.`); break;
+        case "shipped": {
+          const days = order.shippingInfo?.shippedAt ? (Date.now() - order.shippingInfo.shippedAt) / 86400_000 : 0;
+          if (days > 18) lines.push(`Heads-up on order ${order.id} — it's been in transit ${Math.round(days)} days, a bit slower than usual. Tracking ${order.shippingInfo?.tracking ?? "—"}${order.shippingInfo?.trackingUrl ? ` (${order.shippingInfo.trackingUrl})` : ""}. We're monitoring it daily; if it doesn't move in the next 3 days we'll open a case with the carrier.`);
+          else lines.push(`Your order has shipped via ${order.shippingInfo?.carrier ?? "Yanwen"}. Tracking: ${order.shippingInfo?.tracking ?? "—"}${order.shippingInfo?.trackingUrl ? ` (${order.shippingInfo.trackingUrl})` : ""}. Estimated arrival 13–20 days.`);
+          break;
+        }
         case "delivered":
           lines.push(`Hope your new ${line?.name} arrived safely. Let us know if anything isn't perfect — we're here for adjustments.`); break;
         default:
