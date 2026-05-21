@@ -360,7 +360,7 @@ export default function LensFlow() {
           </div>
         </Modal>
       )}
-    </Layout>
+    </div>
   );
 }
 
