@@ -2,10 +2,15 @@ import { Link } from "@tanstack/react-router";
 import { type Product, productImage } from "@/lib/products";
 import { Heart } from "lucide-react";
 import { useUser, user } from "@/lib/user-store";
+import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 export function ProductCard({ p }: { p: Product }) {
   const { wishlist } = useUser();
-  const wished = wishlist.includes(p.id);
+  const { t } = useI18n();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const wished = mounted && wishlist.includes(p.id);
   return (
     <Link to="/product/$id" params={{ id: p.id }} className="group block">
       <div className="relative aspect-[4/5] overflow-hidden bg-surface">
@@ -14,7 +19,6 @@ export function ProductCard({ p }: { p: Product }) {
           alt={p.name}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
         />
-        {/* badges top-left */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {p.discountPct ? (
             <span className="bg-sale text-white text-[9px] font-bold uppercase tracking-tighter px-1.5 py-0.5">{p.discountPct}% OFF</span>
@@ -23,17 +27,15 @@ export function ProductCard({ p }: { p: Product }) {
             <span className="bg-background/90 backdrop-blur text-foreground text-[9px] font-bold uppercase tracking-tighter px-1.5 py-0.5">{p.badge}</span>
           ) : null}
         </div>
-        {/* wishlist heart top-right */}
         <button
           onClick={(e) => { e.preventDefault(); user.toggleWish(p.id); }}
-          aria-label="Toggle wishlist"
+          aria-label={t("a11y.wishlist")}
           className="absolute top-3 right-3 size-8 flex items-center justify-center text-foreground hover:scale-110 transition-transform"
         >
           <Heart className={`size-[18px] ${wished ? "fill-sale text-sale" : ""}`} strokeWidth={1.5} />
         </button>
-        {/* try on bottom-right on hover */}
         <span className="absolute bottom-3 right-3 bg-background/95 text-foreground text-[10px] uppercase tracking-[0.15em] font-semibold px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          Try On
+          {t("common.tryOn")}
         </span>
       </div>
       <div className="mt-4 px-0.5">

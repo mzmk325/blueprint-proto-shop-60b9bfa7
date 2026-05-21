@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Layout } from "@/components/site/Layout";
 import { useCart, cart, cartSubtotal, lineTotal, FREE_SHIPPING_THRESHOLD } from "@/lib/cart-store";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [{ title: "Checkout — MIRAVUE" }] }),
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/checkout")({
 function Checkout() {
   const { lines } = useCart();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [contact, setContact] = useState({ email: "", name: "" });
   const [addr, setAddr] = useState({ line1: "", city: "", state: "", zip: "" });
@@ -30,15 +32,15 @@ function Checkout() {
   }
 
   if (lines.length === 0) {
-    return <Layout><div className="p-20 text-center"><p>Your cart is empty.</p><Link to="/" className="underline mt-4 inline-block">Continue shopping</Link></div></Layout>;
+    return <Layout><div className="p-20 text-center"><p>{t("co.cartEmpty")}</p><Link to="/" className="underline mt-4 inline-block">{t("co.continueShop")}</Link></div></Layout>;
   }
 
-  const steps = ["Contact", "Shipping", "Payment", "Review"];
+  const steps = [t("co.step.contact"), t("co.step.shipping"), t("co.step.payment"), t("co.step.review")];
 
   return (
     <Layout>
       <div className="mx-auto max-w-5xl px-4 py-10">
-        <h1 className="text-3xl mb-6">Checkout</h1>
+        <h1 className="text-3xl mb-6">{t("co.title")}</h1>
         <div className="flex gap-4 mb-8 text-sm">
           {steps.map((s, i) => (
             <div key={s} className={`flex items-center gap-2 ${step === i + 1 ? "font-medium" : "text-muted-foreground"}`}>
@@ -52,23 +54,23 @@ function Checkout() {
         <div className="grid md:grid-cols-[1fr_340px] gap-10">
           <div className="space-y-6">
             {step === 1 && (
-              <Section title="Contact information">
-                <Field label="Email"><input value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} className={input} type="email" /></Field>
-                <Field label="Full name"><input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} className={input} /></Field>
-                <button onClick={() => setStep(2)} disabled={!contact.email || !contact.name} className={btn}>Continue to shipping</button>
+              <Section title={t("co.contact.title")}>
+                <Field label={t("co.email")}><input value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} className={input} type="email" /></Field>
+                <Field label={t("co.fullName")}><input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} className={input} /></Field>
+                <button onClick={() => setStep(2)} disabled={!contact.email || !contact.name} className={btn}>{t("co.continueShip")}</button>
               </Section>
             )}
             {step === 2 && (
-              <Section title="Shipping address">
-                <Field label="Address"><input value={addr.line1} onChange={(e) => setAddr({ ...addr, line1: e.target.value })} className={input} /></Field>
+              <Section title={t("co.ship.title")}>
+                <Field label={t("co.address")}><input value={addr.line1} onChange={(e) => setAddr({ ...addr, line1: e.target.value })} className={input} /></Field>
                 <div className="grid grid-cols-3 gap-3">
-                  <Field label="City"><input value={addr.city} onChange={(e) => setAddr({ ...addr, city: e.target.value })} className={input} /></Field>
-                  <Field label="State"><input value={addr.state} onChange={(e) => setAddr({ ...addr, state: e.target.value })} className={input} /></Field>
-                  <Field label="ZIP"><input value={addr.zip} onChange={(e) => setAddr({ ...addr, zip: e.target.value })} className={input} /></Field>
+                  <Field label={t("co.city")}><input value={addr.city} onChange={(e) => setAddr({ ...addr, city: e.target.value })} className={input} /></Field>
+                  <Field label={t("co.state")}><input value={addr.state} onChange={(e) => setAddr({ ...addr, state: e.target.value })} className={input} /></Field>
+                  <Field label={t("co.zip")}><input value={addr.zip} onChange={(e) => setAddr({ ...addr, zip: e.target.value })} className={input} /></Field>
                 </div>
                 <div className="space-y-2 pt-2">
-                  <p className="text-sm font-medium">Method</p>
-                  {([["standard","Standard (13–20 days)", subtotal >= FREE_SHIPPING_THRESHOLD ? "FREE" : "$6.95"], ["express","Express (5–8 days)", "$14.95"]] as const).map(([k, label, price]) => (
+                  <p className="text-sm font-medium">{t("co.method")}</p>
+                  {([["standard", t("co.standard"), subtotal >= FREE_SHIPPING_THRESHOLD ? t("cart.free") : "$6.95"], ["express", t("co.express"), "$14.95"]] as const).map(([k, label, price]) => (
                     <label key={k} className={`flex justify-between border rounded-lg p-3 cursor-pointer ${shipping === k ? "border-foreground bg-secondary" : ""}`}>
                       <span className="text-sm"><input type="radio" checked={shipping === k} onChange={() => setShipping(k as "standard" | "express")} className="mr-2" />{label}</span>
                       <span className="text-sm font-medium">{price}</span>
@@ -76,39 +78,39 @@ function Checkout() {
                   ))}
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={() => setStep(1)} className={btnGhost}>Back</button>
-                  <button onClick={() => setStep(3)} disabled={!addr.line1 || !addr.zip} className={btn}>Continue to payment</button>
+                  <button onClick={() => setStep(1)} className={btnGhost}>{t("common.back")}</button>
+                  <button onClick={() => setStep(3)} disabled={!addr.line1 || !addr.zip} className={btn}>{t("co.continuePay")}</button>
                 </div>
               </Section>
             )}
             {step === 3 && (
-              <Section title="Payment">
+              <Section title={t("co.pay.title")}>
                 <div className="bg-secondary/50 border border-dashed rounded-lg p-6 text-sm text-muted-foreground">
-                  💳 Payment integration placeholder. Wire Stripe / Paddle here. For MVP, click continue to simulate.
+                  {t("co.payPlaceholder")}
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={() => setStep(2)} className={btnGhost}>Back</button>
-                  <button onClick={() => setStep(4)} className={btn}>Continue to review</button>
+                  <button onClick={() => setStep(2)} className={btnGhost}>{t("common.back")}</button>
+                  <button onClick={() => setStep(4)} className={btn}>{t("co.continueReview")}</button>
                 </div>
               </Section>
             )}
             {step === 4 && (
-              <Section title="Review & place order">
+              <Section title={t("co.review.title")}>
                 <div className="text-sm space-y-2">
-                  <p><strong>Ship to:</strong> {contact.name}, {addr.line1}, {addr.city} {addr.state} {addr.zip}</p>
-                  <p><strong>Email:</strong> {contact.email}</p>
-                  <p><strong>Method:</strong> {shipping === "express" ? "Express" : "Standard"}</p>
+                  <p><strong>{t("co.shipTo")}</strong> {contact.name}, {addr.line1}, {addr.city} {addr.state} {addr.zip}</p>
+                  <p><strong>{t("co.emailLbl")}</strong> {contact.email}</p>
+                  <p><strong>{t("co.methodLbl")}</strong> {shipping === "express" ? t("co.expressShort") : t("co.standardShort")}</p>
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={() => setStep(3)} className={btnGhost}>Back</button>
-                  <button onClick={placeOrder} className={btn}>Place order</button>
+                  <button onClick={() => setStep(3)} className={btnGhost}>{t("common.back")}</button>
+                  <button onClick={placeOrder} className={btn}>{t("co.place")}</button>
                 </div>
               </Section>
             )}
           </div>
 
           <aside className="border rounded-xl p-5 h-fit space-y-3 bg-card">
-            <h3 className="font-semibold text-sm">Order ({lines.length})</h3>
+            <h3 className="font-semibold text-sm">{t("co.order")} ({lines.length})</h3>
             {lines.map((l) => (
               <div key={l.lineId} className="text-sm flex justify-between gap-2">
                 <span className="truncate">{l.name} <span className="text-muted-foreground">× {l.qty}</span><br/><span className="text-xs text-muted-foreground">{l.color} · {l.lens.label}</span></span>
@@ -116,9 +118,9 @@ function Checkout() {
               </div>
             ))}
             <div className="border-t pt-3 space-y-1 text-sm">
-              <div className="flex justify-between"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span>Shipping</span><span>{shipCost === 0 ? "FREE" : `$${shipCost.toFixed(2)}`}</span></div>
-              <div className="flex justify-between font-semibold pt-2 border-t mt-2"><span>Total</span><span>${total.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>{t("cart.subtotal")}</span><span>${subtotal.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>{t("cart.shipping")}</span><span>{shipCost === 0 ? t("cart.free") : `$${shipCost.toFixed(2)}`}</span></div>
+              <div className="flex justify-between font-semibold pt-2 border-t mt-2"><span>{t("cart.total")}</span><span>${total.toFixed(2)}</span></div>
             </div>
           </aside>
         </div>

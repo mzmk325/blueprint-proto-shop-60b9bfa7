@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { products, shapes, categories } from "@/lib/products";
 import { ArrowRight, ShieldCheck, RotateCcw, Truck, Star } from "lucide-react";
+import { useI18n, type TKey } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,24 +31,24 @@ const editorial = {
 };
 
 function Home() {
+  const { t } = useI18n();
   const bestsellers = products.slice(0, 4);
   const newArrivals = products.slice(4, 8);
 
   return (
     <Layout>
-      {/* === Editorial Hero === */}
       <section className="relative h-[88vh] min-h-[600px] w-full overflow-hidden bg-surface">
         <img src={heroImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/30" />
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
           <span className="text-white/90 text-[11px] uppercase tracking-[0.3em] mb-6 font-medium">
-            Collection 2026 · Out Now
+            {t("home.hero.tag")}
           </span>
           <h1 className="text-white text-[14vw] md:text-[9rem] font-bold leading-[0.85] tracking-[-0.04em] uppercase">
-            New<br />Vision
+            {t("home.hero.title1")}<br />{t("home.hero.title2")}
           </h1>
           <p className="text-white/80 text-sm md:text-base max-w-md mt-8 font-light">
-            Architectural acetate silhouettes. Hand-finished. Honestly priced.
+            {t("home.hero.lead")}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 mt-10">
             <Link
@@ -55,18 +56,17 @@ function Home() {
               params={{ slug: "all" }}
               className="bg-primary text-primary-foreground px-10 py-4 text-[11px] uppercase tracking-[0.2em] font-bold hover:bg-foreground transition-colors"
             >
-              Shop Eyeglasses
+              {t("home.hero.shopEye")}
             </Link>
             <Link
               to="/category/$slug"
               params={{ slug: "sunglasses" }}
               className="bg-background/90 backdrop-blur text-foreground px-10 py-4 text-[11px] uppercase tracking-[0.2em] font-bold hover:bg-background transition-colors"
             >
-              Shop Sunglasses
+              {t("home.hero.shopSun")}
             </Link>
           </div>
         </div>
-        {/* hero slide dots */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           {[0, 1, 2].map((i) => (
             <span key={i} className={`h-0.5 transition-all ${i === 0 ? "w-10 bg-white" : "w-6 bg-white/40"}`} />
@@ -74,42 +74,39 @@ function Home() {
         </div>
       </section>
 
-      {/* === Section heading strip === */}
       <section className="bg-surface/60 py-10 text-center">
         <h2 className="font-display text-2xl md:text-3xl tracking-tight">
-          Eyewear designed for those who see the world differently.
+          {t("home.tagline")}
         </h2>
       </section>
 
-      {/* === 4-up Gender / Category Tiles === */}
       <section className="grid grid-cols-2 lg:grid-cols-4 w-full border-b border-border">
         {[
-          { slug: "women-eyeglasses", label: "Women", img: tile.women },
-          { slug: "men-eyeglasses", label: "Men", img: tile.men },
-          { slug: "sunglasses", label: "Women Sun", img: tile.sunW },
-          { slug: "sunglasses", label: "Men Sun", img: tile.sunM },
-        ].map((t, i) => (
+          { slug: "women-eyeglasses", label: t("home.tile.women"), img: tile.women },
+          { slug: "men-eyeglasses", label: t("home.tile.men"), img: tile.men },
+          { slug: "sunglasses", label: t("home.tile.womenSun"), img: tile.sunW },
+          { slug: "sunglasses", label: t("home.tile.menSun"), img: tile.sunM },
+        ].map((tt, i) => (
           <Link
             key={i}
             to="/category/$slug"
-            params={{ slug: t.slug }}
+            params={{ slug: tt.slug }}
             className={`relative aspect-[3/4] overflow-hidden group ${i < 3 ? "lg:border-r border-border" : ""}`}
           >
-            <img src={t.img} alt={t.label} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+            <img src={tt.img} alt={tt.label} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/5 transition-colors" />
             <div className="absolute bottom-6 left-6">
-              <h3 className="text-white font-display text-2xl uppercase tracking-tight font-bold">{t.label}</h3>
-              <span className="text-white/80 text-[10px] uppercase tracking-[0.25em] mt-1 inline-block">Shop Now →</span>
+              <h3 className="text-white font-display text-2xl uppercase tracking-tight font-bold">{tt.label}</h3>
+              <span className="text-white/80 text-[10px] uppercase tracking-[0.25em] mt-1 inline-block">{t("common.shopNow")} →</span>
             </div>
           </Link>
         ))}
       </section>
 
-      {/* === Shop by Shape === */}
       <section className="py-20 lg:py-24 px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl uppercase tracking-tight font-bold">Shop by Shape</h2>
-          <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mt-3">Find your frame silhouette</p>
+          <h2 className="text-3xl md:text-4xl uppercase tracking-tight font-bold">{t("home.shape.title")}</h2>
+          <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mt-3">{t("home.shape.sub")}</p>
         </div>
         <div className="flex justify-start lg:justify-center gap-10 lg:gap-16 overflow-x-auto no-scrollbar pb-4 px-2 max-w-6xl mx-auto">
           {shapes.map((s) => (
@@ -123,19 +120,18 @@ function Home() {
               <div className="w-24 h-24 rounded-full bg-surface flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                 <ShapeIcon shape={s} />
               </div>
-              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold">{s}</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold">{t(`shape.${s}` as TKey)}</span>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* === Bestsellers === */}
       <section className="px-6 lg:px-8 pb-20 lg:pb-24">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4 border-b border-border pb-6">
-            <h2 className="text-4xl md:text-5xl uppercase tracking-tight font-bold">Bestsellers</h2>
+            <h2 className="text-4xl md:text-5xl uppercase tracking-tight font-bold">{t("home.bestsellers")}</h2>
             <Link to="/category/$slug" params={{ slug: "best-sellers" }} className="text-[11px] uppercase tracking-[0.2em] font-bold flex items-center gap-2 hover:opacity-60">
-              Shop all <ArrowRight className="size-3" />
+              {t("common.shopAll")} <ArrowRight className="size-3" />
             </Link>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
@@ -144,13 +140,12 @@ function Home() {
         </div>
       </section>
 
-      {/* === New Arrivals === */}
       <section className="px-6 lg:px-8 pb-24 bg-surface/40 pt-20">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4 border-b border-border pb-6">
-            <h2 className="text-4xl md:text-5xl uppercase tracking-tight font-bold">New Arrivals</h2>
+            <h2 className="text-4xl md:text-5xl uppercase tracking-tight font-bold">{t("home.newArrivals")}</h2>
             <Link to="/category/$slug" params={{ slug: "new-arrivals" }} className="text-[11px] uppercase tracking-[0.2em] font-bold flex items-center gap-2 hover:opacity-60">
-              Shop all <ArrowRight className="size-3" />
+              {t("common.shopAll")} <ArrowRight className="size-3" />
             </Link>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
@@ -159,19 +154,18 @@ function Home() {
         </div>
       </section>
 
-      {/* === 3-up Personal Style Editorial === */}
       <section className="py-24 lg:py-32 px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl uppercase tracking-tight font-bold">A Frame for Every Self</h2>
+          <h2 className="text-3xl md:text-5xl uppercase tracking-tight font-bold">{t("home.editorial.title")}</h2>
           <p className="text-sm text-muted-foreground mt-4 max-w-md mx-auto">
-            Three perspectives. One shared obsession with quiet, considered design.
+            {t("home.editorial.sub")}
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
           {[
-            { title: "Bold", desc: "Statement frames for the unafraid.", img: editorial.bold, slug: "all", filter: "Bold" },
-            { title: "Dark", desc: "Monochrome edge for the after-hours.", img: editorial.dark, slug: "all", filter: "Dark" },
-            { title: "Daily", desc: "Quiet originals you'll wear forever.", img: editorial.daily, slug: "all", filter: "Daily" },
+            { title: t("home.editorial.boldT"), desc: t("home.editorial.boldD"), img: editorial.bold, slug: "all", filter: "Bold" },
+            { title: t("home.editorial.darkT"), desc: t("home.editorial.darkD"), img: editorial.dark, slug: "all", filter: "Dark" },
+            { title: t("home.editorial.dailyT"), desc: t("home.editorial.dailyD"), img: editorial.daily, slug: "all", filter: "Daily" },
           ].map((e) => (
             <Link
               key={e.title}
@@ -185,7 +179,7 @@ function Home() {
               <div className="absolute bottom-8 left-8 right-8 text-white">
                 <h3 className="font-display text-3xl uppercase tracking-tight font-bold">{e.title}</h3>
                 <p className="text-sm opacity-90 mt-1 max-w-xs">{e.desc}</p>
-                <span className="inline-block mt-4 text-[10px] uppercase tracking-[0.25em] font-bold border-b border-white pb-0.5">Discover</span>
+                <span className="inline-block mt-4 text-[10px] uppercase tracking-[0.25em] font-bold border-b border-white pb-0.5">{t("common.discover")}</span>
               </div>
             </Link>
           ))}
@@ -194,51 +188,48 @@ function Home() {
 
       <RecentlyViewed />
 
-      {/* === Lens features 3-up === */}
       <section className="py-20 px-6 lg:px-8 bg-surface/50">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl uppercase tracking-tight font-bold">Multi-purpose Lenses</h2>
-          <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mt-3">Blue light · Photochromic · Polarized</p>
+          <h2 className="text-3xl md:text-4xl uppercase tracking-tight font-bold">{t("home.lens.title")}</h2>
+          <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mt-3">{t("home.lens.sub")}</p>
         </div>
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            { t: "Polarized", d: "Crisp, glare-free clarity outdoors.", img: "https://images.unsplash.com/photo-1577803645773-f96470509666?auto=format&fit=crop&w=800&q=80" },
-            { t: "Progressive", d: "Near, mid, and far in one seamless lens.", img: "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=800&q=80" },
-            { t: "Blue Light", d: "Reduce digital eye strain, sleep better.", img: "https://images.unsplash.com/photo-1556306535-0f09a537f0a3?auto=format&fit=crop&w=800&q=80" },
+            { tt: t("home.lens.polT"), d: t("home.lens.polD"), img: "https://images.unsplash.com/photo-1577803645773-f96470509666?auto=format&fit=crop&w=800&q=80" },
+            { tt: t("home.lens.proT"), d: t("home.lens.proD"), img: "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=800&q=80" },
+            { tt: t("home.lens.bluT"), d: t("home.lens.bluD"), img: "https://images.unsplash.com/photo-1556306535-0f09a537f0a3?auto=format&fit=crop&w=800&q=80" },
           ].map((l) => (
-            <div key={l.t} className="group">
+            <div key={l.tt} className="group">
               <div className="aspect-[4/5] overflow-hidden bg-surface">
-                <img src={l.img} alt={l.t} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <img src={l.img} alt={l.tt} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               </div>
               <div className="mt-5">
-                <h3 className="font-display text-xl font-semibold">{l.t}</h3>
+                <h3 className="font-display text-xl font-semibold">{l.tt}</h3>
                 <p className="text-sm text-muted-foreground mt-1">{l.d}</p>
-                <button className="mt-3 text-[11px] uppercase tracking-[0.2em] font-bold border-b border-foreground pb-0.5">Learn more</button>
+                <button className="mt-3 text-[11px] uppercase tracking-[0.2em] font-bold border-b border-foreground pb-0.5">{t("common.learnMore")}</button>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* === Trust strip === */}
       <section className="py-14 px-6 lg:px-8 border-t border-border">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
-            { icon: RotateCcw, t: "30-Day Returns", s: "No questions asked" },
-            { icon: ShieldCheck, t: "365-Day Warranty", s: "Quality guaranteed" },
-            { icon: Truck, t: "Free Shipping", s: "Over $75" },
-            { icon: Star, t: "4.6 / 5", s: "20,000+ reviews" },
+            { icon: RotateCcw, tt: t("home.trust.returnsT"), s: t("home.trust.returnsS") },
+            { icon: ShieldCheck, tt: t("home.trust.warrantyT"), s: t("home.trust.warrantyS") },
+            { icon: Truck, tt: t("home.trust.shipT"), s: t("home.trust.shipS") },
+            { icon: Star, tt: "4.6 / 5", s: t("home.trust.ratingS") },
           ].map((b) => (
-            <div key={b.t} className="flex flex-col items-center gap-2">
+            <div key={b.tt} className="flex flex-col items-center gap-2">
               <b.icon className="size-5" strokeWidth={1.5} />
-              <div className="font-display text-sm font-semibold tracking-tight">{b.t}</div>
+              <div className="font-display text-sm font-semibold tracking-tight">{b.tt}</div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{b.s}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* category links for SEO / catalog discovery */}
       <section className="hidden">
         {categories.map((c) => (
           <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }}>{c.title}</Link>

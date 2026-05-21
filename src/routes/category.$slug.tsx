@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { products, shapes, collections, categories } from "@/lib/products";
 import { z } from "zod";
 import { ChevronDown } from "lucide-react";
+import { useI18n, type TKey } from "@/lib/i18n";
 
 const searchSchema = z.object({
   shape: z.string().optional(),
@@ -32,6 +33,7 @@ function Category() {
   const { slug } = Route.useParams();
   const search = Route.useSearch();
   const navigate = useNavigate();
+  const { t, locale } = useI18n();
   const cat = categories.find((c) => c.slug === slug);
 
   let list = products.filter((p) => {
@@ -47,40 +49,67 @@ function Category() {
   const setParam = (key: string, value?: string) =>
     navigate({ to: "/category/$slug", params: { slug }, search: { ...search, [key]: value } as never });
 
+  // Localize category title for ZH
+  const catTitle = (() => {
+    if (!cat) return t("common.shop");
+    if (locale === "en") return cat.title;
+    const map: Record<string, string> = {
+      "all": "全部",
+      "women-eyeglasses": "女款光学镜",
+      "men-eyeglasses": "男款光学镜",
+      "sunglasses": "太阳镜",
+      "best-sellers": "热销榜",
+      "new-arrivals": "新品上架",
+    };
+    return map[cat.slug] ?? cat.title;
+  })();
+
   return (
     <Layout>
-      {/* Editorial header */}
       <section className="border-b border-border/60">
         <div className="mx-auto max-w-7xl px-6 pt-10 pb-6">
           <nav className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground mb-6">
-            <Link to="/" className="hover:text-foreground">Home</Link>
+            <Link to="/" className="hover:text-foreground">{t("common.home")}</Link>
             <span className="mx-2">/</span>
-            <span className="text-foreground">{cat?.title ?? "Shop"}</span>
+            <span className="text-foreground">{catTitle}</span>
           </nav>
           <div className="flex items-end justify-between gap-6 flex-wrap">
             <div>
-              <h1 className="font-display text-5xl md:text-7xl tracking-tight leading-[0.95]">{cat?.title ?? "Shop"}</h1>
+              <h1 className="font-display text-5xl md:text-7xl tracking-tight leading-[0.95]">{catTitle}</h1>
               <p className="text-sm text-muted-foreground mt-3 max-w-xl">
-                Considered eyewear for the everyday — engineered in acetate and titanium, finished by hand.
+                {t("cat.intro")}
               </p>
             </div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{list.length} pieces</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{list.length} {t("cat.pieces")}</p>
           </div>
         </div>
       </section>
 
       <div className="mx-auto max-w-7xl px-6 py-10 grid grid-cols-1 md:grid-cols-[220px_1fr] gap-x-12 gap-y-8">
-        {/* Sidebar filters */}
         <aside className="space-y-8 text-sm">
-          <FilterGroup title="Shape" current={search.shape} onSelect={(v) => setParam("shape", v)} options={[...shapes]} />
-          <FilterGroup title="Collection" current={search.collection} onSelect={(v) => setParam("collection", v)} options={[...collections]} />
+          <FilterGroup
+            title={t("cat.shape")}
+            current={search.shape}
+            onSelect={(v) => setParam("shape", v)}
+            options={[...shapes]}
+            labelOf={(o) => t(`shape.${o}` as TKey)}
+            allLabel={t("cat.allOf") + " " + t("cat.shape")}
+          />
+          <FilterGroup
+            title={t("cat.collection")}
+            current={search.collection}
+            onSelect={(v) => setParam("collection", v)}
+            options={[...collections]}
+            labelOf={(o) => o}
+            allLabel={t("cat.allOf") + " " + t("cat.collection")}
+          />
           <div>
-            <h3 className="text-[11px] uppercase tracking-[0.18em] font-semibold mb-3">Color</h3>
+            <h3 className="text-[11px] uppercase tracking-[0.18em] font-semibold mb-3">{t("cat.color")}</h3>
             <div className="grid grid-cols-6 gap-2">
               <button
                 onClick={() => setParam("color", undefined)}
                 className={`size-7 rounded-full border ${!search.color ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "border-border"} bg-gradient-to-br from-secondary to-muted`}
-                aria-label="All colors"
+                aria-label={t("cat.allColors")}
               />
               {Object.entries(COLOR_SWATCHES).map(([name, hex]) => (
                 <button
@@ -96,9 +125,7 @@ function Category() {
           </div>
         </aside>
 
-        {/* Right column */}
         <div>
-          {/* Sort bar */}
           <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-8">
             <div className="flex flex-wrap gap-2">
               {(["shape", "collection", "color"] as const).map((k) =>
@@ -119,10 +146,10 @@ function Category() {
                 value={search.sort ?? "recommend"}
                 onChange={(e) => setParam("sort", e.target.value)}
               >
-                <option value="recommend">Featured</option>
-                <option value="new">Newest</option>
-                <option value="price-asc">Price ↑</option>
-                <option value="price-desc">Price ↓</option>
+                <option value="recommend">{t("common.featured")}</option>
+                <option value="new">{t("common.newest")}</option>
+                <option value="price-asc">{t("common.priceAsc")}</option>
+                <option value="price-desc">{t("common.priceDesc")}</option>
               </select>
               <ChevronDown className="size-3 absolute right-0 top-1 pointer-events-none" />
             </div>
@@ -134,29 +161,27 @@ function Category() {
 
           {list.length === 0 && (
             <div className="py-20 text-center text-sm text-muted-foreground">
-              No frames match. <button onClick={() => navigate({ to: "/category/$slug", params: { slug }, search: {} })} className="underline">Reset filters</button>
+              {t("cat.empty")} <button onClick={() => navigate({ to: "/category/$slug", params: { slug }, search: {} })} className="underline">{t("cat.reset")}</button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Editorial FAQ */}
       <section className="border-t border-border/60">
         <div className="mx-auto max-w-4xl px-6 py-20">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-3">About the collection</p>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-3">{t("cat.about")}</p>
           <h2 className="font-display text-3xl md:text-4xl tracking-tight mb-6">
-            Frames designed for the way you actually live.
+            {t("cat.aboutTitle")}
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
-            Every pair includes scratch-resistant lenses, anti-reflective coating, and free shipping
-            on orders over $75. Try on virtually, ship in 13–20 days, return within 30.
+            {t("cat.aboutDesc")}
           </p>
           <div className="mt-12 divide-y divide-border/60 border-y border-border/60">
             {[
-              ["Do you offer prescription lenses?", "Yes — single vision, blue-light, and frame-only are all available at checkout."],
-              ["How do I find the right style?", "Start by shape. Round softens angular faces; square balances softer ones."],
-              ["Can I try on virtually?", "Tap Try On on any product card to open the virtual mirror."],
-              ["What's your return policy?", "30 days, no questions asked, on all unused frames."],
+              [t("cat.faq1Q"), t("cat.faq1A")],
+              [t("cat.faq2Q"), t("cat.faq2A")],
+              [t("cat.faq3Q"), t("cat.faq3A")],
+              [t("cat.faq4Q"), t("cat.faq4A")],
             ].map(([q, a]) => (
               <details key={q} className="group py-5">
                 <summary className="flex justify-between items-center cursor-pointer list-none">
@@ -173,20 +198,20 @@ function Category() {
   );
 }
 
-function FilterGroup({ title, current, options, onSelect }: { title: string; current?: string; options: string[]; onSelect: (v?: string) => void }) {
+function FilterGroup({ title, current, options, onSelect, labelOf, allLabel }: { title: string; current?: string; options: string[]; onSelect: (v?: string) => void; labelOf: (o: string) => string; allLabel: string }) {
   return (
     <div>
       <h3 className="text-[11px] uppercase tracking-[0.18em] font-semibold mb-3">{title}</h3>
       <ul className="space-y-1.5">
         <li>
           <button onClick={() => onSelect(undefined)} className={`text-sm ${!current ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}>
-            All {title.toLowerCase()}s
+            {allLabel}
           </button>
         </li>
         {options.map((o) => (
           <li key={o}>
             <button onClick={() => onSelect(o)} className={`text-sm ${current === o ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}>
-              {o}
+              {labelOf(o)}
             </button>
           </li>
         ))}

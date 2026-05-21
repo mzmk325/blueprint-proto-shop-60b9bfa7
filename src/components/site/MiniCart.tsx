@@ -3,11 +3,15 @@ import { ShoppingBag, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useCart, cart, cartSubtotal, lineTotal, FREE_SHIPPING_THRESHOLD } from "@/lib/cart-store";
 import { getProduct, productImage } from "@/lib/products";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 export function MiniCart() {
   const { lines } = useCart();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const count = lines.reduce((s, l) => s + l.qty, 0);
   const subtotal = cartSubtotal(lines);
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
@@ -16,31 +20,31 @@ export function MiniCart() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button aria-label="Cart" className="relative hover:text-foreground">
+        <button aria-label={t("a11y.cart")} className="relative hover:text-foreground">
           <ShoppingBag className="size-5" />
-          {count > 0 && (
+          {mounted && count > 0 && (
             <span className="absolute -top-2 -right-2 bg-sale text-white text-[10px] rounded-full size-4 flex items-center justify-center">{count}</span>
           )}
         </button>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-md flex flex-col">
         <SheetHeader>
-          <SheetTitle>Your cart ({count})</SheetTitle>
+          <SheetTitle>{t("mini.title")} ({count})</SheetTitle>
         </SheetHeader>
 
         {lines.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
             <ShoppingBag className="size-10 text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">Your cart is empty.</p>
-            <Link to="/category/$slug" params={{ slug: "all" }} onClick={() => setOpen(false)} className="mt-4 px-5 py-2 bg-primary text-primary-foreground rounded-full text-sm">Shop frames</Link>
+            <p className="text-sm text-muted-foreground">{t("mini.empty")}</p>
+            <Link to="/category/$slug" params={{ slug: "all" }} onClick={() => setOpen(false)} className="mt-4 px-5 py-2 bg-primary text-primary-foreground rounded-full text-sm">{t("cart.shopFrames")}</Link>
           </div>
         ) : (
           <>
             <div className="px-1 py-2 text-xs">
               {remaining > 0 ? (
-                <p className="text-muted-foreground mb-1">Add <strong className="text-foreground">${remaining.toFixed(2)}</strong> for free shipping</p>
+                <p className="text-muted-foreground mb-1">{t("cart.addMore")} <strong className="text-foreground">${remaining.toFixed(2)}</strong> {t("mini.addFor")}</p>
               ) : (
-                <p className="text-foreground mb-1">🎉 Free shipping unlocked</p>
+                <p className="text-foreground mb-1">{t("mini.unlocked")}</p>
               )}
               <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
                 <div className="h-full bg-accent transition-all" style={{ width: `${pct}%` }} />
@@ -74,9 +78,9 @@ export function MiniCart() {
             </div>
 
             <div className="border-t pt-4 space-y-3">
-              <div className="flex justify-between text-sm"><span>Subtotal</span><span className="font-semibold">${subtotal.toFixed(2)}</span></div>
-              <Link to="/cart" onClick={() => setOpen(false)} className="block text-center border-2 py-2.5 rounded-full text-sm">View cart</Link>
-              <Link to="/checkout" onClick={() => setOpen(false)} className="block text-center bg-primary text-primary-foreground py-2.5 rounded-full text-sm font-medium">Checkout</Link>
+              <div className="flex justify-between text-sm"><span>{t("cart.subtotal")}</span><span className="font-semibold">${subtotal.toFixed(2)}</span></div>
+              <Link to="/cart" onClick={() => setOpen(false)} className="block text-center border-2 py-2.5 rounded-full text-sm">{t("mini.viewCart")}</Link>
+              <Link to="/checkout" onClick={() => setOpen(false)} className="block text-center bg-primary text-primary-foreground py-2.5 rounded-full text-sm font-medium">{t("mini.checkout")}</Link>
             </div>
           </>
         )}

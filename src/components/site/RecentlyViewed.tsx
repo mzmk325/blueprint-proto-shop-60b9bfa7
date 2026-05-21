@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useUser } from "@/lib/user-store";
 import { getProduct } from "@/lib/products";
 import { ProductCard } from "./ProductCard";
+import { useI18n } from "@/lib/i18n";
 
 export function RecentlyViewed({ excludeId }: { excludeId?: string }) {
   const { recent } = useUser();
+  const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -21,7 +23,7 @@ export function RecentlyViewed({ excludeId }: { excludeId?: string }) {
   return (
     <section className="mx-auto max-w-7xl px-6 py-20 border-t border-border/60">
       <div className="flex items-end justify-between mb-8">
-        <h2 className="font-display text-2xl md:text-3xl tracking-tight">Recently viewed</h2>
+        <h2 className="font-display text-2xl md:text-3xl tracking-tight">{t("pdp.recent")}</h2>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
         {items.map((p) => <ProductCard key={p.id} p={p} />)}
