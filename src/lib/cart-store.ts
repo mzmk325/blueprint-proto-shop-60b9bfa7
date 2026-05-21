@@ -234,7 +234,7 @@ function mockLine(over: Partial<CartLine> & { name: string; color: string; unitP
 function cryptoId() {
   try { return crypto.randomUUID(); } catch { return Math.random().toString(36).slice(2); }
 }
-const day = 86400_000;
+
 
 function seedOrders(): Order[] {
   const now = Date.now();
