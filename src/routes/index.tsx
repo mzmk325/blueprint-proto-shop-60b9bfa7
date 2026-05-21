@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
+import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { products, shapes, categories, collections } from "@/lib/products";
 
 export const Route = createFileRoute("/")({
@@ -83,6 +84,8 @@ function Home() {
           {featured.map((p) => <ProductCard key={p.id} p={p} />)}
         </div>
       </section>
+
+      <RecentlyViewed />
 
       {/* Lens education */}
       <section className="mx-auto max-w-7xl px-4 py-16">
