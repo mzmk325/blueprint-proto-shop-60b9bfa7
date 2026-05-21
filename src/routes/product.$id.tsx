@@ -185,43 +185,56 @@ function PDP() {
                   <div className="pb-6 text-sm text-muted-foreground">
                     {k === "details" && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border/60 border border-border/60">
-                        <div className="bg-surface/60 flex items-center justify-center p-10 md:p-12 min-h-[320px]">
-                          <svg viewBox="0 0 300 130" className="w-full max-w-md h-auto text-foreground/70">
-                            <g fill="none" stroke="currentColor" strokeWidth="1">
-                              <rect x="40" y="40" width="80" height="50" rx="6" />
-                              <rect x="180" y="40" width="80" height="50" rx="6" />
-                              <line x1="120" y1="65" x2="180" y2="65" />
-                              <line x1="40" y1="20" x2="260" y2="20" strokeDasharray="2 3" />
-                              <line x1="40" y1="100" x2="40" y2="115" />
-                              <line x1="120" y1="100" x2="120" y2="115" />
-                              <line x1="120" y1="40" x2="120" y2="25" />
-                              <line x1="180" y1="40" x2="180" y2="25" />
-                            </g>
-                            <g fill="currentColor" fontSize="9" fontFamily="DM Sans" textAnchor="middle">
-                              <text x="150" y="15">{p.dims.frameWidth} mm</text>
-                              <text x="80" y="115">{p.dims.lensWidth} mm</text>
-                              <text x="150" y="60">{p.dims.bridge}</text>
-                              <text x="280" y="65">{p.dims.lensHeight}</text>
-                            </g>
-                          </svg>
+                        <div className="bg-surface/60 px-8 md:px-14 py-12 flex flex-col">
+                          <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground/80 mb-8 text-center">
+                            {t("pdp.spec.dimensions" as TKey) !== "pdp.spec.dimensions" ? t("pdp.spec.dimensions" as TKey) : "Dimensions"}
+                          </div>
+                          <div className="flex-1 flex items-center justify-center">
+                            <svg viewBox="0 0 300 130" className="w-full h-auto text-foreground/80">
+                              <g fill="none" stroke="currentColor" strokeWidth="1">
+                                <rect x="40" y="40" width="80" height="50" rx="6" />
+                                <rect x="180" y="40" width="80" height="50" rx="6" />
+                                <line x1="120" y1="65" x2="180" y2="65" />
+                                <line x1="40" y1="20" x2="260" y2="20" strokeDasharray="2 3" />
+                                <line x1="40" y1="100" x2="40" y2="115" />
+                                <line x1="120" y1="100" x2="120" y2="115" />
+                                <line x1="120" y1="40" x2="120" y2="25" />
+                                <line x1="180" y1="40" x2="180" y2="25" />
+                              </g>
+                              <g fill="currentColor" fontSize="9" fontFamily="DM Sans" textAnchor="middle">
+                                <text x="150" y="15">{p.dims.frameWidth} mm</text>
+                                <text x="80" y="115">{p.dims.lensWidth} mm</text>
+                                <text x="150" y="60">{p.dims.bridge}</text>
+                                <text x="280" y="65">{p.dims.lensHeight}</text>
+                              </g>
+                            </svg>
+                          </div>
                         </div>
-                        <dl className="bg-surface/60 p-10 md:p-12 min-h-[320px] flex flex-col justify-center divide-y divide-border/60">
-                          {[
-                            [t("pdp.spec.model"), p.modelCode],
-                            [t("pdp.spec.frameW"), `${p.dims.frameWidth} mm`],
-                            [t("pdp.spec.lensW"), `${p.dims.lensWidth} mm`],
-                            [t("pdp.spec.lensH"), `${p.dims.lensHeight} mm`],
-                            [t("pdp.spec.bridge"), `${p.dims.bridge} mm`],
-                            [t("pdp.spec.temple"), `${p.dims.temple} mm`],
-                            [t("pdp.spec.material"), p.material],
-                            [t("pdp.spec.weight"), p.weight],
-                          ].map(([k2, v]) => (
-                            <div key={k2 as string} className="flex items-center justify-between py-2.5">
-                              <dt className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">{k2}</dt>
-                              <dd className="text-foreground text-sm font-medium">{v}</dd>
-                            </div>
-                          ))}
-                        </dl>
+                        <div className="bg-surface/60 px-8 md:px-14 py-12 flex flex-col">
+                          <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground/80 mb-8 text-center">
+                            Specifications
+                          </div>
+                          <dl className="flex-1 grid grid-cols-2 gap-x-10 gap-y-7 content-center">
+                            {[
+                              [t("pdp.spec.model"), p.modelCode],
+                              [t("pdp.spec.frameW"), `${p.dims.frameWidth}`, "mm"],
+                              [t("pdp.spec.lensW"), `${p.dims.lensWidth}`, "mm"],
+                              [t("pdp.spec.lensH"), `${p.dims.lensHeight}`, "mm"],
+                              [t("pdp.spec.bridge"), `${p.dims.bridge}`, "mm"],
+                              [t("pdp.spec.temple"), `${p.dims.temple}`, "mm"],
+                              [t("pdp.spec.material"), p.material],
+                              [t("pdp.spec.weight"), p.weight],
+                            ].map(([k2, v, unit]) => (
+                              <div key={k2 as string}>
+                                <dt className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">{k2}</dt>
+                                <dd className="font-display text-2xl text-foreground mt-1.5 leading-none">
+                                  {v}
+                                  {unit && <span className="text-xs text-muted-foreground ml-1 font-sans tracking-normal">{unit}</span>}
+                                </dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </div>
                       </div>
                     )}
                     {k === "lens" && <p className="max-w-3xl">{t("pdp.lensRec")}</p>}
