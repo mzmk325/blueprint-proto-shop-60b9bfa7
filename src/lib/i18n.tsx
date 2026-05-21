@@ -708,17 +708,22 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
 
-  const setLocale = (l: Locale) => {
+  const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
     try {
       localStorage.setItem(STORAGE_KEY, l);
       document.documentElement.lang = l === "zh" ? "zh-CN" : "en";
     } catch {}
-  };
+  }, []);
 
-  const t = (k: TKey) => (dict[locale] as Record<string, string>)[k] ?? (dict.en as Record<string, string>)[k] ?? k;
+  const t = useCallback(
+    (k: TKey) => (dict[locale] as Record<string, string>)[k] ?? (dict.en as Record<string, string>)[k] ?? k,
+    [locale]
+  );
 
-  return <I18nContext.Provider value={{ locale, setLocale, t }}>{children}</I18nContext.Provider>;
+  const value = useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
 export function useI18n() {
