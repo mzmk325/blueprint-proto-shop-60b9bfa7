@@ -389,8 +389,16 @@ export function computeRisks(o: Order): Risk[] {
   if (o.status === "qc") {
     if (!o.lab?.qcPhotoName) risks.push({ level: "warn", message: "QC photo not uploaded yet." });
     const cl = o.lab?.qcChecklist ?? {};
-    const incomplete = !cl.frameMatches || !cl.lensMatches || (ft === "prescription" && !cl.rxChecked) || !cl.noScratches;
-    if (incomplete) risks.push({ level: "warn", message: "QC checklist incomplete." });
+    const required: (keyof QcChecklist)[] = [
+      "frameModel", "frameColor", "lensFunction",
+      ...(ft !== "frame-only" ? (["lensThickness"] as (keyof QcChecklist)[]) : []),
+      ...(ft === "prescription" ? (["rxChecked", "pdChecked"] as (keyof QcChecklist)[]) : []),
+      "noScratches", "hingesAlignment", "packingPhoto",
+    ];
+    const missing = required.filter((k) => !cl[k]).length;
+    if (missing > 0) risks.push({ level: "warn", message: `QC checklist incomplete (${missing} item${missing > 1 ? "s" : ""} pending).` });
+    if (o.lab?.qcResult === "remake") risks.push({ level: "danger", message: "QC flagged remake — production restart required." });
+    if (o.lab?.qcResult === "needs-customer-confirm") risks.push({ level: "warn", message: "QC needs customer confirmation before shipping." });
   }
   if ((o.status === "ready-to-ship" || o.status === "shipped") && !o.shippingInfo?.tracking) {
     risks.push({ level: "danger", message: "Tracking number missing." });
@@ -400,6 +408,10 @@ export function computeRisks(o: Order): Risk[] {
   }
   if (o.status === "shipped" && o.shippingInfo?.tracking && !o.shippingInfo?.shippedAt) {
     risks.push({ level: "warn", message: "Tracking entered but ship date not set." });
+  }
+  if (o.status === "shipped" && o.shippingInfo?.shippedAt) {
+    const daysSinceShip = (Date.now() - o.shippingInfo.shippedAt) / 86400_000;
+    if (daysSinceShip > 21) risks.push({ level: "warn", message: `Shipped ${Math.round(daysSinceShip)}d ago — possible delivery delay, check tracking.` });
   }
   if (o.status === "sourcing") {
     const fc = o.sourcing?.frame?.costRMB ?? o.sourcing?.frame?.costUSD ?? o.sourcing?.frameCost;
