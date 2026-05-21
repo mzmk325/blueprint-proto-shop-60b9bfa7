@@ -506,59 +506,43 @@ function LensFlow() {
           </div>
         </section>
 
-        {/* Persistent Order Summary */}
-        <aside className="bg-background border-b lg:border-b-0 lg:border-l border-border/60 px-4 sm:px-6 lg:px-10 py-4 lg:py-8 flex flex-col gap-4 lg:gap-6 lg:overflow-y-auto order-1 lg:order-2">
-          <div className="flex items-center gap-4">
-            <div className="size-20 bg-surface shrink-0">
-              <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt={p.name} className="w-full h-full object-contain" />
+        {/* Persistent Order Summary — collapsible on mobile */}
+        <aside className="bg-background border-b lg:border-b-0 lg:border-l border-border/60 lg:px-10 lg:py-8 flex flex-col gap-4 lg:gap-6 lg:overflow-y-auto order-1 lg:order-2">
+          <details className="lg:hidden border-b border-border/60 group" open={false}>
+            <summary className="list-none cursor-pointer flex items-center justify-between px-4 py-3 gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="size-10 bg-surface shrink-0">
+                  <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt="" className="w-full h-full object-contain" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Order summary</div>
+                  <div className="text-sm font-medium truncate">{p.name} · {color}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="font-display text-lg">${total.toFixed(2)}</span>
+                <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+              </div>
+            </summary>
+            <div className="px-4 pb-4">
+              <SummaryBody {...{ p, rxType, fnReached, fnObj, fnPrice, thickReached, thickObj, thickPrice, addonReached, addonObj, addonPrice, shipFree, shipping, total, goto, rxTypeLabelOf }} />
             </div>
-            <div className="min-w-0">
-              <h2 className="font-display text-lg leading-tight">{p.name}</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">{color} · M</p>
-            </div>
-          </div>
+          </details>
 
-          <div className="border-t border-border/60 pt-5">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-3">Order summary</div>
-            <div className="space-y-2.5 text-sm">
-              <SumRow label="Frame price" value={`$${p.price.toFixed(2)}`} />
-              <SumRow
-                label="Fulfillment"
-                subValue={rxTypeLabelOf(rxType)}
-                onEdit={() => goto("rx-type")}
-              />
-              {fnReached ? (
-                <SumRow label="Lens function" subValue={fnObj.label} value={fnPrice === 0 ? "Included" : `+$${fnPrice.toFixed(2)}`} onEdit={() => goto("fn")} />
-              ) : rxType !== "frame-only" && (
-                <SumRow label="Lens function" subValue="Not selected yet" />
-              )}
-              {thickReached ? (
-                <SumRow label="Lens thickness" subValue={thickObj.label} value={thickPrice === 0 ? "Included" : `+$${thickPrice.toFixed(2)}`} onEdit={() => goto("thick")} />
-              ) : rxType !== "frame-only" && (
-                <SumRow label="Lens thickness" subValue="Not selected yet" />
-              )}
-              {addonReached ? (
-                <SumRow label="Add-on" subValue={addonObj.label} value={addonPrice === 0 ? "Included" : `+$${addonPrice.toFixed(2)}`} onEdit={() => goto("addon")} />
-              ) : rxType !== "frame-only" && (
-                <SumRow label="Add-on" subValue="Not selected yet" />
-              )}
-              <SumRow label="Shipping" value={shipFree ? "FREE" : `$${shipping.toFixed(2)}`} />
+          <div className="hidden lg:flex flex-col gap-6">
+            <div className="flex items-center gap-4">
+              <div className="size-20 bg-surface shrink-0">
+                <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt={p.name} className="w-full h-full object-contain" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="font-display text-lg leading-tight">{p.name}</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">{color} · M</p>
+              </div>
             </div>
-            <div className="border-t border-border/60 pt-4 mt-4 flex justify-between items-baseline">
-              <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">Total</span>
-              <span className="font-display text-3xl">${total.toFixed(2)}</span>
-            </div>
-            {rxType === "frame-only" && (
-              <p className="text-[11px] text-muted-foreground mt-3">Ships with demo lenses only.</p>
-            )}
-            {rxType === "non-rx" && (
-              <p className="text-[11px] text-muted-foreground mt-3">No prescription required.</p>
-            )}
-            {(rxType === "single-vision" || rxType === "reading") && (
-              <p className="text-[11px] text-muted-foreground mt-3">Every prescription is reviewed by our team before production.</p>
-            )}
+            <SummaryBody {...{ p, rxType, fnReached, fnObj, fnPrice, thickReached, thickObj, thickPrice, addonReached, addonObj, addonPrice, shipFree, shipping, total, goto, rxTypeLabelOf }} />
           </div>
         </aside>
+
       </div>
 
       {showPd && (
