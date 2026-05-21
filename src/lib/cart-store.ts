@@ -132,9 +132,10 @@ type State = { lines: CartLine[]; orders: Order[] };
 const KEY = "mv-cart-v2";
 let state: State = load();
 const listeners = new Set<() => void>();
+const MOCK_NOW = Date.UTC(2026, 4, 21, 10, 0, 0);
 
 function load(): State {
-  if (typeof window === "undefined") return { lines: [], orders: seedOrders() };
+  if (typeof window === "undefined") return { lines: [], orders: [] };
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return { lines: [], orders: seedOrders() };
@@ -229,18 +230,14 @@ function round2(n: number) { return Math.round(n * 100) / 100; }
 // ── Mock seed ────────────────────────────────────────────────────────────────
 function mockLine(over: Partial<CartLine> & { name: string; color: string; unitPrice: number; lens: LensChoice }): CartLine {
   return {
-    lineId: cryptoId(), productId: "p-" + over.name.toLowerCase(), qty: 1, size: "M", ...over,
+    lineId: `mock-${over.name.toLowerCase()}-${over.color.toLowerCase()}`, productId: "p-" + over.name.toLowerCase(), qty: 1, size: "M", ...over,
   };
 }
-function cryptoId() {
-  try { return crypto.randomUUID(); } catch { return Math.random().toString(36).slice(2); }
-}
-
 
 function seedOrders(): Order[] {
-  const now = Date.now();
-  const base = (over: Partial<Order>): Order => ({
-    id: "ORD-" + Math.random().toString(36).slice(2, 8).toUpperCase(),
+  const now = MOCK_NOW;
+  const base = (id: string, over: Partial<Order>): Order => ({
+    id,
     createdAt: now, email: "", name: "", address: "",
     shipping: "standard", shippingCost: 6.95, subtotal: 0, total: 0,
     lines: [], status: "paid", timeline: [],
@@ -249,7 +246,7 @@ function seedOrders(): Order[] {
   });
 
   const orders: Order[] = [
-    base({
+    base("ORD-RX1001", {
       createdAt: now - 2 * 3600_000, name: "Emma Larsen", email: "emma.l@example.com",
       phone: "+47 412 88 901", country: "Norway",
       address: "Storgata 14, 0184 Oslo, Norway",
@@ -271,7 +268,7 @@ function seedOrders(): Order[] {
         { at: now - 2 * 3600_000 + 60_000, status: "rx-pending", message: "Prescription submitted for review" },
       ],
     }),
-    base({
+    base("ORD-RX1002", {
       createdAt: now - 6 * 3600_000, name: "Lucas Ferreira", email: "lucas.f@example.com",
       phone: "+55 11 99888 4421", country: "Brazil",
       address: "Av. Paulista 1200, São Paulo, SP 01310-100, Brazil",
@@ -294,7 +291,7 @@ function seedOrders(): Order[] {
         { at: now - 4 * 3600_000, status: "rx-clarification", message: "Requested clearer Rx photo from customer", author: "Mira" },
       ],
     }),
-    base({
+    base("ORD-RX1003", {
       createdAt: now - 1 * 86400000, name: "Sofia Bianchi", email: "sofia.b@example.com",
       phone: "+39 333 555 7788", country: "Italy",
       address: "Via Roma 45, 20121 Milano, Italy",
@@ -318,7 +315,7 @@ function seedOrders(): Order[] {
         { at: now - 18 * 3600_000, status: "sourcing", message: "Started sourcing frame and lenses" },
       ],
     }),
-    base({
+    base("ORD-RX1004", {
       createdAt: now - 3 * 86400000, name: "Daniel Park", email: "d.park@example.com",
       phone: "+82 10 4422 6611", country: "South Korea",
       address: "12 Gangnam-daero, Gangnam-gu, Seoul 06236, South Korea",
@@ -344,7 +341,7 @@ function seedOrders(): Order[] {
         { at: now - 1 * 86400000, status: "in-production", message: "Lab started edging lenses" },
       ],
     }),
-    base({
+    base("ORD-RX1005", {
       createdAt: now - 5 * 86400000, name: "Aisha Khan", email: "aisha.k@example.com",
       phone: "+971 50 123 4567", country: "United Arab Emirates",
       address: "Marina Plaza, Dubai Marina, Dubai, UAE",
@@ -372,7 +369,7 @@ function seedOrders(): Order[] {
         { at: now - 12 * 3600_000, status: "ready-to-ship", message: "Packed, ready for Yanwen pickup" },
       ],
     }),
-    base({
+    base("ORD-RX1006", {
       createdAt: now - 9 * 86400000, name: "Thomas Müller", email: "t.muller@example.com",
       phone: "+49 151 2233 4455", country: "Germany",
       address: "Friedrichstraße 200, 10117 Berlin, Germany",
