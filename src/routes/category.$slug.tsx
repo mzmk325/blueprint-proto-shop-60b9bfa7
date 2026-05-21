@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/category/$slug")({
 function Category() {
   const { slug } = Route.useParams();
   const search = Route.useSearch();
+  const navigate = useNavigate();
   const cat = categories.find((c) => c.slug === slug);
   const [showFilters, setShowFilters] = useState(true);
 
@@ -57,7 +58,7 @@ function Category() {
           <select
             className="text-sm border rounded-full px-4 py-2 bg-background"
             value={search.sort ?? "recommend"}
-            onChange={(e) => { window.location.search = `?sort=${e.target.value}`; }}
+            onChange={(e) => navigate({ to: "/category/$slug", params: { slug }, search: { ...search, sort: e.target.value as never } })}
           >
             <option value="recommend">Recommended</option>
             <option value="price-asc">Price: Low to High</option>
