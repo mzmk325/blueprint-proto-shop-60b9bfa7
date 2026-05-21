@@ -2,14 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   useCart, cart, estimateMargin,
-  STATUS_META, STATUS_ORDER,
-  type Order, type OrderStatus,
+  STATUS_META, STATUS_ORDER, PIPELINE,
+  FULFILLMENT_LABEL,
+  orderFulfillmentType, computeRisks, nextAction,
+  type Order, type OrderStatus, type FulfillmentType,
 } from "@/lib/cart-store";
 import {
   LayoutDashboard, Package, Eye, ArrowLeft, RotateCcw, Search,
   CircleDollarSign, Truck, Factory, ClipboardCheck, AlertCircle, Clock,
-  TrendingUp, CheckCircle2, MessageSquare,
+  TrendingUp, CheckCircle2, MessageSquare, Copy, ShieldAlert, ChevronRight,
 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Operations — MIRAVUE Admin" }] }),
@@ -17,15 +20,29 @@ export const Route = createFileRoute("/admin")({
 });
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+const FT_BADGE: Record<FulfillmentType, string> = {
+  "frame-only": "bg-slate-500/15 text-slate-700 dark:text-slate-200",
+  "non-rx":     "bg-sky-500/15 text-sky-800 dark:text-sky-200",
+  prescription: "bg-violet-500/15 text-violet-800 dark:text-violet-200",
+};
+
+function FtBadge({ ft }: { ft: FulfillmentType }) {
+  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${FT_BADGE[ft]}`}>{FULFILLMENT_LABEL[ft]}</span>;
+}
+
 const FILTERS: { key: string; label: string; match: (o: Order) => boolean }[] = [
-  { key: "all",            label: "All orders",          match: () => true },
-  { key: "rx-pending",     label: "Pending Rx review",   match: (o) => o.status === "rx-pending" },
-  { key: "rx-clarification", label: "Needs clarification", match: (o) => o.status === "rx-clarification" },
-  { key: "sourcing",       label: "Sourcing",            match: (o) => o.status === "rx-approved" || o.status === "sourcing" },
-  { key: "production",     label: "In production",       match: (o) => ["sent-to-lab","in-production","qc"].includes(o.status) },
-  { key: "ready",          label: "Ready to ship",       match: (o) => o.status === "ready-to-ship" },
-  { key: "shipped",        label: "Shipped",             match: (o) => o.status === "shipped" || o.status === "delivered" },
-  { key: "after-sale",     label: "After-sale",          match: (o) => o.status === "after-sale" },
+  { key: "all",              label: "All",                  match: () => true },
+  { key: "ft-frame-only",    label: "Frame only",           match: (o) => orderFulfillmentType(o) === "frame-only" },
+  { key: "ft-non-rx",        label: "Non-prescription",     match: (o) => orderFulfillmentType(o) === "non-rx" },
+  { key: "ft-prescription",  label: "Prescription",         match: (o) => orderFulfillmentType(o) === "prescription" },
+  { key: "rx-pending",       label: "Pending Rx review",    match: (o) => o.status === "rx-pending" },
+  { key: "rx-clarification", label: "Need clarification",   match: (o) => o.status === "rx-clarification" },
+  { key: "sourcing",         label: "Sourcing",             match: (o) => o.status === "rx-approved" || o.status === "sourcing" },
+  { key: "production",       label: "In production",        match: (o) => ["sent-to-lab","in-production"].includes(o.status) },
+  { key: "qc",               label: "Quality check",        match: (o) => o.status === "qc" },
+  { key: "ready",            label: "Ready to ship",        match: (o) => o.status === "ready-to-ship" },
+  { key: "shipped",          label: "Shipped",              match: (o) => o.status === "shipped" || o.status === "delivered" },
+  { key: "after-sale",       label: "After-sale",           match: (o) => o.status === "after-sale" },
 ];
 
 function StatusBadge({ status }: { status: OrderStatus }) {
@@ -34,8 +51,15 @@ function StatusBadge({ status }: { status: OrderStatus }) {
 }
 
 function money(n: number) { return "$" + n.toFixed(2); }
+function rmb(n: number) { return "¥" + n.toFixed(2); }
 function fmtDate(t?: number) { return t ? new Date(t).toLocaleString() : "—"; }
 function fmtShort(t?: number) { return t ? new Date(t).toLocaleDateString() : "—"; }
+
+function copy(text: string, label = "Copied") {
+  if (typeof navigator !== "undefined" && navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => toast.success(label));
+  }
+}
 
 // ── Root ────────────────────────────────────────────────────────────────────
 function AdminApp() {
@@ -92,7 +116,7 @@ function Sidebar({ view, onView }: { view: string; onView: (v: "dashboard" | "or
 function Topbar() {
   return (
     <div className="h-16 bg-background border-b border-border flex items-center justify-between px-6 md:pl-6">
-      <div className="text-sm text-muted-foreground">Operations dashboard</div>
+      <div className="text-sm text-muted-foreground">Eyewear order operations</div>
       <div className="flex items-center gap-4">
         <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">↗ View store</Link>
         <div className="size-8 rounded-full bg-primary text-primary-foreground grid place-items-center text-xs font-bold">M</div>
@@ -108,38 +132,39 @@ function Dashboard({ orders, onOpen, onJump }: { orders: Order[]; onOpen: (id: s
   const stats = useMemo(() => {
     const todayCount = orders.filter((o) => o.createdAt >= today.getTime()).length;
     const pendingRx = orders.filter((o) => o.status === "rx-pending").length;
-    const clarif = orders.filter((o) => o.status === "rx-clarification").length;
-    const prod = orders.filter((o) => ["sent-to-lab","in-production","qc"].includes(o.status)).length;
     const ready = orders.filter((o) => o.status === "ready-to-ship").length;
     const shippedWeek = orders.filter((o) => o.status === "shipped" && (o.shippingInfo?.shippedAt ?? 0) >= weekAgo).length;
     const revenue = orders.reduce((s, o) => s + o.total, 0);
     const profit = orders.reduce((s, o) => s + estimateMargin(o).gross, 0);
     const aov = orders.length ? revenue / orders.length : 0;
-    return { todayCount, pendingRx, clarif, prod, ready, shippedWeek, revenue, profit, aov };
+    return { todayCount, pendingRx, ready, shippedWeek, revenue, profit, aov };
   }, [orders]);
 
   const cards = [
     { label: "Orders today",            value: stats.todayCount,         icon: Package,        tone: "text-blue-600" },
-    { label: "Pending Rx review",       value: stats.pendingRx,          icon: Clock,          tone: "text-amber-600" },
-    { label: "Need clarification",      value: stats.clarif,             icon: AlertCircle,    tone: "text-red-600" },
-    { label: "In production",           value: stats.prod,               icon: Factory,        tone: "text-purple-600" },
-    { label: "Ready to ship",           value: stats.ready,              icon: ClipboardCheck, tone: "text-teal-600" },
-    { label: "Shipped this week",       value: stats.shippedWeek,        icon: Truck,          tone: "text-cyan-600" },
     { label: "Estimated revenue",       value: money(stats.revenue),     icon: CircleDollarSign, tone: "text-emerald-600" },
     { label: "Estimated gross profit",  value: money(stats.profit),      icon: TrendingUp,     tone: "text-emerald-700" },
     { label: "Average order value",     value: money(stats.aov),         icon: CheckCircle2,   tone: "text-slate-600" },
   ];
 
-  const needsAttention = orders.filter((o) => o.status === "rx-pending" || o.status === "rx-clarification").slice(0, 5);
+  // Today's work queue groups
+  const queues = [
+    { key: "rx-review",   title: "Prescription Review", icon: ClipboardCheck, tone: "text-amber-700", match: (o: Order) => o.status === "rx-pending" },
+    { key: "follow-up",   title: "Customer Follow-up",  icon: AlertCircle,    tone: "text-red-700",   match: (o: Order) => o.status === "rx-clarification" || computeRisks(o).some((r) => r.level === "danger" && /address|PD missing|Axis/.test(r.message)) },
+    { key: "sourcing",    title: "Sourcing",            icon: Package,        tone: "text-blue-700",  match: (o: Order) => o.status === "rx-approved" || o.status === "sourcing" },
+    { key: "production",  title: "Production Follow-up",icon: Factory,        tone: "text-purple-700",match: (o: Order) => o.status === "sent-to-lab" || o.status === "in-production" },
+    { key: "qc",          title: "Quality Check",       icon: ShieldAlert,    tone: "text-fuchsia-700",match: (o: Order) => o.status === "qc" },
+    { key: "ship",        title: "Ready to Ship",       icon: Truck,          tone: "text-teal-700",  match: (o: Order) => o.status === "ready-to-ship" },
+  ];
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Welcome back, Mira 👋</h1>
-        <p className="text-sm text-muted-foreground mt-1">Here&apos;s what&apos;s happening across the workshop today.</p>
+        <p className="text-sm text-muted-foreground mt-1">Here&apos;s today&apos;s work queue across the workshop.</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {cards.map((c) => (
           <div key={c.label} className="bg-card border border-border rounded-xl p-4 hover:shadow-sm transition-shadow">
             <div className="flex items-start justify-between">
@@ -151,30 +176,53 @@ function Dashboard({ orders, onOpen, onJump }: { orders: Order[]; onOpen: (id: s
         ))}
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <div>
-            <div className="font-medium">Needs your attention</div>
-            <div className="text-xs text-muted-foreground">Prescriptions awaiting review or clarification</div>
-          </div>
-          <button onClick={onJump} className="text-xs text-muted-foreground hover:text-foreground">View all orders →</button>
-        </div>
-        {needsAttention.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">All caught up. 🎉</div>
-        ) : (
-          <div className="divide-y divide-border">
-            {needsAttention.map((o) => (
-              <button key={o.id} onClick={() => onOpen(o.id)} className="w-full grid grid-cols-[1fr_auto_auto] gap-4 items-center p-4 hover:bg-secondary/40 text-left">
-                <div>
-                  <div className="text-sm font-medium">{o.name} <span className="text-muted-foreground font-normal">· {o.country}</span></div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{o.id} · {o.lines[0]?.name} · {o.lines[0]?.lens.label}</div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Today&apos;s work queue</h2>
+        <button onClick={onJump} className="text-xs text-muted-foreground hover:text-foreground">View all orders →</button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        {queues.map((q) => {
+          const items = orders.filter(q.match).slice(0, 6);
+          return (
+            <div key={q.key} className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <q.icon className={`size-4 ${q.tone}`} />
+                  <span className="text-sm font-semibold">{q.title}</span>
                 </div>
-                <StatusBadge status={o.status} />
-                <div className="text-xs text-muted-foreground">{fmtShort(o.createdAt)}</div>
-              </button>
-            ))}
-          </div>
-        )}
+                <span className="text-xs text-muted-foreground">{items.length}</span>
+              </div>
+              {items.length === 0 ? (
+                <div className="p-6 text-center text-xs text-muted-foreground">All clear.</div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {items.map((o) => {
+                    const ft = orderFulfillmentType(o);
+                    const na = nextAction(o);
+                    return (
+                      <button key={o.id} onClick={() => onOpen(o.id)} className="w-full text-left p-3 hover:bg-secondary/40 transition-colors">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium truncate">{o.name} <span className="text-muted-foreground font-mono text-xs">· {o.id}</span></div>
+                            <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                              <FtBadge ft={ft} />
+                              <StatusBadge status={o.status} />
+                            </div>
+                          </div>
+                          <ChevronRight className="size-4 text-muted-foreground shrink-0" />
+                        </div>
+                        <div className="mt-2 text-xs text-foreground bg-secondary/60 rounded px-2 py-1 inline-block">
+                          → {na.label}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -187,7 +235,7 @@ function OrdersList({ orders, onOpen }: { orders: Order[]; onOpen: (id: string) 
   const active = FILTERS.find((f) => f.key === filter)!;
   const filtered = orders
     .filter(active.match)
-    .filter((o) => !q || (o.name + o.id + o.email + o.country).toLowerCase().includes(q.toLowerCase()));
+    .filter((o) => !q || (o.name + o.id + o.email + (o.country ?? "")).toLowerCase().includes(q.toLowerCase()));
 
   return (
     <div className="space-y-4">
@@ -199,9 +247,9 @@ function OrdersList({ orders, onOpen }: { orders: Order[]; onOpen: (id: string) 
       <div className="flex flex-wrap items-center gap-2">
         {FILTERS.map((f) => {
           const count = orders.filter(f.match).length;
-          const active = filter === f.key;
+          const isActive = filter === f.key;
           return (
-            <button key={f.key} onClick={() => setFilter(f.key)} className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${active ? "bg-foreground text-background border-foreground" : "bg-background border-border hover:bg-secondary"}`}>
+            <button key={f.key} onClick={() => setFilter(f.key)} className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${isActive ? "bg-foreground text-background border-foreground" : "bg-background border-border hover:bg-secondary"}`}>
               {f.label} <span className="opacity-60">· {count}</span>
             </button>
           );
@@ -217,8 +265,10 @@ function OrdersList({ orders, onOpen }: { orders: Order[]; onOpen: (id: string) 
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-xs text-muted-foreground">
               <tr>
-                <Th>Order</Th><Th>Customer</Th><Th>Country</Th><Th>Frame</Th><Th>Lens</Th>
+                <Th>Order</Th><Th>Customer</Th><Th>Country</Th><Th>Type</Th>
+                <Th>Frame</Th><Th>Lens</Th>
                 <Th className="text-right">Paid</Th><Th>Rx</Th><Th>Production</Th><Th>Shipping</Th>
+                <Th>Next action</Th>
                 <Th className="text-right">Margin</Th><Th>Created</Th><Th></Th>
               </tr>
             </thead>
@@ -226,6 +276,8 @@ function OrdersList({ orders, onOpen }: { orders: Order[]; onOpen: (id: string) 
               {filtered.map((o) => {
                 const m = estimateMargin(o);
                 const l = o.lines[0];
+                const ft = orderFulfillmentType(o);
+                const na = nextAction(o);
                 return (
                   <tr key={o.id} className="hover:bg-secondary/30 transition-colors">
                     <Td className="font-mono text-xs">{o.id}</Td>
@@ -234,12 +286,14 @@ function OrdersList({ orders, onOpen }: { orders: Order[]; onOpen: (id: string) 
                       <div className="text-xs text-muted-foreground">{o.email}</div>
                     </Td>
                     <Td className="text-xs">{o.country ?? "—"}</Td>
+                    <Td><FtBadge ft={ft} /></Td>
                     <Td>{l?.name} <span className="text-xs text-muted-foreground">/ {l?.color}</span></Td>
-                    <Td className="text-xs">{l?.lens.rxTypeLabel ?? l?.lens.label.split("·")[0]}</Td>
+                    <Td className="text-xs">{ft === "frame-only" ? "—" : (l?.lens.rxTypeLabel ?? l?.lens.label.split("·")[0])}</Td>
                     <Td className="text-right font-medium">{money(o.total)}</Td>
-                    <Td><RxBadge order={o} /></Td>
+                    <Td>{ft === "prescription" ? <RxBadge order={o} /> : <span className="text-xs text-muted-foreground">—</span>}</Td>
                     <Td><StatusBadge status={o.status} /></Td>
                     <Td className="text-xs">{o.shippingInfo?.tracking ?? o.shipping}</Td>
+                    <Td className="text-xs">{na.label}</Td>
                     <Td className="text-right">
                       <div className="text-sm font-medium">{money(m.gross)}</div>
                       <div className="text-[11px] text-muted-foreground">{m.marginPct}%</div>
@@ -254,7 +308,7 @@ function OrdersList({ orders, onOpen }: { orders: Order[]; onOpen: (id: string) 
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan={12} className="text-center text-sm text-muted-foreground p-10">No orders match this filter.</td></tr>
+                <tr><td colSpan={14} className="text-center text-sm text-muted-foreground p-10">No orders match this filter.</td></tr>
               )}
             </tbody>
           </table>
@@ -264,7 +318,7 @@ function OrdersList({ orders, onOpen }: { orders: Order[]; onOpen: (id: string) 
   );
 }
 function Th({ children, className = "" }: { children?: React.ReactNode; className?: string }) {
-  return <th className={`text-left font-medium px-3 py-2.5 ${className}`}>{children}</th>;
+  return <th className={`text-left font-medium px-3 py-2.5 whitespace-nowrap ${className}`}>{children}</th>;
 }
 function Td({ children, className = "" }: { children?: React.ReactNode; className?: string }) {
   return <td className={`px-3 py-3 align-top ${className}`}>{children}</td>;
@@ -281,23 +335,11 @@ function RxBadge({ order }: { order: Order }) {
 }
 
 // ── Order Detail ────────────────────────────────────────────────────────────
-const NEXT_ACTIONS: { from: OrderStatus[]; to: OrderStatus; label: string; tone?: string }[] = [
-  { from: ["rx-pending"], to: "rx-approved", label: "Approve prescription", tone: "bg-emerald-600 text-white" },
-  { from: ["rx-pending", "rx-approved"], to: "rx-clarification", label: "Request clarification", tone: "bg-red-600 text-white" },
-  { from: ["rx-clarification"], to: "rx-approved", label: "Mark clarified & approve", tone: "bg-emerald-600 text-white" },
-  { from: ["rx-approved"], to: "sourcing", label: "Start sourcing" },
-  { from: ["sourcing"], to: "sent-to-lab", label: "Mark sent to local lab" },
-  { from: ["sent-to-lab"], to: "in-production", label: "Mark in production" },
-  { from: ["in-production"], to: "qc", label: "Mark quality check" },
-  { from: ["qc"], to: "ready-to-ship", label: "Mark ready to ship" },
-  { from: ["ready-to-ship"], to: "shipped", label: "Mark shipped" },
-  { from: ["shipped"], to: "delivered", label: "Mark delivered" },
-  { from: ["delivered"], to: "after-sale", label: "Open after-sale" },
-];
-
 function OrderDetail({ order, onBack }: { order: Order; onBack: () => void }) {
+  const ft = orderFulfillmentType(order);
   const m = estimateMargin(order);
-  const actions = NEXT_ACTIONS.filter((a) => a.from.includes(order.status));
+  const na = nextAction(order);
+  const risks = computeRisks(order);
 
   return (
     <div className="space-y-5">
@@ -309,18 +351,45 @@ function OrderDetail({ order, onBack }: { order: Order; onBack: () => void }) {
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-semibold tracking-tight font-mono">{order.id}</h1>
+            <FtBadge ft={ft} />
             <StatusBadge status={order.status} />
           </div>
           <p className="text-sm text-muted-foreground mt-1">{order.name} · {order.country} · Created {fmtDate(order.createdAt)}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {actions.map((a) => (
-            <button key={a.to + a.label} onClick={() => cart.setStatus(order.id, a.to, a.label)} className={`px-3 py-1.5 rounded-md text-xs font-medium border transition ${a.tone ?? "bg-background border-border hover:bg-secondary"}`}>
-              {a.label}
+        <CopyButtons order={order} />
+      </div>
+
+      {/* Status / Next / Risks */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Current status</div>
+          <div className="mt-2"><StatusBadge status={order.status} /></div>
+          <PipelineMini status={order.status} ft={ft} />
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Next action</div>
+          <div className="mt-2 text-sm font-medium">{na.label}</div>
+          {na.nextStatus && (
+            <button onClick={() => cart.setStatus(order.id, na.nextStatus!, na.label)} className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-foreground text-background text-xs font-medium">
+              {na.label} <ChevronRight className="size-3.5" />
             </button>
-          ))}
+          )}
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Risk & alerts</div>
+          {risks.length === 0 ? (
+            <div className="mt-2 text-sm text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5"><CheckCircle2 className="size-4" /> No alerts</div>
+          ) : (
+            <ul className="mt-2 space-y-1.5">
+              {risks.map((r, i) => (
+                <li key={i} className={`text-xs flex items-start gap-1.5 ${r.level === "danger" ? "text-red-700 dark:text-red-300" : "text-amber-700 dark:text-amber-300"}`}>
+                  <AlertCircle className="size-3.5 mt-0.5 shrink-0" /> <span>{r.message}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
@@ -337,14 +406,17 @@ function OrderDetail({ order, onBack }: { order: Order; onBack: () => void }) {
           <Card title="Product configuration">
             {order.lines.map((line) => (
               <div key={line.lineId} className="space-y-1.5">
+                <KV k="Fulfillment type" v={<FtBadge ft={ft} />} />
                 <KV k="Frame model" v={`${line.name} × ${line.qty}`} />
                 <KV k="Frame color" v={line.color} />
                 <KV k="Frame size" v={line.size ?? "—"} />
                 <KV k="Frame price" v={money(line.unitPrice)} />
-                <KV k="Prescription type" v={line.lens.rxTypeLabel ?? "—"} />
-                <KV k="Lens function" v={line.lens.fn?.label ?? "—"} />
-                <KV k="Lens thickness" v={line.lens.thickness?.label ?? "—"} />
-                <KV k="Add-ons" v={line.lens.addon?.label ?? "—"} />
+                {ft !== "frame-only" && <>
+                  <KV k="Prescription type" v={line.lens.rxTypeLabel ?? "—"} />
+                  <KV k="Lens function" v={line.lens.fn?.label ?? "—"} />
+                  <KV k="Lens thickness" v={line.lens.thickness?.label ?? "—"} />
+                  <KV k="Add-ons" v={line.lens.addon?.label ?? "—"} />
+                </>}
               </div>
             ))}
             <div className="border-t border-border mt-3 pt-3 flex justify-between text-sm">
@@ -353,9 +425,19 @@ function OrderDetail({ order, onBack }: { order: Order; onBack: () => void }) {
             </div>
           </Card>
 
-          <RxReviewSection order={order} />
-          <SourcingSection order={order} />
-          <LabSection order={order} />
+          {ft === "prescription" && <RxReviewSection order={order} />}
+
+          <FrameSourcingSection order={order} />
+          {ft !== "frame-only" && <LensSourcingSection order={order} />}
+
+          {ft === "frame-only" ? (
+            <Card title="Local lab / production">
+              <div className="text-sm text-muted-foreground">Not required for frame-only orders.</div>
+            </Card>
+          ) : (
+            <LabSection order={order} />
+          )}
+
           <ShippingSection order={order} />
           <NotesSection order={order} />
         </div>
@@ -365,7 +447,78 @@ function OrderDetail({ order, onBack }: { order: Order; onBack: () => void }) {
           <TimelineCard order={order} />
         </div>
       </div>
+    </div>
+  );
+}
 
+function PipelineMini({ status, ft }: { status: OrderStatus; ft: FulfillmentType }) {
+  const pipeline = PIPELINE[ft];
+  const idx = pipeline.indexOf(status);
+  return (
+    <div className="mt-3 flex items-center gap-1 flex-wrap">
+      {pipeline.map((s, i) => (
+        <div key={s} className={`h-1.5 flex-1 min-w-[16px] rounded-full ${i <= idx ? "bg-foreground" : "bg-secondary"}`} title={STATUS_META[s].label} />
+      ))}
+    </div>
+  );
+}
+
+// ── Copy Buttons ────────────────────────────────────────────────────────────
+function CopyButtons({ order }: { order: Order }) {
+  const ft = orderFulfillmentType(order);
+  const line = order.lines[0];
+  const rx = line?.lens.rx;
+  const risks = computeRisks(order);
+
+  function customerMsg() {
+    const lines = [`Hi ${order.name.split(" ")[0] || "there"},`, ``, `This is Mira from MIRAVUE about your order ${order.id}.`];
+    if (risks.some((r) => /PD/.test(r.message))) lines.push(`We need your pupillary distance (PD) to cut your lenses. Please measure or share a clear prescription photo.`);
+    if (risks.some((r) => /Axis/.test(r.message))) lines.push(`Your prescription shows CYL but the AXIS value is missing. Could you double-check your Rx?`);
+    if (risks.some((r) => /Prism/.test(r.message))) lines.push(`Your prescription includes prism — we'll have an optician manually verify it before production.`);
+    if (risks.some((r) => /address/i.test(r.message))) lines.push(`Could you confirm your full shipping address (street, city, postal code, country)?`);
+    if (order.status === "shipped") lines.push(`Your tracking number is ${order.shippingInfo?.tracking ?? "—"}.`);
+    lines.push(``, `Thanks!`, `MIRAVUE Team`);
+    return lines.join("\n");
+  }
+
+  function momNote() {
+    const lines = [
+      `Order: ${order.id}`,
+      `Customer: ${order.name} (${order.country})`,
+      `Fulfillment: ${FULFILLMENT_LABEL[ft]}`,
+      `Frame: ${line?.name} / ${line?.color} / ${line?.size ?? "M"}`,
+      ft !== "frame-only" ? `Lens: ${line?.lens.fn?.label ?? "—"} · ${line?.lens.thickness?.label ?? "—"}` : `No lens (frame only — ship with demo lenses)`,
+      ft !== "frame-only" ? `Local lab processing: YES` : `Local lab processing: NO`,
+      `Frame sourcing status: ${order.sourcing?.frame?.status ?? "not-ordered"}`,
+      ft !== "frame-only" ? `Lens sourcing status: ${order.sourcing?.lens?.status ?? "not-ordered"}` : ``,
+      ``,
+      `Notes: ${order.internalNotes ?? "—"}`,
+    ].filter(Boolean);
+    return lines.join("\n");
+  }
+
+  function labNote() {
+    return [
+      `Order: ${order.id}`,
+      `Frame: ${line?.name} / ${line?.color} / ${line?.size ?? "M"}`,
+      `Lens function: ${line?.lens.fn?.label ?? "—"}`,
+      `Lens thickness: ${line?.lens.thickness?.label ?? "—"}`,
+      `Add-ons: ${line?.lens.addon?.label ?? "—"}`,
+      ft === "prescription" && rx ? `OD: SPH ${rx.od?.sph} / CYL ${rx.od?.cyl || "—"} / AXIS ${rx.od?.axis || "—"}` : "",
+      ft === "prescription" && rx ? `OS: SPH ${rx.os?.sph} / CYL ${rx.os?.cyl || "—"} / AXIS ${rx.os?.axis || "—"}` : "",
+      ft === "prescription" && rx ? `PD: ${rx.pd ?? (rx.dontKnowPd ? "UNKNOWN — measure manually" : "—")}` : "",
+      ft === "prescription" && rx?.hasPrism ? `⚠️ PRISM — manual verification required` : "",
+      ``,
+      `Special notes: ${order.internalNotes ?? "—"}`,
+    ].filter(Boolean).join("\n");
+  }
+
+  const btn = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-border bg-background hover:bg-secondary";
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button className={btn} onClick={() => copy(customerMsg(), "Customer message copied")}><Copy className="size-3.5" /> Copy customer message</button>
+      <button className={btn} onClick={() => copy(momNote(), "Mom note copied")}><Copy className="size-3.5" /> Copy mom note</button>
+      <button className={btn} onClick={() => copy(labNote(), "Lab note copied")}><Copy className="size-3.5" /> Copy lab note</button>
     </div>
   );
 }
@@ -430,28 +583,83 @@ function RxReviewSection({ order }: { order: Order }) {
   );
 }
 
-function SourcingSection({ order }: { order: Order }) {
-  const s = order.sourcing ?? {};
-  const update = (patch: Partial<typeof s>) => cart.updateOrder(order.id, { sourcing: { ...s, ...patch } });
+function FrameSourcingSection({ order }: { order: Order }) {
+  const f = order.sourcing?.frame ?? {};
+  const update = (patch: Partial<typeof f>) => cart.updateOrder(order.id, { sourcing: { ...(order.sourcing ?? {}), frame: { ...f, ...patch } } });
   return (
-    <Card title="Sourcing">
-      <EditRow k="Frame source link" v={s.frameSourceUrl} onSave={(v) => update({ frameSourceUrl: v })} placeholder="https://…" />
-      <EditRow k="Frame cost (USD)" v={s.frameCost?.toString()} onSave={(v) => update({ frameCost: v ? Number(v) : undefined })} type="number" />
-      <EditRow k="Lens supplier" v={s.lensSupplier} onSave={(v) => update({ lensSupplier: v })} />
-      <EditRow k="Lens cost (USD)" v={s.lensCost?.toString()} onSave={(v) => update({ lensCost: v ? Number(v) : undefined })} type="number" />
-      <EditRow k="Purchase notes" v={s.notes} onSave={(v) => update({ notes: v })} textarea />
+    <Card title="Frame sourcing" action={<StatusPill value={f.status ?? "not-ordered"} onChange={(v) => update({ status: v })} />}>
+      <EditRow k="Platform" v={f.platform} onSave={(v) => update({ platform: v })} placeholder="1688 / Taobao / Local" />
+      <EditRow k="Source link" v={f.sourceUrl} onSave={(v) => update({ sourceUrl: v })} placeholder="https://…" />
+      <EditRow k="Supplier / shop" v={f.supplier} onSave={(v) => update({ supplier: v })} />
+      <EditRow k="Frame SKU" v={f.sku} onSave={(v) => update({ sku: v })} />
+      <EditRow k="Color" v={f.color} onSave={(v) => update({ color: v })} />
+      <EditRow k="Size" v={f.size} onSave={(v) => update({ size: v })} placeholder="e.g. 52-18-145" />
+      <EditRow k="Frame cost (RMB)" v={f.costRMB?.toString()} onSave={(v) => update({ costRMB: v ? Number(v) : undefined })} type="number" />
+      <EditRow k="Frame cost (USD)" v={f.costUSD?.toString()} onSave={(v) => update({ costUSD: v ? Number(v) : undefined })} type="number" placeholder="auto from RMB" />
+      <EditRow k="Domestic tracking" v={f.domesticTracking} onSave={(v) => update({ domesticTracking: v })} placeholder="SF / YTO / JD…" />
+      <EditRow k="Notes" v={f.notes} onSave={(v) => update({ notes: v })} textarea />
     </Card>
+  );
+}
+
+function LensSourcingSection({ order }: { order: Order }) {
+  const l = order.sourcing?.lens ?? {};
+  const update = (patch: Partial<typeof l>) => cart.updateOrder(order.id, { sourcing: { ...(order.sourcing ?? {}), lens: { ...l, ...patch } } });
+  return (
+    <Card title="Lens sourcing" action={<StatusPill value={l.status ?? "not-ordered"} onChange={(v) => update({ status: v })} />}>
+      <EditRow k="Supplier" v={l.supplier} onSave={(v) => update({ supplier: v })} placeholder="Wenzhou Optical Co." />
+      <EditRow k="Lens function" v={l.fn} onSave={(v) => update({ fn: v })} placeholder="Blue-light / Photochromic…" />
+      <EditRow k="Lens index" v={l.index} onSave={(v) => update({ index: v })} placeholder="1.56 / 1.61 / 1.67 / 1.74" />
+      <EditRow k="Lens cost (RMB)" v={l.costRMB?.toString()} onSave={(v) => update({ costRMB: v ? Number(v) : undefined })} type="number" />
+      <EditRow k="Lens cost (USD)" v={l.costUSD?.toString()} onSave={(v) => update({ costUSD: v ? Number(v) : undefined })} type="number" placeholder="auto from RMB" />
+      <EditRow k="Domestic tracking" v={l.domesticTracking} onSave={(v) => update({ domesticTracking: v })} />
+      <EditRow k="Notes" v={l.notes} onSave={(v) => update({ notes: v })} textarea />
+    </Card>
+  );
+}
+
+function StatusPill({ value, onChange }: { value: "not-ordered" | "ordered" | "received" | string; onChange: (v: "not-ordered" | "ordered" | "received") => void }) {
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value as "not-ordered" | "ordered" | "received")} className="text-xs rounded-md border border-border bg-background px-2 py-1">
+      <option value="not-ordered">Not ordered</option>
+      <option value="ordered">Ordered</option>
+      <option value="received">Received</option>
+    </select>
   );
 }
 
 function LabSection({ order }: { order: Order }) {
   const l = order.lab ?? {};
   const update = (patch: Partial<typeof l>) => cart.updateOrder(order.id, { lab: { ...l, ...patch } });
+  const checklist = l.qcChecklist ?? {};
+  const updateCheck = (patch: Partial<typeof checklist>) => update({ qcChecklist: { ...checklist, ...patch } });
+
+  const checks: { key: keyof typeof checklist; label: string }[] = [
+    { key: "frameMatches", label: "Frame color matches order" },
+    { key: "lensMatches",  label: "Lens function matches order" },
+    { key: "rxChecked",    label: "Prescription values checked" },
+    { key: "noScratches",  label: "No visible scratches" },
+    { key: "packingPhoto", label: "Packing photo uploaded" },
+    { key: "readyToShip",  label: "Ready to ship" },
+  ];
+
   return (
     <Card title="Local lab / production">
-      <KV k="Sent to mom" v={fmtDate(l.sentToMomAt)} />
-      <EditRow k="Local optical shop" v={l.localShop} onSave={(v) => update({ localShop: v })} placeholder="Mira's Optical Workshop" />
-      <EditRow k="Processing fee (USD)" v={l.processingFee?.toString()} onSave={(v) => update({ processingFee: v ? Number(v) : undefined })} type="number" />
+      <DateRow k="Sent to mom" v={l.sentToMomAt} onSave={(t) => update({ sentToMomAt: t })} />
+      <DateRow k="Mom received" v={l.momReceivedAt} onSave={(t) => update({ momReceivedAt: t })} />
+      <EditRow k="Local optical shop" v={l.localShop} onSave={(v) => update({ localShop: v })} placeholder="e.g. Hangzhou Bright Optical" />
+      <DateRow k="Sent to shop" v={l.sentToShopAt} onSave={(t) => update({ sentToShopAt: t })} />
+      <DateRow k="Expected completion" v={l.expectedCompletionAt} onSave={(t) => update({ expectedCompletionAt: t })} />
+      <EditRow k="Processing fee (RMB)" v={l.processingFeeRMB?.toString()} onSave={(v) => update({ processingFeeRMB: v ? Number(v) : undefined })} type="number" />
+      <EditRow k="Processing fee (USD)" v={l.processingFeeUSD?.toString()} onSave={(v) => update({ processingFeeUSD: v ? Number(v) : undefined })} type="number" placeholder="auto from RMB" />
+      <div className="grid grid-cols-[160px_1fr] gap-3 items-start">
+        <div className="text-muted-foreground">Production status</div>
+        <select value={l.productionStatus ?? "not-started"} onChange={(e) => update({ productionStatus: e.target.value as "not-started" | "in-progress" | "completed" })} className="text-sm rounded-md border border-border bg-background px-2.5 py-1.5">
+          <option value="not-started">Not started</option>
+          <option value="in-progress">In progress</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
       <div className="grid grid-cols-[160px_1fr] gap-3">
         <div className="text-muted-foreground">QC photo</div>
         <label className="cursor-pointer text-xs px-3 py-1.5 rounded-md border border-dashed border-border w-fit hover:bg-secondary">
@@ -460,7 +668,28 @@ function LabSection({ order }: { order: Order }) {
         </label>
       </div>
       <EditRow k="QC notes" v={l.qcNotes} onSave={(v) => update({ qcNotes: v })} textarea />
+      <div className="grid grid-cols-[160px_1fr] gap-3 items-start">
+        <div className="text-muted-foreground pt-1">QC checklist</div>
+        <div className="space-y-1.5">
+          {checks.map((c) => (
+            <label key={c.key} className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={!!checklist[c.key]} onChange={(e) => updateCheck({ [c.key]: e.target.checked })} />
+              <span>{c.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
     </Card>
+  );
+}
+
+function DateRow({ k, v, onSave }: { k: string; v?: number; onSave: (t: number | undefined) => void }) {
+  const value = v ? new Date(v).toISOString().slice(0, 10) : "";
+  return (
+    <div className="grid grid-cols-[160px_1fr] gap-3 items-start">
+      <div className="text-muted-foreground pt-1.5">{k}</div>
+      <input type="date" defaultValue={value} onBlur={(e) => onSave(e.target.value ? new Date(e.target.value).getTime() : undefined)} className="rounded-md border border-border bg-background px-2.5 py-1.5 text-sm" />
+    </div>
   );
 }
 
@@ -468,11 +697,23 @@ function ShippingSection({ order }: { order: Order }) {
   const s = order.shippingInfo ?? {};
   const update = (patch: Partial<typeof s>) => cart.updateOrder(order.id, { shippingInfo: { ...s, ...patch } });
   return (
-    <Card title="Shipping & tracking">
-      <EditRow k="Carrier" v={s.carrier} onSave={(v) => update({ carrier: v })} placeholder="Yanwen" />
+    <Card title="International shipping">
+      <div className="grid grid-cols-[160px_1fr] gap-3 items-start">
+        <div className="text-muted-foreground pt-1.5">Carrier</div>
+        <select value={s.carrier ?? "Yanwen"} onChange={(e) => update({ carrier: e.target.value })} className="rounded-md border border-border bg-background px-2.5 py-1.5 text-sm">
+          <option>Yanwen</option><option>4PX</option><option>China Post</option><option>Other</option>
+        </select>
+      </div>
       <EditRow k="Tracking number" v={s.tracking} onSave={(v) => update({ tracking: v })} placeholder="YW…" />
-      <EditRow k="Shipping cost (USD)" v={order.intlShippingCost?.toString()} onSave={(v) => cart.updateOrder(order.id, { intlShippingCost: v ? Number(v) : undefined })} type="number" />
-      <KV k="Shipped date" v={fmtDate(s.shippedAt)} />
+      <EditRow k="Tracking URL" v={s.trackingUrl} onSave={(v) => update({ trackingUrl: v })} placeholder="https://track.yw56.com.cn/…" />
+      <EditRow k="Package weight (g)" v={s.weightG?.toString()} onSave={(v) => update({ weightG: v ? Number(v) : undefined })} type="number" />
+      <EditRow k="Shipping cost (RMB)" v={s.costRMB?.toString()} onSave={(v) => update({ costRMB: v ? Number(v) : undefined })} type="number" />
+      <EditRow k="Shipping cost (USD)" v={s.costUSD?.toString()} onSave={(v) => update({ costUSD: v ? Number(v) : undefined })} type="number" placeholder="auto from RMB" />
+      <DateRow k="Label created" v={s.labelCreatedAt} onSave={(t) => update({ labelCreatedAt: t })} />
+      <DateRow k="Shipped date" v={s.shippedAt} onSave={(t) => update({ shippedAt: t })} />
+      <DateRow k="ETA start" v={s.etaStart} onSave={(t) => update({ etaStart: t })} />
+      <DateRow k="ETA end" v={s.etaEnd} onSave={(t) => update({ etaEnd: t })} />
+      <DateRow k="Delivered" v={s.deliveredAt} onSave={(t) => update({ deliveredAt: t })} />
       <EditRow k="Delivery status" v={s.deliveryStatus} onSave={(v) => update({ deliveryStatus: v })} />
       <EditRow k="Tracking notes" v={s.trackingNotes} onSave={(v) => update({ trackingNotes: v })} textarea />
     </Card>
@@ -521,25 +762,36 @@ function EditRow({ k, v, onSave, type = "text", placeholder, textarea }: { k: st
 }
 
 function MarginCard({ order, m }: { order: Order; m: ReturnType<typeof estimateMargin> }) {
-  const row = (k: string, v: number, sign: "-" | "+" = "-") => (
+  const [rate, setRate] = useState((order.exchangeRate ?? 7.2).toString());
+  const ft = orderFulfillmentType(order);
+  const row = (k: string, usd: number, rmbV?: number) => (
     <div className="flex justify-between text-sm">
       <span className="text-muted-foreground">{k}</span>
-      <span className={sign === "-" ? "text-red-600" : ""}>{sign === "-" ? "−" : "+"}{money(Math.abs(v))}</span>
+      <span className="text-right">
+        <span className="text-red-600">−{money(usd)}</span>
+        {rmbV !== undefined && <span className="block text-[11px] text-muted-foreground">{rmb(rmbV)}</span>}
+      </span>
     </div>
   );
   return (
-    <Card title="Margin estimate">
+    <Card title="Margin estimate" action={
+      <div className="flex items-center gap-1.5 text-xs">
+        <span className="text-muted-foreground">¥/$</span>
+        <input value={rate} onChange={(e) => setRate(e.target.value)} onBlur={() => cart.updateOrder(order.id, { exchangeRate: Number(rate) || 7.2 })} className="w-14 rounded-md border border-border bg-background px-1.5 py-0.5 text-xs" />
+      </div>
+    }>
       <div className="flex justify-between text-sm">
         <span className="text-muted-foreground">Customer paid</span>
         <span className="font-medium">{money(order.total)}</span>
       </div>
       <div className="border-t border-border my-2" />
-      {row("Frame cost", m.frameCost)}
-      {row("Lens cost", m.lensCost)}
-      {row("Processing fee", m.processingFee)}
-      {row("Packaging", m.packagingCost)}
-      {row("Int'l shipping", m.intlShipping)}
+      {row("Frame cost", m.frameCost, m.frameCostRMB)}
+      {ft !== "frame-only" && row("Lens cost", m.lensCost, m.lensCostRMB)}
+      {ft !== "frame-only" && row("Processing fee", m.processingFee, m.processingFeeRMB)}
+      {row("Packaging", m.packagingCost, m.packagingRMB)}
+      {row("Int'l shipping", m.intlShipping, m.intlShippingRMB)}
       {row("Payment fee", m.paymentFee)}
+      {row("Defect / remake reserve", m.defectReserve)}
       <div className="border-t border-border my-2" />
       <div className="flex justify-between text-sm">
         <span className="text-muted-foreground">Total cost</span>
@@ -548,7 +800,7 @@ function MarginCard({ order, m }: { order: Order; m: ReturnType<typeof estimateM
       <div className="flex justify-between items-baseline mt-3 bg-emerald-500/10 rounded-md px-3 py-2">
         <div>
           <div className="text-xs text-emerald-800 dark:text-emerald-200">Estimated gross profit</div>
-          <div className="text-xs text-muted-foreground">{m.marginPct}% margin</div>
+          <div className="text-xs text-muted-foreground">{m.marginPct}% margin · rate ¥{m.rate}</div>
         </div>
         <div className="text-lg font-semibold text-emerald-700 dark:text-emerald-300">{money(m.gross)}</div>
       </div>
