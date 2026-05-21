@@ -469,48 +469,106 @@ function CopyButtons({ order }: { order: Order }) {
   const line = order.lines[0];
   const rx = line?.lens.rx;
   const risks = computeRisks(order);
+  const first = order.name.split(" ")[0] || "there";
 
   function customerMsg() {
-    const lines = [`Hi ${order.name.split(" ")[0] || "there"},`, ``, `This is Mira from MIRAVUE about your order ${order.id}.`];
-    if (risks.some((r) => /PD/.test(r.message))) lines.push(`We need your pupillary distance (PD) to cut your lenses. Please measure or share a clear prescription photo.`);
-    if (risks.some((r) => /Axis/.test(r.message))) lines.push(`Your prescription shows CYL but the AXIS value is missing. Could you double-check your Rx?`);
-    if (risks.some((r) => /Prism/.test(r.message))) lines.push(`Your prescription includes prism — we'll have an optician manually verify it before production.`);
-    if (risks.some((r) => /address/i.test(r.message))) lines.push(`Could you confirm your full shipping address (street, city, postal code, country)?`);
-    if (order.status === "shipped") lines.push(`Your tracking number is ${order.shippingInfo?.tracking ?? "—"}.`);
-    lines.push(``, `Thanks!`, `MIRAVUE Team`);
+    const lines = [`Hi ${first},`, ``, `This is Mira from MIRAVUE about your order ${order.id} (${line?.name} · ${line?.color}).`];
+    let added = false;
+    if (risks.some((r) => /PD/.test(r.message))) {
+      lines.push(`We need your pupillary distance (PD) to cut your lenses. You can measure it from a clear selfie or send a photo of your prescription.`); added = true;
+    }
+    if (risks.some((r) => /Axis/.test(r.message))) {
+      lines.push(`Your prescription shows CYL but the AXIS value is missing. Could you double-check your Rx?`); added = true;
+    }
+    if (risks.some((r) => /Prism/.test(r.message))) {
+      lines.push(`Your prescription includes prism — our optician will manually verify it before production.`); added = true;
+    }
+    if (risks.some((r) => /address/i.test(r.message))) {
+      lines.push(`Could you confirm your full shipping address (street, city, postal code, country)?`); added = true;
+    }
+    if (!added) {
+      // Status-based fallback
+      switch (order.status) {
+        case "rx-pending":
+          lines.push(`Just a quick note — your prescription is in our review queue and we'll confirm everything within 24 hours.`); break;
+        case "rx-approved":
+        case "sourcing":
+          lines.push(`Your prescription is approved! We're now sourcing your ${line?.name} frame${ft !== "frame-only" ? " and lenses" : ""} and will keep you posted.`); break;
+        case "sent-to-lab":
+        case "in-production":
+          lines.push(`Quick update — your glasses are being assembled at our partner lab. Expected completion ${fmtShort(order.lab?.expectedCompletionAt) === "—" ? "soon" : fmtShort(order.lab?.expectedCompletionAt)}.`); break;
+        case "qc":
+          lines.push(`Your glasses are in final quality check. We'll ship as soon as they pass.`); break;
+        case "ready-to-ship":
+          lines.push(`Good news — your order is packed and ready to hand off to Yanwen today.`); break;
+        case "shipped":
+          lines.push(`Your order has shipped via ${order.shippingInfo?.carrier ?? "Yanwen"}. Tracking: ${order.shippingInfo?.tracking ?? "—"}${order.shippingInfo?.trackingUrl ? ` (${order.shippingInfo.trackingUrl})` : ""}. Estimated arrival 13–20 days.`); break;
+        case "delivered":
+          lines.push(`Hope your new ${line?.name} arrived safely. Let us know if anything isn't perfect — we're here for adjustments.`); break;
+        default:
+          lines.push(`Just a quick update on your order. Let us know if you have any questions!`);
+      }
+    }
+    lines.push(``, `Thanks!`, `Mira · MIRAVUE Team`);
     return lines.join("\n");
   }
 
   function momNote() {
-    const lines = [
-      `Order: ${order.id}`,
-      `Customer: ${order.name} (${order.country})`,
+    const f = order.sourcing?.frame ?? {};
+    const l = order.sourcing?.lens ?? {};
+    const out = [
+      `订单 / Order: ${order.id}`,
+      `客户 / Customer: ${order.name} (${order.country ?? "—"})`,
       `Fulfillment: ${FULFILLMENT_LABEL[ft]}`,
-      `Frame: ${line?.name} / ${line?.color} / ${line?.size ?? "M"}`,
-      ft !== "frame-only" ? `Lens: ${line?.lens.fn?.label ?? "—"} · ${line?.lens.thickness?.label ?? "—"}` : `No lens (frame only — ship with demo lenses)`,
-      ft !== "frame-only" ? `Local lab processing: YES` : `Local lab processing: NO`,
-      `Frame sourcing status: ${order.sourcing?.frame?.status ?? "not-ordered"}`,
-      ft !== "frame-only" ? `Lens sourcing status: ${order.sourcing?.lens?.status ?? "not-ordered"}` : ``,
       ``,
-      `Notes: ${order.internalNotes ?? "—"}`,
-    ].filter(Boolean);
-    return lines.join("\n");
+      `镜框 / Frame: ${line?.name} · ${line?.color} · ${line?.size ?? "M"}`,
+      `  平台: ${f.platform ?? "—"}  |  SKU: ${f.sku ?? "—"}`,
+      `  到货状态: ${f.status ?? "not-ordered"}  |  国内单号: ${f.domesticTracking ?? "—"}`,
+    ];
+    if (ft !== "frame-only") {
+      out.push(``,
+        `镜片 / Lens: ${line?.lens.fn?.label ?? "—"} · ${line?.lens.thickness?.label ?? "—"}`,
+        `  供应商: ${l.supplier ?? "—"}  |  到货状态: ${l.status ?? "not-ordered"}`,
+        `  本地加工店: ${order.lab?.localShop ?? "—"}`,
+      );
+    } else {
+      out.push(``, `⚠️ Frame only — 不需要加工，直接装 demo 片寄出 / no lens cutting, ship with demo lenses.`);
+    }
+    if (ft === "prescription" && rx) {
+      out.push(``,
+        `处方 / Rx: OD ${rx.od?.sph}/${rx.od?.cyl || "—"}/${rx.od?.axis || "—"}  ·  OS ${rx.os?.sph}/${rx.os?.cyl || "—"}/${rx.os?.axis || "—"}  ·  PD ${rx.pd ?? (rx.dontKnowPd ? "未知/UNKNOWN" : "—")}`,
+        rx.hasPrism ? `⚠️ 含棱镜 / Has prism — 需手工核对` : ``,
+      );
+    }
+    out.push(``, `寄出国家 / Ship to: ${order.country ?? "—"}`, `备注 / Notes: ${order.internalNotes || "—"}`);
+    return out.filter(Boolean).join("\n");
   }
 
   function labNote() {
-    return [
-      `Order: ${order.id}`,
-      `Frame: ${line?.name} / ${line?.color} / ${line?.size ?? "M"}`,
-      `Lens function: ${line?.lens.fn?.label ?? "—"}`,
-      `Lens thickness: ${line?.lens.thickness?.label ?? "—"}`,
-      `Add-ons: ${line?.lens.addon?.label ?? "—"}`,
-      ft === "prescription" && rx ? `OD: SPH ${rx.od?.sph} / CYL ${rx.od?.cyl || "—"} / AXIS ${rx.od?.axis || "—"}` : "",
-      ft === "prescription" && rx ? `OS: SPH ${rx.os?.sph} / CYL ${rx.os?.cyl || "—"} / AXIS ${rx.os?.axis || "—"}` : "",
-      ft === "prescription" && rx ? `PD: ${rx.pd ?? (rx.dontKnowPd ? "UNKNOWN — measure manually" : "—")}` : "",
-      ft === "prescription" && rx?.hasPrism ? `⚠️ PRISM — manual verification required` : "",
-      ``,
-      `Special notes: ${order.internalNotes ?? "—"}`,
-    ].filter(Boolean).join("\n");
+    const out = [
+      `订单 / Order: ${order.id}`,
+      `镜框 / Frame: ${line?.name} · ${line?.color} · ${line?.size ?? "M"}`,
+    ];
+    if (ft === "frame-only") {
+      out.push(``, `⚠️ Frame only — 仅装 demo 镜片，无需配镜片 / install demo lenses only.`);
+    } else {
+      out.push(
+        `镜片功能 / Lens function: ${line?.lens.fn?.label ?? "—"}`,
+        `镜片厚度 / Lens index: ${line?.lens.thickness?.label ?? "—"}`,
+        `镀膜 / Coating: ${line?.lens.addon?.label ?? "Standard AR only"}`,
+      );
+    }
+    if (ft === "prescription" && rx) {
+      out.push(``,
+        `OD (右眼): SPH ${rx.od?.sph} / CYL ${rx.od?.cyl || "—"} / AXIS ${rx.od?.axis || "—"}`,
+        `OS (左眼): SPH ${rx.os?.sph} / CYL ${rx.os?.cyl || "—"} / AXIS ${rx.os?.axis || "—"}`,
+        `PD: ${rx.pd ?? (rx.dontKnowPd ? "未知 — 请手工测量 / UNKNOWN, measure manually" : "—")}`,
+        rx.hasPrism ? `⚠️ 含棱镜 — 请人工核对 / PRISM, manual verification required` : ``,
+      );
+    }
+    out.push(``, `预计完工 / Expected completion: ${fmtShort(order.lab?.expectedCompletionAt)}`,
+      `特别备注 / Special notes: ${order.internalNotes || "—"}`);
+    return out.filter(Boolean).join("\n");
   }
 
   const btn = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-border bg-background hover:bg-secondary";
