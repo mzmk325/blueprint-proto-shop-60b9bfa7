@@ -140,9 +140,10 @@ function PDP() {
               to="/lens/$id"
               params={{ id: p.id }}
               search={{ color: p.colors[colorIdx].name }}
-              className="block w-full bg-sale text-white text-center py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
+              className="relative block w-full bg-sale text-white text-center py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
             >
-              Select lens color — ${p.price.toFixed(2)}
+              Select lens color
+              <span className="absolute top-0 right-3 -translate-y-1/2 bg-foreground text-background text-[9px] px-2 py-0.5 tracking-wider">15% Off</span>
             </Link>
             <Link
               to="/lens/$id"
