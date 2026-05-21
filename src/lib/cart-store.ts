@@ -147,13 +147,22 @@ export type Sourcing = {
 };
 
 export type QcChecklist = {
-  frameMatches?: boolean;
-  lensMatches?: boolean;
+  frameModel?: boolean;
+  frameColor?: boolean;
+  lensFunction?: boolean;
+  lensThickness?: boolean;
   rxChecked?: boolean;
+  pdChecked?: boolean;
   noScratches?: boolean;
+  hingesAlignment?: boolean;
   packingPhoto?: boolean;
   readyToShip?: boolean;
+  // legacy keys kept for back-compat with previously saved orders
+  frameMatches?: boolean;
+  lensMatches?: boolean;
 };
+
+export type QcResult = "pass" | "remake" | "needs-customer-confirm";
 
 export type LabInfo = {
   sentToMomAt?: number;
@@ -167,6 +176,7 @@ export type LabInfo = {
   qcPhotoName?: string;
   qcNotes?: string;
   qcChecklist?: QcChecklist;
+  qcResult?: QcResult;
   // legacy
   processingFee?: number;
 };
