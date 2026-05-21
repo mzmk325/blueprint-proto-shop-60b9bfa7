@@ -202,8 +202,9 @@ export const cart = {
   },
 };
 
+const EMPTY_STATE: State = { lines: [], orders: [] };
 export function useCart() {
-  return useSyncExternalStore(cart.subscribe, cart.get, cart.get);
+  return useSyncExternalStore(cart.subscribe, cart.get, () => EMPTY_STATE);
 }
 
 export function lineTotal(l: CartLine) { return (l.unitPrice + l.lens.priceAdd) * l.qty; }
