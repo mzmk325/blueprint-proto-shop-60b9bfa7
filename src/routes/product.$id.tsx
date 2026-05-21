@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/site/Layout";
+import { ProductCard } from "@/components/site/ProductCard";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { getProduct, productImage, products, type Product } from "@/lib/products";
 import { useUser, user } from "@/lib/user-store";
@@ -171,7 +172,7 @@ function PDP() {
       <section className="mx-auto max-w-7xl px-4 py-16">
         <h2 className="text-2xl md:text-3xl mb-8">You may also like</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {products.filter((x) => x.id !== p.id).slice(0, 4).map((r) => <ProductCardCompact key={r.id} p={r} />)}
+          {products.filter((x) => x.id !== p.id).slice(0, 4).map((r) => <ProductCard key={r.id} p={r} />)}
         </div>
       </section>
     </Layout>
