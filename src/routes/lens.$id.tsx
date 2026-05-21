@@ -284,13 +284,13 @@ function LensFlow() {
                   {rxMethod === "manual" && (
                     <div className="bg-background p-5 space-y-5">
                       {/* Compact Rx table */}
-                      <div className="grid grid-cols-[70px_1fr_1fr_1fr] gap-2 items-center text-xs">
+                      <div className="grid grid-cols-[58px_1fr_1fr_1fr] sm:grid-cols-[70px_1fr_1fr_1fr] gap-1.5 sm:gap-2 items-center text-xs">
                         <div></div>
                         <div className="font-semibold text-center text-muted-foreground">SPH</div>
                         <div className="font-semibold text-center text-muted-foreground">CYL</div>
                         <div className="font-semibold text-center text-muted-foreground">Axis</div>
-                        <RxRow label="OD (Right)" val={od} setVal={setOd} />
-                        <RxRow label="OS (Left)" val={os} setVal={setOs} />
+                        <RxRow label="OD (R)" val={od} setVal={setOd} />
+                        <RxRow label="OS (L)" val={os} setVal={setOs} />
                       </div>
 
                       {/* PD */}
