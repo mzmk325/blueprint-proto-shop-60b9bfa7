@@ -594,9 +594,9 @@ function Card({ title, action, children }: { title: string; action?: React.React
 }
 function KV({ k, v }: { k: string; v: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[160px_1fr] gap-3 text-sm">
-      <div className="text-muted-foreground">{k}</div>
-      <div>{v}</div>
+    <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3 text-sm">
+      <div className="text-muted-foreground text-xs sm:text-sm">{k}</div>
+      <div className="break-words">{v}</div>
     </div>
   );
 }
