@@ -393,6 +393,9 @@ function OrderDetail({ order, onBack }: { order: Order; onBack: () => void }) {
         </div>
       </div>
 
+      <StatusActions order={order} />
+
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2 space-y-5">
           <Card title="Customer information">
@@ -463,6 +466,105 @@ function PipelineMini({ status, ft }: { status: OrderStatus; ft: FulfillmentType
   );
 }
 
+// ── Status-specific Actions ─────────────────────────────────────────────────
+function StatusActions({ order }: { order: Order }) {
+  const ft = orderFulfillmentType(order);
+  const review = order.rxReview ?? { status: "pending" as const };
+  const f = order.sourcing?.frame ?? {};
+  const l = order.sourcing?.lens ?? {};
+  const lab = order.lab ?? {};
+  const updateFrame = (patch: Partial<typeof f>) => cart.updateOrder(order.id, { sourcing: { ...(order.sourcing ?? {}), frame: { ...f, ...patch } } });
+  const updateLens  = (patch: Partial<typeof l>) => cart.updateOrder(order.id, { sourcing: { ...(order.sourcing ?? {}), lens:  { ...l, ...patch } } });
+  const updateLab   = (patch: Partial<typeof lab>) => cart.updateOrder(order.id, { lab: { ...lab, ...patch } });
+
+  type Btn = { label: string; tone?: "primary" | "danger" | "neutral"; onClick: () => void };
+  const buttons: Btn[] = [];
+
+  switch (order.status) {
+    case "paid":
+      if (ft === "prescription") buttons.push({ label: "Send to Rx review", tone: "primary", onClick: () => cart.setStatus(order.id, "rx-pending", "Prescription queued for review") });
+      else buttons.push({ label: "Start sourcing", tone: "primary", onClick: () => cart.setStatus(order.id, "sourcing", "Order entered sourcing queue") });
+      break;
+    case "rx-pending":
+      buttons.push(
+        { label: "Approve prescription", tone: "primary", onClick: () => { cart.updateOrder(order.id, { rxReview: { ...review, status: "approved", reviewedAt: Date.now(), reviewer: "Mira" } }); cart.setStatus(order.id, "rx-approved", "Prescription approved"); } },
+        { label: "Request clarification", tone: "danger", onClick: () => { cart.updateOrder(order.id, { rxReview: { ...review, status: "clarification", reviewedAt: Date.now(), reviewer: "Mira" } }); cart.setStatus(order.id, "rx-clarification", "Requested clarification from customer"); } },
+      );
+      break;
+    case "rx-clarification":
+      buttons.push(
+        { label: "Mark customer replied", onClick: () => cart.addEvent(order.id, "Customer replied — re-reviewing prescription") },
+        { label: "Approve after clarification", tone: "primary", onClick: () => { cart.updateOrder(order.id, { rxReview: { ...review, status: "approved", reviewedAt: Date.now(), reviewer: "Mira" } }); cart.setStatus(order.id, "rx-approved", "Approved after clarification"); } },
+      );
+      break;
+    case "rx-approved":
+      buttons.push({ label: "Start sourcing", tone: "primary", onClick: () => cart.setStatus(order.id, "sourcing", "Started frame & lens sourcing") });
+      break;
+    case "sourcing":
+      buttons.push({ label: "Mark frame ordered", onClick: () => updateFrame({ status: "ordered" }) });
+      if (ft !== "frame-only") buttons.push({ label: "Mark lenses ordered", onClick: () => updateLens({ status: "ordered" }) });
+      buttons.push({ label: "Mark frame received", onClick: () => updateFrame({ status: "received" }) });
+      if (ft !== "frame-only") buttons.push({ label: "Mark lenses received", onClick: () => updateLens({ status: "received" }) });
+      if (ft === "frame-only") buttons.push({ label: "Move to Ready to Ship", tone: "primary", onClick: () => cart.setStatus(order.id, "ready-to-ship", "Frame received — ready to ship") });
+      else buttons.push({ label: "Send to local lab", tone: "primary", onClick: () => { updateLab({ sentToMomAt: Date.now() }); cart.setStatus(order.id, "sent-to-lab", "Parcel sent to mom for local lab"); } });
+      break;
+    case "sent-to-lab":
+      buttons.push(
+        { label: "Mark received by mom", onClick: () => updateLab({ momReceivedAt: Date.now() }) },
+        { label: "Mark sent to optical shop", onClick: () => updateLab({ sentToShopAt: Date.now() }) },
+        { label: "Move to In Production", tone: "primary", onClick: () => { updateLab({ productionStatus: "in-progress" }); cart.setStatus(order.id, "in-production", "Local lab started production"); } },
+      );
+      break;
+    case "in-production":
+      buttons.push(
+        { label: "Mark production completed", onClick: () => updateLab({ productionStatus: "completed" }) },
+        { label: "Move to Quality Check", tone: "primary", onClick: () => cart.setStatus(order.id, "qc", "Production complete — moved to QC") },
+      );
+      break;
+    case "qc":
+      buttons.push(
+        { label: "Mark QC passed", tone: "primary", onClick: () => { updateLab({ qcResult: "pass", qcChecklist: { ...(lab.qcChecklist ?? {}), readyToShip: true } }); cart.addEvent(order.id, "QC passed"); } },
+        { label: "Request remake", tone: "danger", onClick: () => { updateLab({ qcResult: "remake" }); cart.setStatus(order.id, "in-production", "QC remake requested"); } },
+        { label: "Move to Ready to Ship", onClick: () => cart.setStatus(order.id, "ready-to-ship", "QC complete — ready to ship") },
+      );
+      break;
+    case "ready-to-ship":
+      buttons.push({ label: "Mark shipped", tone: "primary", onClick: () => { cart.updateOrder(order.id, { shippingInfo: { ...(order.shippingInfo ?? {}), shippedAt: Date.now() } }); cart.setStatus(order.id, "shipped", `Shipped via ${order.shippingInfo?.carrier ?? "Yanwen"}`); } });
+      break;
+    case "shipped":
+      buttons.push(
+        { label: "Mark delivered", tone: "primary", onClick: () => { cart.updateOrder(order.id, { shippingInfo: { ...(order.shippingInfo ?? {}), deliveredAt: Date.now() } }); cart.setStatus(order.id, "delivered", "Marked delivered"); } },
+        { label: "Open after-sale case", tone: "danger", onClick: () => cart.setStatus(order.id, "after-sale", "After-sale case opened") },
+      );
+      break;
+    case "delivered":
+      buttons.push({ label: "Open after-sale case", tone: "danger", onClick: () => cart.setStatus(order.id, "after-sale", "After-sale case opened") });
+      break;
+    case "after-sale":
+      buttons.push({ label: "Resolve & mark delivered", tone: "primary", onClick: () => cart.setStatus(order.id, "delivered", "After-sale resolved") });
+      break;
+  }
+
+  if (buttons.length === 0) return null;
+  const tones: Record<NonNullable<Btn["tone"]>, string> = {
+    primary: "bg-foreground text-background hover:opacity-90",
+    danger:  "bg-red-600 text-white hover:bg-red-700",
+    neutral: "bg-background border border-border hover:bg-secondary",
+  };
+  return (
+    <div className="bg-card border border-border rounded-xl p-4">
+      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-3">Actions for {STATUS_META[order.status].label}</div>
+      <div className="flex flex-wrap gap-2">
+        {buttons.map((b, i) => (
+          <button key={i} onClick={b.onClick} className={`px-3 py-1.5 rounded-md text-xs font-medium ${tones[b.tone ?? "neutral"]}`}>
+            {b.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Copy Buttons ────────────────────────────────────────────────────────────
 function CopyButtons({ order }: { order: Order }) {
   const ft = orderFulfillmentType(order);
@@ -497,12 +599,19 @@ function CopyButtons({ order }: { order: Order }) {
         case "sent-to-lab":
         case "in-production":
           lines.push(`Quick update — your glasses are being assembled at our partner lab. Expected completion ${fmtShort(order.lab?.expectedCompletionAt) === "—" ? "soon" : fmtShort(order.lab?.expectedCompletionAt)}.`); break;
-        case "qc":
-          lines.push(`Your glasses are in final quality check. We'll ship as soon as they pass.`); break;
+        case "qc": {
+          const daysInQc = order.lab?.expectedCompletionAt ? (Date.now() - order.lab.expectedCompletionAt) / 86400_000 : 0;
+          if (daysInQc > 2) lines.push(`Quick heads-up — your glasses are in our final quality check and we're being a little extra picky. Shipping is delayed by a couple of days but you'll have a perfect pair, promise.`);
+          else lines.push(`Your glasses are in final quality check. We'll ship as soon as they pass.`); break;
+        }
         case "ready-to-ship":
           lines.push(`Good news — your order is packed and ready to hand off to Yanwen today.`); break;
-        case "shipped":
-          lines.push(`Your order has shipped via ${order.shippingInfo?.carrier ?? "Yanwen"}. Tracking: ${order.shippingInfo?.tracking ?? "—"}${order.shippingInfo?.trackingUrl ? ` (${order.shippingInfo.trackingUrl})` : ""}. Estimated arrival 13–20 days.`); break;
+        case "shipped": {
+          const days = order.shippingInfo?.shippedAt ? (Date.now() - order.shippingInfo.shippedAt) / 86400_000 : 0;
+          if (days > 18) lines.push(`Heads-up on order ${order.id} — it's been in transit ${Math.round(days)} days, a bit slower than usual. Tracking ${order.shippingInfo?.tracking ?? "—"}${order.shippingInfo?.trackingUrl ? ` (${order.shippingInfo.trackingUrl})` : ""}. We're monitoring it daily; if it doesn't move in the next 3 days we'll open a case with the carrier.`);
+          else lines.push(`Your order has shipped via ${order.shippingInfo?.carrier ?? "Yanwen"}. Tracking: ${order.shippingInfo?.tracking ?? "—"}${order.shippingInfo?.trackingUrl ? ` (${order.shippingInfo.trackingUrl})` : ""}. Estimated arrival 13–20 days.`);
+          break;
+        }
         case "delivered":
           lines.push(`Hope your new ${line?.name} arrived safely. Let us know if anything isn't perfect — we're here for adjustments.`); break;
         default:
@@ -691,15 +800,21 @@ function LabSection({ order }: { order: Order }) {
   const update = (patch: Partial<typeof l>) => cart.updateOrder(order.id, { lab: { ...l, ...patch } });
   const checklist = l.qcChecklist ?? {};
   const updateCheck = (patch: Partial<typeof checklist>) => update({ qcChecklist: { ...checklist, ...patch } });
+  const ft = orderFulfillmentType(order);
 
-  const checks: { key: keyof typeof checklist; label: string }[] = [
-    { key: "frameMatches", label: "Frame color matches order" },
-    { key: "lensMatches",  label: "Lens function matches order" },
-    { key: "rxChecked",    label: "Prescription values checked" },
-    { key: "noScratches",  label: "No visible scratches" },
-    { key: "packingPhoto", label: "Packing photo uploaded" },
-    { key: "readyToShip",  label: "Ready to ship" },
+  const allChecks: { key: keyof typeof checklist; label: string; show: boolean }[] = [
+    { key: "frameModel",      label: "Frame model matches order",         show: true },
+    { key: "frameColor",      label: "Frame color matches order",         show: true },
+    { key: "lensFunction",    label: "Lens function matches order",       show: ft !== "frame-only" },
+    { key: "lensThickness",   label: "Lens thickness / index matches",    show: ft !== "frame-only" },
+    { key: "rxChecked",       label: "Prescription values checked",       show: ft === "prescription" },
+    { key: "pdChecked",       label: "PD checked",                        show: ft === "prescription" },
+    { key: "noScratches",     label: "No visible scratches",              show: true },
+    { key: "hingesAlignment", label: "Hinges and frame alignment checked",show: true },
+    { key: "packingPhoto",    label: "Packing photo uploaded",            show: true },
+    { key: "readyToShip",     label: "Ready to ship",                     show: true },
   ];
+  const checks = allChecks.filter((c) => c.show);
 
   return (
     <Card title="Local lab / production">
@@ -737,6 +852,26 @@ function LabSection({ order }: { order: Order }) {
           ))}
         </div>
       </div>
+      <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3 items-start">
+        <div className="text-muted-foreground pt-1.5">QC result</div>
+        <select
+          value={l.qcResult ?? ""}
+          onChange={(e) => update({ qcResult: (e.target.value || undefined) as typeof l.qcResult })}
+          className="text-sm rounded-md border border-border bg-background px-2.5 py-1.5"
+        >
+          <option value="">— Not decided —</option>
+          <option value="pass">Pass</option>
+          <option value="remake">Needs remake</option>
+          <option value="needs-customer-confirm">Needs customer confirmation</option>
+        </select>
+      </div>
+      {order.status === "qc" && (
+        <div className="flex flex-wrap gap-2 pt-2">
+          <button onClick={() => { update({ qcResult: "pass", qcChecklist: { ...checklist, readyToShip: true } }); cart.addEvent(order.id, "QC passed — all checks complete"); }} className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-600 text-white">Mark QC passed</button>
+          <button onClick={() => { update({ qcResult: "remake" }); cart.setStatus(order.id, "in-production", "QC requested remake — back to production"); }} className="px-3 py-1.5 rounded-md text-xs font-medium bg-red-600 text-white">Request remake</button>
+          <button onClick={() => cart.setStatus(order.id, "ready-to-ship", "QC complete — moved to ready to ship")} className="px-3 py-1.5 rounded-md text-xs font-medium bg-foreground text-background">Move to Ready to Ship</button>
+        </div>
+      )}
     </Card>
   );
 }
