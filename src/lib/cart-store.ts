@@ -130,9 +130,9 @@ export type Order = {
 type State = { lines: CartLine[]; orders: Order[] };
 
 const KEY = "mv-cart-v2";
+const MOCK_NOW = Date.UTC(2026, 4, 21, 10, 0, 0);
 let state: State = load();
 const listeners = new Set<() => void>();
-const MOCK_NOW = Date.UTC(2026, 4, 21, 10, 0, 0);
 
 function load(): State {
   if (typeof window === "undefined") return { lines: [], orders: [] };
