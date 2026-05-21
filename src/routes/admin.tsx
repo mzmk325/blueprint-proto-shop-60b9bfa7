@@ -610,7 +610,7 @@ function RxReviewSection({ order }: { order: Order }) {
       <KV k="Method" v={rx?.method ?? "—"} />
       {rx?.method === "upload" && <KV k="Uploaded file" v={rx.fileName ?? "—"} />}
       {rx?.method === "upload" && (
-        <div className="grid grid-cols-[160px_1fr] gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3">
           <div className="text-muted-foreground">Image preview</div>
           <div className="h-32 rounded-md border border-dashed border-border bg-muted/30 grid place-items-center text-xs text-muted-foreground">[ Rx photo preview placeholder ]</div>
         </div>
@@ -624,7 +624,7 @@ function RxReviewSection({ order }: { order: Order }) {
         </>
       )}
       <KV k="Review status" v={<RxBadge order={order} />} />
-      <div className="grid grid-cols-[160px_1fr] gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3">
         <div className="text-muted-foreground pt-1.5">Review notes</div>
         <textarea
           value={notes} onChange={(e) => setNotes(e.target.value)}
@@ -710,7 +710,7 @@ function LabSection({ order }: { order: Order }) {
       <DateRow k="Expected completion" v={l.expectedCompletionAt} onSave={(t) => update({ expectedCompletionAt: t })} />
       <EditRow k="Processing fee (RMB)" v={l.processingFeeRMB?.toString()} onSave={(v) => update({ processingFeeRMB: v ? Number(v) : undefined })} type="number" />
       <EditRow k="Processing fee (USD)" v={l.processingFeeUSD?.toString()} onSave={(v) => update({ processingFeeUSD: v ? Number(v) : undefined })} type="number" placeholder="auto from RMB" />
-      <div className="grid grid-cols-[160px_1fr] gap-3 items-start">
+      <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3 items-start">
         <div className="text-muted-foreground">Production status</div>
         <select value={l.productionStatus ?? "not-started"} onChange={(e) => update({ productionStatus: e.target.value as "not-started" | "in-progress" | "completed" })} className="text-sm rounded-md border border-border bg-background px-2.5 py-1.5">
           <option value="not-started">Not started</option>
@@ -718,7 +718,7 @@ function LabSection({ order }: { order: Order }) {
           <option value="completed">Completed</option>
         </select>
       </div>
-      <div className="grid grid-cols-[160px_1fr] gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3">
         <div className="text-muted-foreground">QC photo</div>
         <label className="cursor-pointer text-xs px-3 py-1.5 rounded-md border border-dashed border-border w-fit hover:bg-secondary">
           {l.qcPhotoName ?? "Upload QC photo (placeholder)"}
@@ -726,7 +726,7 @@ function LabSection({ order }: { order: Order }) {
         </label>
       </div>
       <EditRow k="QC notes" v={l.qcNotes} onSave={(v) => update({ qcNotes: v })} textarea />
-      <div className="grid grid-cols-[160px_1fr] gap-3 items-start">
+      <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3 items-start">
         <div className="text-muted-foreground pt-1">QC checklist</div>
         <div className="space-y-1.5">
           {checks.map((c) => (
@@ -744,7 +744,7 @@ function LabSection({ order }: { order: Order }) {
 function DateRow({ k, v, onSave }: { k: string; v?: number; onSave: (t: number | undefined) => void }) {
   const value = v ? new Date(v).toISOString().slice(0, 10) : "";
   return (
-    <div className="grid grid-cols-[160px_1fr] gap-3 items-start">
+    <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3 items-start">
       <div className="text-muted-foreground pt-1.5">{k}</div>
       <input type="date" defaultValue={value} onBlur={(e) => onSave(e.target.value ? new Date(e.target.value).getTime() : undefined)} className="rounded-md border border-border bg-background px-2.5 py-1.5 text-sm" />
     </div>
@@ -756,7 +756,7 @@ function ShippingSection({ order }: { order: Order }) {
   const update = (patch: Partial<typeof s>) => cart.updateOrder(order.id, { shippingInfo: { ...s, ...patch } });
   return (
     <Card title="International shipping">
-      <div className="grid grid-cols-[160px_1fr] gap-3 items-start">
+      <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3 items-start">
         <div className="text-muted-foreground pt-1.5">Carrier</div>
         <select value={s.carrier ?? "Yanwen"} onChange={(e) => update({ carrier: e.target.value })} className="rounded-md border border-border bg-background px-2.5 py-1.5 text-sm">
           <option>Yanwen</option><option>4PX</option><option>China Post</option><option>Other</option>
@@ -784,15 +784,15 @@ function NotesSection({ order }: { order: Order }) {
   const [msg, setMsg] = useState("");
   return (
     <Card title="Notes & communication">
-      <div className="grid grid-cols-[160px_1fr] gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3">
         <div className="text-muted-foreground pt-1.5">Internal notes</div>
         <textarea value={internal} onChange={(e) => setInternal(e.target.value)} onBlur={() => cart.updateOrder(order.id, { internalNotes: internal })} rows={2} className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm" />
       </div>
-      <div className="grid grid-cols-[160px_1fr] gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3">
         <div className="text-muted-foreground pt-1.5">Customer notes</div>
         <textarea value={customer} onChange={(e) => setCustomer(e.target.value)} onBlur={() => cart.updateOrder(order.id, { customerNotes: customer })} rows={2} className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm" />
       </div>
-      <div className="grid grid-cols-[160px_1fr] gap-3 items-start">
+      <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3 items-start">
         <div className="text-muted-foreground pt-1.5">Add timeline note</div>
         <div className="flex gap-2">
           <input value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="e.g. Called customer about Rx" className="flex-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-sm" />
@@ -808,7 +808,7 @@ function NotesSection({ order }: { order: Order }) {
 function EditRow({ k, v, onSave, type = "text", placeholder, textarea }: { k: string; v?: string; onSave: (v: string) => void; type?: string; placeholder?: string; textarea?: boolean }) {
   const [val, setVal] = useState(v ?? "");
   return (
-    <div className="grid grid-cols-[160px_1fr] gap-3 items-start">
+    <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3 items-start">
       <div className="text-muted-foreground pt-1.5">{k}</div>
       {textarea ? (
         <textarea value={val} onChange={(e) => setVal(e.target.value)} onBlur={() => onSave(val)} placeholder={placeholder} rows={2} className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm" />
