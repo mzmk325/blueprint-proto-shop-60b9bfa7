@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
-import { RecentlyViewed } from "@/components/site/RecentlyViewed";
+
 import { products, shapes, categories } from "@/lib/products";
 import { ArrowRight, ShieldCheck, RotateCcw, Truck, Star } from "lucide-react";
 import { useI18n, type TKey } from "@/lib/i18n";
