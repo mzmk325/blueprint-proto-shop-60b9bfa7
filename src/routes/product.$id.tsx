@@ -1,8 +1,9 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "@/components/site/Layout";
-import { ProductCard } from "@/components/site/ProductCard";
+import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { getProduct, productImage, products, type Product } from "@/lib/products";
+import { useUser, user } from "@/lib/user-store";
 import { Star, Truck, RefreshCw, ShieldCheck, Heart } from "lucide-react";
 
 export const Route = createFileRoute("/product/$id")({
@@ -26,7 +27,10 @@ function PDP() {
   const [colorIdx, setColorIdx] = useState(0);
   const [size, setSize] = useState<"S" | "M" | "L">("M");
   const [tab, setTab] = useState<"details" | "lens" | "shipping" | "reviews">("details");
-  const recs = products.filter((x) => x.id !== p.id).slice(0, 4);
+  const { wishlist } = useUser();
+  const wished = wishlist.includes(p.id);
+  useEffect(() => { user.pushRecent(p.id); }, [p.id]);
+
 
   return (
     <Layout>
