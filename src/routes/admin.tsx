@@ -55,9 +55,28 @@ function rmb(n: number) { return "¥" + n.toFixed(2); }
 function fmtDate(t?: number) { return t ? new Date(t).toLocaleString() : "—"; }
 function fmtShort(t?: number) { return t ? new Date(t).toLocaleDateString() : "—"; }
 
-function copy(text: string, label = "Copied") {
-  if (typeof navigator !== "undefined" && navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => toast.success(label));
+async function copyText(text: string, label = "Copied", onFail?: (text: string) => void) {
+  try {
+    if (typeof navigator !== "undefined" && navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      toast.success(label);
+      return;
+    }
+    throw new Error("clipboard unavailable");
+  } catch {
+    // Fallback: legacy execCommand
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      if (ok) { toast.success(label); return; }
+    } catch { /* noop */ }
+    if (onFail) onFail(text); else toast.error("Copy failed");
   }
 }
 
@@ -681,12 +700,34 @@ function CopyButtons({ order }: { order: Order }) {
   }
 
   const btn = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-border bg-background hover:bg-secondary";
+  const [fallback, setFallback] = useState<string | null>(null);
+  const doCopy = (text: string, label: string) => copyText(text, label, (t) => setFallback(t));
   return (
-    <div className="flex flex-wrap gap-2">
-      <button className={btn} onClick={() => copy(customerMsg(), "Customer message copied")}><Copy className="size-3.5" /> Copy customer message</button>
-      <button className={btn} onClick={() => copy(momNote(), "Mom note copied")}><Copy className="size-3.5" /> Copy mom note</button>
-      <button className={btn} onClick={() => copy(labNote(), "Lab note copied")}><Copy className="size-3.5" /> Copy lab note</button>
-    </div>
+    <>
+      <div className="flex flex-wrap gap-2">
+        <button className={btn} onClick={() => doCopy(customerMsg(), "Customer message copied")}><Copy className="size-3.5" /> Copy customer message</button>
+        <button className={btn} onClick={() => doCopy(momNote(), "Mom note copied")}><Copy className="size-3.5" /> Copy mom note</button>
+        <button className={btn} onClick={() => doCopy(labNote(), "Lab note copied")}><Copy className="size-3.5" /> Copy lab note</button>
+      </div>
+      {fallback !== null && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setFallback(null)}>
+          <div className="bg-card border border-border rounded-xl p-4 max-w-lg w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-semibold">Copy manually</div>
+              <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setFallback(null)}>Close</button>
+            </div>
+            <p className="text-xs text-muted-foreground mb-2">Clipboard permission unavailable. Select all and copy.</p>
+            <textarea
+              readOnly
+              autoFocus
+              onFocus={(e) => e.currentTarget.select()}
+              className="w-full h-64 text-xs font-mono border border-border rounded-md p-2 bg-background"
+              value={fallback}
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
