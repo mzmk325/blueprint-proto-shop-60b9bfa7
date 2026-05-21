@@ -184,9 +184,9 @@ function PDP() {
                 {open && (
                   <div className="pb-6 text-sm text-muted-foreground">
                     {k === "details" && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-                        <div className="bg-surface/60 border border-border/60 p-6 md:p-8">
-                          <svg viewBox="0 0 300 130" className="w-full h-auto text-foreground/70">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border/60 border border-border/60">
+                        <div className="bg-surface/60 flex items-center justify-center p-10 md:p-12 min-h-[320px]">
+                          <svg viewBox="0 0 300 130" className="w-full max-w-md h-auto text-foreground/70">
                             <g fill="none" stroke="currentColor" strokeWidth="1">
                               <rect x="40" y="40" width="80" height="50" rx="6" />
                               <rect x="180" y="40" width="80" height="50" rx="6" />
@@ -205,7 +205,7 @@ function PDP() {
                             </g>
                           </svg>
                         </div>
-                        <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
+                        <dl className="bg-surface/60 p-10 md:p-12 min-h-[320px] flex flex-col justify-center divide-y divide-border/60">
                           {[
                             [t("pdp.spec.model"), p.modelCode],
                             [t("pdp.spec.frameW"), `${p.dims.frameWidth} mm`],
@@ -216,9 +216,9 @@ function PDP() {
                             [t("pdp.spec.material"), p.material],
                             [t("pdp.spec.weight"), p.weight],
                           ].map(([k2, v]) => (
-                            <div key={k2 as string}>
-                              <dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">{k2}</dt>
-                              <dd className="text-foreground mt-1 text-base">{v}</dd>
+                            <div key={k2 as string} className="flex items-center justify-between py-2.5">
+                              <dt className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">{k2}</dt>
+                              <dd className="text-foreground text-sm font-medium">{v}</dd>
                             </div>
                           ))}
                         </dl>
