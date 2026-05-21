@@ -276,48 +276,42 @@ function LensFlow() {
 
               {step === "rx-entry" && (
                 <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => setRxMethod("manual")} className={`bg-background p-4 text-sm font-medium border ${rxMethod === "manual" ? "border-sale" : "border-transparent"}`}>Enter manually</button>
-                    <button onClick={() => setRxMethod("upload")} className={`bg-background p-4 text-sm font-medium border ${rxMethod === "upload" ? "border-sale" : "border-transparent"}`}>Upload prescription</button>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    <button onClick={() => setRxMethod("manual")} className={`bg-background p-3 sm:p-4 text-sm font-medium border ${rxMethod === "manual" ? "border-sale" : "border-transparent"}`}>Enter manually</button>
+                    <button onClick={() => setRxMethod("upload")} className={`bg-background p-3 sm:p-4 text-sm font-medium border ${rxMethod === "upload" ? "border-sale" : "border-transparent"}`}>Upload prescription</button>
                   </div>
 
                   {rxMethod === "manual" && (
-                    <div className="bg-background p-5 space-y-5">
-                      {/* Compact Rx table */}
-                      <div className="grid grid-cols-[58px_1fr_1fr_1fr] sm:grid-cols-[70px_1fr_1fr_1fr] gap-1.5 sm:gap-2 items-center text-xs">
-                        <div></div>
-                        <div className="font-semibold text-center text-muted-foreground">SPH</div>
-                        <div className="font-semibold text-center text-muted-foreground">CYL</div>
-                        <div className="font-semibold text-center text-muted-foreground">Axis</div>
-                        <RxRow label="OD (R)" val={od} setVal={setOd} />
-                        <RxRow label="OS (L)" val={os} setVal={setOs} />
-                      </div>
+                    <div className="space-y-3">
+                      {/* OD card */}
+                      <EyeCard label="Right Eye" sub="OD" val={od} setVal={setOd} />
+                      {/* OS card */}
+                      <EyeCard label="Left Eye" sub="OS" val={os} setVal={setOs} />
 
-                      {/* PD */}
-                      <div className="border-t border-border/60 pt-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold flex items-center gap-1">
-                            PD (Pupillary Distance)
+                      {/* PD card */}
+                      <div className="bg-background p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="text-sm font-semibold flex items-center gap-1.5">
+                            PD <span className="text-xs text-muted-foreground font-normal">(Pupillary Distance)</span>
                             <button onClick={() => setShowPd(true)} aria-label="help"><HelpCircle className="size-3.5 text-muted-foreground" /></button>
                           </span>
-                          <label className="text-xs flex items-center gap-1.5">
+                          <label className="text-xs flex items-center gap-1.5 shrink-0">
                             <input type="checkbox" checked={twoPd} onChange={(e) => setTwoPd(e.target.checked)} className="size-3.5" /> Dual PD
                           </label>
                         </div>
 
                         {!twoPd ? (
-                          <div className="grid grid-cols-[58px_1fr] sm:grid-cols-[70px_1fr] gap-1.5 sm:gap-2 items-center text-xs">
-                            <span className="font-medium">PD</span>
-                            <Select value={pd} onChange={setPd} options={["54","56","57","58","59","60","61","62","63","64","65","66","68"]} placeholder="Select PD (mm)" disabled={dontKnowPd} />
-                          </div>
+                          <Select value={pd} onChange={setPd} options={["54","56","57","58","59","60","61","62","63","64","65","66","68"]} placeholder="Select PD (mm)" disabled={dontKnowPd} />
                         ) : (
-                          <div className="grid grid-cols-[58px_1fr_1fr] sm:grid-cols-[70px_1fr_1fr] gap-1.5 sm:gap-2 items-center text-xs">
-                            <span></span>
-                            <span className="text-center text-muted-foreground">R PD</span>
-                            <span className="text-center text-muted-foreground">L PD</span>
-                            <span className="font-medium">PD</span>
-                            <Select value={pdRight} onChange={setPdRight} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
-                            <Select value={pdLeft} onChange={setPdLeft} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <div className="text-[11px] text-muted-foreground mb-1">Right PD</div>
+                              <Select value={pdRight} onChange={setPdRight} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
+                            </div>
+                            <div>
+                              <div className="text-[11px] text-muted-foreground mb-1">Left PD</div>
+                              <Select value={pdLeft} onChange={setPdLeft} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
+                            </div>
                           </div>
                         )}
 
@@ -326,24 +320,25 @@ function LensFlow() {
                           I don't know my PD
                         </label>
                         {dontKnowPd && (
-                          <div className="text-xs text-muted-foreground bg-surface p-3 border-l-2 border-amber-500">
+                          <div className="text-xs text-muted-foreground bg-surface p-2.5 border-l-2 border-amber-500">
                             PD will be marked as <strong>Unknown</strong>. Our team will contact you before production.
                           </div>
                         )}
-                      </div>
 
-                      {/* Prism */}
-                      <div className="border-t border-border/60 pt-4 space-y-3">
-                        <label className="flex items-center gap-2 text-sm">
-                          <input type="checkbox" checked={hasPrism} onChange={(e) => { setHasPrism(e.target.checked); if (e.target.checked) setRxMethod("upload"); }} className="size-4" />
-                          My prescription includes prism
-                          <button onClick={() => setShowPrism(true)} aria-label="help"><HelpCircle className="size-3.5 text-muted-foreground" /></button>
-                        </label>
-                        {hasPrism && (
-                          <div className="text-xs text-muted-foreground bg-surface p-3 border-l-2 border-sale">
-                            Prism prescriptions require manual review. Please upload your prescription image instead of manual entry.
-                          </div>
-                        )}
+                        <div className="border-t border-border/60 pt-3">
+                          <label className="flex items-start gap-2 text-sm">
+                            <input type="checkbox" checked={hasPrism} onChange={(e) => { setHasPrism(e.target.checked); if (e.target.checked) setRxMethod("upload"); }} className="size-4 mt-0.5" />
+                            <span className="flex-1">
+                              My prescription includes prism
+                              <button onClick={() => setShowPrism(true)} aria-label="help" className="ml-1 align-middle"><HelpCircle className="size-3.5 text-muted-foreground inline" /></button>
+                            </span>
+                          </label>
+                          {hasPrism && (
+                            <div className="text-xs text-muted-foreground bg-surface p-2.5 border-l-2 border-sale mt-2">
+                              Prism prescriptions require manual review. Please upload your prescription image.
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {errors.length > 0 && (
@@ -353,6 +348,7 @@ function LensFlow() {
                       )}
                     </div>
                   )}
+
 
                   {rxMethod === "upload" && (
                     <div className="bg-background p-8 space-y-4">
@@ -510,59 +506,43 @@ function LensFlow() {
           </div>
         </section>
 
-        {/* Persistent Order Summary */}
-        <aside className="bg-background border-b lg:border-b-0 lg:border-l border-border/60 px-4 sm:px-6 lg:px-10 py-4 lg:py-8 flex flex-col gap-4 lg:gap-6 lg:overflow-y-auto order-1 lg:order-2">
-          <div className="flex items-center gap-4">
-            <div className="size-20 bg-surface shrink-0">
-              <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt={p.name} className="w-full h-full object-contain" />
+        {/* Persistent Order Summary — collapsible on mobile */}
+        <aside className="bg-background border-b lg:border-b-0 lg:border-l border-border/60 lg:px-10 lg:py-8 flex flex-col gap-4 lg:gap-6 lg:overflow-y-auto order-1 lg:order-2">
+          <details className="lg:hidden border-b border-border/60 group" open={false}>
+            <summary className="list-none cursor-pointer flex items-center justify-between px-4 py-3 gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="size-10 bg-surface shrink-0">
+                  <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt="" className="w-full h-full object-contain" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Order summary</div>
+                  <div className="text-sm font-medium truncate">{p.name} · {color}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="font-display text-lg">${total.toFixed(2)}</span>
+                <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+              </div>
+            </summary>
+            <div className="px-4 pb-4">
+              <SummaryBody {...{ p, rxType, fnReached, fnObj, fnPrice, thickReached, thickObj, thickPrice, addonReached, addonObj, addonPrice, shipFree, shipping, total, goto, rxTypeLabelOf }} />
             </div>
-            <div className="min-w-0">
-              <h2 className="font-display text-lg leading-tight">{p.name}</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">{color} · M</p>
-            </div>
-          </div>
+          </details>
 
-          <div className="border-t border-border/60 pt-5">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-3">Order summary</div>
-            <div className="space-y-2.5 text-sm">
-              <SumRow label="Frame price" value={`$${p.price.toFixed(2)}`} />
-              <SumRow
-                label="Fulfillment"
-                subValue={rxTypeLabelOf(rxType)}
-                onEdit={() => goto("rx-type")}
-              />
-              {fnReached ? (
-                <SumRow label="Lens function" subValue={fnObj.label} value={fnPrice === 0 ? "Included" : `+$${fnPrice.toFixed(2)}`} onEdit={() => goto("fn")} />
-              ) : rxType !== "frame-only" && (
-                <SumRow label="Lens function" subValue="Not selected yet" />
-              )}
-              {thickReached ? (
-                <SumRow label="Lens thickness" subValue={thickObj.label} value={thickPrice === 0 ? "Included" : `+$${thickPrice.toFixed(2)}`} onEdit={() => goto("thick")} />
-              ) : rxType !== "frame-only" && (
-                <SumRow label="Lens thickness" subValue="Not selected yet" />
-              )}
-              {addonReached ? (
-                <SumRow label="Add-on" subValue={addonObj.label} value={addonPrice === 0 ? "Included" : `+$${addonPrice.toFixed(2)}`} onEdit={() => goto("addon")} />
-              ) : rxType !== "frame-only" && (
-                <SumRow label="Add-on" subValue="Not selected yet" />
-              )}
-              <SumRow label="Shipping" value={shipFree ? "FREE" : `$${shipping.toFixed(2)}`} />
+          <div className="hidden lg:flex flex-col gap-6">
+            <div className="flex items-center gap-4">
+              <div className="size-20 bg-surface shrink-0">
+                <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt={p.name} className="w-full h-full object-contain" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="font-display text-lg leading-tight">{p.name}</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">{color} · M</p>
+              </div>
             </div>
-            <div className="border-t border-border/60 pt-4 mt-4 flex justify-between items-baseline">
-              <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">Total</span>
-              <span className="font-display text-3xl">${total.toFixed(2)}</span>
-            </div>
-            {rxType === "frame-only" && (
-              <p className="text-[11px] text-muted-foreground mt-3">Ships with demo lenses only.</p>
-            )}
-            {rxType === "non-rx" && (
-              <p className="text-[11px] text-muted-foreground mt-3">No prescription required.</p>
-            )}
-            {(rxType === "single-vision" || rxType === "reading") && (
-              <p className="text-[11px] text-muted-foreground mt-3">Every prescription is reviewed by our team before production.</p>
-            )}
+            <SummaryBody {...{ p, rxType, fnReached, fnObj, fnPrice, thickReached, thickObj, thickPrice, addonReached, addonObj, addonPrice, shipFree, shipping, total, goto, rxTypeLabelOf }} />
           </div>
         </aside>
+
       </div>
 
       {showPd && (
@@ -599,6 +579,47 @@ function SumRow({ label, value, subValue, onEdit }: { label: string; value?: str
   );
 }
 
+type SummaryProps = {
+  p: ReturnType<typeof getProduct> extends infer T ? NonNullable<T> : never;
+  rxType: RxType;
+  fnReached: boolean; fnObj: { label: string }; fnPrice: number;
+  thickReached: boolean; thickObj: { label: string }; thickPrice: number;
+  addonReached: boolean; addonObj: { label: string }; addonPrice: number;
+  shipFree: boolean; shipping: number; total: number;
+  goto: (s: Step) => void;
+  rxTypeLabelOf: (rt: RxType) => string;
+};
+function SummaryBody(props: SummaryProps) {
+  const { p, rxType, fnReached, fnObj, fnPrice, thickReached, thickObj, thickPrice, addonReached, addonObj, addonPrice, shipFree, shipping, total, goto, rxTypeLabelOf } = props;
+  return (
+    <div className="border-t border-border/60 pt-5">
+      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-3">Order summary</div>
+      <div className="space-y-2.5 text-sm">
+        <SumRow label="Frame price" value={`$${p.price.toFixed(2)}`} />
+        <SumRow label="Fulfillment" subValue={rxTypeLabelOf(rxType)} onEdit={() => goto("rx-type")} />
+        {fnReached ? (
+          <SumRow label="Lens function" subValue={fnObj.label} value={fnPrice === 0 ? "Included" : `+$${fnPrice.toFixed(2)}`} onEdit={() => goto("fn")} />
+        ) : rxType !== "frame-only" && (<SumRow label="Lens function" subValue="Not selected yet" />)}
+        {thickReached ? (
+          <SumRow label="Lens thickness" subValue={thickObj.label} value={thickPrice === 0 ? "Included" : `+$${thickPrice.toFixed(2)}`} onEdit={() => goto("thick")} />
+        ) : rxType !== "frame-only" && (<SumRow label="Lens thickness" subValue="Not selected yet" />)}
+        {addonReached ? (
+          <SumRow label="Add-on" subValue={addonObj.label} value={addonPrice === 0 ? "Included" : `+$${addonPrice.toFixed(2)}`} onEdit={() => goto("addon")} />
+        ) : rxType !== "frame-only" && (<SumRow label="Add-on" subValue="Not selected yet" />)}
+        <SumRow label="Shipping" value={shipFree ? "FREE" : `$${shipping.toFixed(2)}`} />
+      </div>
+      <div className="border-t border-border/60 pt-4 mt-4 flex justify-between items-baseline">
+        <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">Total</span>
+        <span className="font-display text-3xl">${total.toFixed(2)}</span>
+      </div>
+      {rxType === "frame-only" && (<p className="text-[11px] text-muted-foreground mt-3">Ships with demo lenses only.</p>)}
+      {rxType === "non-rx" && (<p className="text-[11px] text-muted-foreground mt-3">No prescription required.</p>)}
+      {(rxType === "single-vision" || rxType === "reading") && (<p className="text-[11px] text-muted-foreground mt-3">Every prescription is reviewed by our team before production.</p>)}
+    </div>
+  );
+}
+
+
 function Select({ value, onChange, options, placeholder, disabled }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; disabled?: boolean }) {
   return (
     <div className="relative">
@@ -611,16 +632,39 @@ function Select({ value, onChange, options, placeholder, disabled }: { value: st
   );
 }
 
-function RxRow({ label, val, setVal }: { label: string; val: { sph: string; cyl: string; axis: string }; setVal: (v: { sph: string; cyl: string; axis: string }) => void }) {
+function EyeCard({ label, sub, val, setVal }: { label: string; sub: string; val: { sph: string; cyl: string; axis: string }; setVal: (v: { sph: string; cyl: string; axis: string }) => void }) {
+  const cylNone = val.cyl === "None";
   return (
-    <>
-      <div className="font-medium">{label}</div>
-      <Select value={val.sph} onChange={(v) => setVal({ ...val, sph: v })} options={SPH} />
-      <Select value={val.cyl} onChange={(v) => setVal({ ...val, cyl: v })} options={CYL} />
-      <input value={val.axis} onChange={(e) => setVal({ ...val, axis: e.target.value.replace(/[^0-9]/g, "").slice(0, 3) })} placeholder={val.cyl === "None" ? "—" : "1–180"} disabled={val.cyl === "None"} className="bg-surface border border-border px-3 py-2 text-sm text-center disabled:opacity-50" />
-    </>
+    <div className="bg-background p-4 space-y-3">
+      <div className="flex items-baseline justify-between">
+        <span className="text-sm font-semibold">{label}</span>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{sub}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <div className="text-[11px] text-muted-foreground mb-1">SPH</div>
+          <Select value={val.sph} onChange={(v) => setVal({ ...val, sph: v })} options={SPH} />
+        </div>
+        <div>
+          <div className="text-[11px] text-muted-foreground mb-1">CYL</div>
+          <Select value={val.cyl} onChange={(v) => setVal({ ...val, cyl: v, axis: v === "None" ? "" : val.axis })} options={CYL} />
+        </div>
+        <div>
+          <div className="text-[11px] text-muted-foreground mb-1">Axis</div>
+          <input
+            value={val.axis}
+            onChange={(e) => setVal({ ...val, axis: e.target.value.replace(/[^0-9]/g, "").slice(0, 3) })}
+            placeholder={cylNone ? "—" : "1–180"}
+            disabled={cylNone}
+            inputMode="numeric"
+            className="w-full bg-surface border border-border px-2 py-2 text-sm text-center disabled:opacity-50"
+          />
+        </div>
+      </div>
+    </div>
   );
 }
+
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (

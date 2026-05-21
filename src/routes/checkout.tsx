@@ -71,15 +71,16 @@ function Checkout() {
     <Layout>
       <div className="mx-auto max-w-5xl px-4 py-10">
         <h1 className="text-3xl mb-6">Checkout</h1>
-        <div className="flex gap-4 mb-8 text-sm">
+        <div className="flex flex-wrap gap-x-3 gap-y-2 mb-8 text-xs sm:text-sm">
           {steps.map((s, i) => (
-            <div key={s} className={`flex items-center gap-2 ${step === i + 1 ? "font-medium" : "text-muted-foreground"}`}>
-              <span className={`size-6 rounded-full flex items-center justify-center text-xs ${step >= i + 1 ? "bg-foreground text-background" : "bg-secondary"}`}>{i + 1}</span>
+            <div key={s} className={`flex items-center gap-1.5 sm:gap-2 ${step === i + 1 ? "font-medium" : "text-muted-foreground"}`}>
+              <span className={`size-5 sm:size-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs ${step >= i + 1 ? "bg-foreground text-background" : "bg-secondary"}`}>{i + 1}</span>
               {s}
-              {i < 3 && <span className="text-muted-foreground">·</span>}
+              {i < 3 && <span className="text-muted-foreground hidden sm:inline">·</span>}
             </div>
           ))}
         </div>
+
 
         <div className="grid md:grid-cols-[1fr_360px] gap-10">
           <div className="space-y-6">
@@ -103,11 +104,12 @@ function Checkout() {
                 </Field>
                 <Field label="Address line 1"><input value={addr.line1} onChange={(e) => setAddr({ ...addr, line1: e.target.value })} className={input} /></Field>
                 <Field label="Address line 2 (optional)"><input value={addr.line2} onChange={(e) => setAddr({ ...addr, line2: e.target.value })} className={input} /></Field>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Field label="City"><input value={addr.city} onChange={(e) => setAddr({ ...addr, city: e.target.value })} className={input} /></Field>
                   <Field label="State / Region"><input value={addr.state} onChange={(e) => setAddr({ ...addr, state: e.target.value })} className={input} /></Field>
                   <Field label="ZIP / Postal code"><input value={addr.zip} onChange={(e) => setAddr({ ...addr, zip: e.target.value })} className={input} /></Field>
                 </div>
+
                 <div className="space-y-2 pt-2">
                   <p className="text-sm font-medium">Shipping method · Estimated delivery 13–20 days</p>
                   {([["standard", "Standard (13–20 days)", subtotal >= FREE_SHIPPING_THRESHOLD ? "FREE" : "$6.95"], ["express", "Express (5–8 days)", "$14.95"]] as const).map(([k, label, price]) => (

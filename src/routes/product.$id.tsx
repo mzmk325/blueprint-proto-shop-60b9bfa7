@@ -85,18 +85,19 @@ function PDP() {
           </div>
 
           <div className="pb-5 border-b border-border/60 space-y-2">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-x-3 gap-y-2 flex-wrap">
               <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{t("pdp.frameFrom")}</span>
               <span className="font-display text-2xl">${p.price.toFixed(2)}</span>
               {p.originalPrice && <span className="text-sm text-muted-foreground line-through">${p.originalPrice.toFixed(2)}</span>}
               {p.discountPct && <span className="text-[10px] bg-sale text-white px-2 py-0.5 font-bold uppercase tracking-tighter">{p.discountPct}% {t("common.off")}</span>}
-              <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                 <div className="flex">{[1,2,3,4,5].map((i) => <Star key={i} className="size-3 fill-foreground text-foreground" />)}</div>
                 <span>(1,284)</span>
               </div>
             </div>
             <p className="text-xs text-muted-foreground">{t("pdp.framePriceNote")}</p>
           </div>
+
 
           <div>
             <div className="flex justify-between items-baseline mb-3">
