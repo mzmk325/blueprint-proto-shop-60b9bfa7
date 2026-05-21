@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
-import { getProduct, productImage, products } from "@/lib/products";
+import { getProduct, productImage, products, type Product } from "@/lib/products";
 import { Star, Truck, RefreshCw, ShieldCheck, Heart } from "lucide-react";
 
 export const Route = createFileRoute("/product/$id")({
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/product/$id")({
 });
 
 function PDP() {
-  const p = Route.useLoaderData();
+  const p = Route.useLoaderData() as Product;
   const [colorIdx, setColorIdx] = useState(0);
   const [size, setSize] = useState<"S" | "M" | "L">("M");
   const [tab, setTab] = useState<"details" | "lens" | "shipping" | "reviews">("details");
