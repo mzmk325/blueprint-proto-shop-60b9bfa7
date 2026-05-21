@@ -745,7 +745,7 @@ function DateRow({ k, v, onSave }: { k: string; v?: number; onSave: (t: number |
   const value = v ? new Date(v).toISOString().slice(0, 10) : "";
   return (
     <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3 items-start">
-      <div className="text-muted-foreground pt-1.5">{k}</div>
+      <div className="text-muted-foreground sm:pt-1.5 text-xs sm:text-sm">{k}</div>
       <input type="date" defaultValue={value} onBlur={(e) => onSave(e.target.value ? new Date(e.target.value).getTime() : undefined)} className="rounded-md border border-border bg-background px-2.5 py-1.5 text-sm" />
     </div>
   );
@@ -809,7 +809,7 @@ function EditRow({ k, v, onSave, type = "text", placeholder, textarea }: { k: st
   const [val, setVal] = useState(v ?? "");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3 items-start">
-      <div className="text-muted-foreground pt-1.5">{k}</div>
+      <div className="text-muted-foreground sm:pt-1.5 text-xs sm:text-sm">{k}</div>
       {textarea ? (
         <textarea value={val} onChange={(e) => setVal(e.target.value)} onBlur={() => onSave(val)} placeholder={placeholder} rows={2} className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm" />
       ) : (
