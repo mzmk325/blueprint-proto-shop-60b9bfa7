@@ -42,6 +42,7 @@ export function ProductCard({ p }: { p: Product }) {
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="font-display text-[15px] font-semibold tracking-tight">{p.name}</h3>
           <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+            <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Frame</span>
             <span className="font-display text-[15px] font-semibold">${p.price.toFixed(2)}</span>
             {p.originalPrice && (
               <span className="text-[11px] text-muted-foreground line-through">${p.originalPrice.toFixed(2)}</span>
