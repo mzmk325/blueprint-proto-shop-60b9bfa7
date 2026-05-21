@@ -607,16 +607,39 @@ function Select({ value, onChange, options, placeholder, disabled }: { value: st
   );
 }
 
-function RxRow({ label, val, setVal }: { label: string; val: { sph: string; cyl: string; axis: string }; setVal: (v: { sph: string; cyl: string; axis: string }) => void }) {
+function EyeCard({ label, sub, val, setVal }: { label: string; sub: string; val: { sph: string; cyl: string; axis: string }; setVal: (v: { sph: string; cyl: string; axis: string }) => void }) {
+  const cylNone = val.cyl === "None";
   return (
-    <>
-      <div className="font-medium">{label}</div>
-      <Select value={val.sph} onChange={(v) => setVal({ ...val, sph: v })} options={SPH} />
-      <Select value={val.cyl} onChange={(v) => setVal({ ...val, cyl: v })} options={CYL} />
-      <input value={val.axis} onChange={(e) => setVal({ ...val, axis: e.target.value.replace(/[^0-9]/g, "").slice(0, 3) })} placeholder={val.cyl === "None" ? "—" : "1–180"} disabled={val.cyl === "None"} className="bg-surface border border-border px-3 py-2 text-sm text-center disabled:opacity-50" />
-    </>
+    <div className="bg-background p-4 space-y-3">
+      <div className="flex items-baseline justify-between">
+        <span className="text-sm font-semibold">{label}</span>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{sub}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <div className="text-[11px] text-muted-foreground mb-1">SPH</div>
+          <Select value={val.sph} onChange={(v) => setVal({ ...val, sph: v })} options={SPH} />
+        </div>
+        <div>
+          <div className="text-[11px] text-muted-foreground mb-1">CYL</div>
+          <Select value={val.cyl} onChange={(v) => setVal({ ...val, cyl: v, axis: v === "None" ? "" : val.axis })} options={CYL} />
+        </div>
+        <div>
+          <div className="text-[11px] text-muted-foreground mb-1">Axis</div>
+          <input
+            value={val.axis}
+            onChange={(e) => setVal({ ...val, axis: e.target.value.replace(/[^0-9]/g, "").slice(0, 3) })}
+            placeholder={cylNone ? "—" : "1–180"}
+            disabled={cylNone}
+            inputMode="numeric"
+            className="w-full bg-surface border border-border px-2 py-2 text-sm text-center disabled:opacity-50"
+          />
+        </div>
+      </div>
+    </div>
   );
 }
+
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
