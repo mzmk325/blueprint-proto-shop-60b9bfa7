@@ -21,7 +21,9 @@ export function MiniCart() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button aria-label={t("a11y.cart")} className="relative hover:text-foreground">
-          <ShoppingBag className="size-5" />
+          <span className="grid size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground">
+            <ShoppingBag className="size-[18px]" strokeWidth={1.5} />
+          </span>
           {mounted && count > 0 && (
             <span className="absolute -top-2 -right-2 bg-sale text-white text-[10px] rounded-full size-4 flex items-center justify-center">{count}</span>
           )}
