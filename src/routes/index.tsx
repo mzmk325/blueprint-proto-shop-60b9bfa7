@@ -186,7 +186,7 @@ function Home() {
         </div>
       </section>
 
-      <RecentlyViewed />
+      {/* RecentlyViewed hidden on homepage to keep main rhythm intact */}
 
       <section className="py-20 px-6 lg:px-8 bg-surface/50">
         <div className="text-center mb-12">
