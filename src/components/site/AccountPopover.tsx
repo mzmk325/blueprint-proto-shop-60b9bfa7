@@ -22,14 +22,15 @@ export function AccountPopover() {
   return (
     <div ref={ref} className="relative">
       <button
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => setOpen((v) => !v)}
         aria-label={t("a11y.account")}
-        className="hover:text-foreground transition-colors text-foreground/80 hidden sm:block"
+        className="hidden size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground sm:grid"
       >
         <User className="size-[18px]" strokeWidth={1.5} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-[280px] bg-background border border-border shadow-lg z-50 p-5">
+        <div className="absolute right-0 top-full mt-2 w-[300px] bg-background border border-border shadow-lg z-50 p-5">
           <div className="flex items-center gap-3 pb-4 border-b border-border">
             <div className="size-10 rounded-full bg-primary text-primary-foreground grid place-items-center font-bold">M</div>
             <div className="font-bold text-sm">Miravue Member</div>

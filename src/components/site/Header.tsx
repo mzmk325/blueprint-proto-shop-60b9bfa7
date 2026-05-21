@@ -56,10 +56,10 @@ export function Header() {
   const { wishlist } = useUser();
   const { t } = useI18n();
   return (
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border">
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border [--header-h:100px]">
       <PromoBar />
-      <div className="relative mx-auto max-w-7xl px-4 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-6">
+      <div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-4 lg:px-8">
+        <div className="flex min-w-0 items-center gap-6">
           <MobileNav />
           <nav className="hidden lg:flex items-center gap-9 text-[11px] uppercase tracking-[0.18em] font-medium">
             <Link to="/category/$slug" params={{ slug: "all" }} className="hover:opacity-60 transition-opacity" activeProps={{ className: "font-bold" }}>{t("nav.eyeglasses")}</Link>
@@ -71,14 +71,14 @@ export function Header() {
 
         <Link
           to="/"
-          className="absolute left-1/2 -translate-x-1/2 font-display text-2xl tracking-[-0.04em] font-bold uppercase"
+          className="font-display text-2xl tracking-[-0.04em] font-bold uppercase"
         >
           Miravue<span className="text-accent">.</span>
         </Link>
 
-        <div className="flex items-center gap-5 text-foreground/80">
+        <div className="flex items-center justify-end gap-1 text-foreground/80">
           <SearchPopover />
-          <Link to="/wishlist" aria-label={t("a11y.wishlist")} className="relative hover:text-foreground transition-colors hidden sm:block">
+          <Link to="/wishlist" aria-label={t("a11y.wishlist")} className="relative hidden size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground sm:grid">
             <Heart className="size-[18px]" strokeWidth={1.5} />
             {wishlist.length > 0 && (
               <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-[9px] rounded-full size-3.5 flex items-center justify-center font-bold">{wishlist.length}</span>

@@ -25,14 +25,15 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
   return (
     <div ref={ref} className={`relative ${className}`}>
       <button
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 hover:text-foreground transition-colors text-foreground/80"
+        className="grid size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
         aria-label="Language and currency"
       >
         <Globe className="size-[18px]" strokeWidth={1.5} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-[280px] bg-background border border-border shadow-lg z-50 p-5 space-y-5">
+        <div className="absolute right-0 top-full mt-2 w-[300px] bg-background border border-border shadow-lg z-50 p-5 space-y-5">
           <div>
             <div className="text-sm font-bold mb-2">{t("lc.language")}</div>
             <div className="relative">
