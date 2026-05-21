@@ -81,7 +81,7 @@ export function Header() {
           <Link to="/wishlist" aria-label={t("a11y.wishlist")} className="relative hidden size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground sm:grid">
             <Heart className="size-[18px]" strokeWidth={1.5} />
             {wishlist.length > 0 && (
-              <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-[9px] rounded-full size-3.5 flex items-center justify-center font-bold">{wishlist.length}</span>
+              <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-[9px] leading-none rounded-full min-w-3.5 h-3.5 px-1 inline-flex items-center justify-center font-bold">{wishlist.length}</span>
             )}
           </Link>
           <MiniCart />
