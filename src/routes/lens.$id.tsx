@@ -511,7 +511,7 @@ function LensFlow() {
         </section>
 
         {/* Persistent Order Summary */}
-        <aside className="bg-background border-b lg:border-b-0 lg:border-l border-border/60 px-6 lg:px-10 py-6 lg:py-8 flex flex-col gap-6 overflow-y-auto order-1 lg:order-2">
+        <aside className="bg-background border-b lg:border-b-0 lg:border-l border-border/60 px-4 sm:px-6 lg:px-10 py-4 lg:py-8 flex flex-col gap-4 lg:gap-6 lg:overflow-y-auto order-1 lg:order-2">
           <div className="flex items-center gap-4">
             <div className="size-20 bg-surface shrink-0">
               <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt={p.name} className="w-full h-full object-contain" />
