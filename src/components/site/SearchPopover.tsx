@@ -1,4 +1,4 @@
-import { Search, Flame, ChevronRight } from "lucide-react";
+import { Search, Flame, ChevronRight, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useI18n } from "@/lib/i18n";
@@ -39,21 +39,27 @@ export function SearchPopover() {
   return (
     <div ref={ref} className="relative">
       <button
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => setOpen((v) => !v)}
         aria-label={t("a11y.search")}
-        className="hover:text-foreground transition-colors text-foreground/80"
+        className="grid size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
       >
         <Search className="size-[18px]" strokeWidth={1.5} />
       </button>
       {open && (
         <>
-          <div className="fixed inset-x-0 top-[var(--header-h,104px)] bottom-0 bg-foreground/10 z-40" onClick={() => setOpen(false)} />
-          <div className="fixed left-0 right-0 top-[var(--header-h,104px)] z-50 bg-background border-b border-border shadow-lg">
-            <div className="mx-auto max-w-7xl px-4 lg:px-8 py-8">
+          <div className="fixed inset-x-0 top-[var(--header-h,100px)] bottom-0 bg-foreground/10 z-40" onClick={() => setOpen(false)} />
+          <div className="fixed left-0 right-0 top-[var(--header-h,100px)] z-50 bg-background border-b border-border shadow-lg">
+            <div className="mx-auto max-w-7xl px-4 lg:px-8 py-7">
+              <div className="mb-5 flex items-center justify-between">
+                <h2 className="font-display text-lg font-semibold">{t("search.hot")}</h2>
+                <button onClick={() => setOpen(false)} className="grid size-9 place-items-center rounded-full hover:bg-secondary" aria-label={t("common.close")}>
+                  <X className="size-4" />
+                </button>
+              </div>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <input
-                  autoFocus
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   onKeyDown={(e) => {
@@ -68,7 +74,7 @@ export function SearchPopover() {
 
               <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-10">
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-[0.15em] mb-4">{t("search.hot")}</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-[0.15em] mb-4 text-muted-foreground">{t("search.hot")}</h3>
                   <div className="flex flex-wrap gap-2">
                     {HOT.map((tag, i) => (
                       <button
