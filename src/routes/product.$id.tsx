@@ -181,8 +181,8 @@ function PDP() {
                   {open && (
                     <div className="pb-5 text-sm text-muted-foreground">
                       {k === "details" && (
-                        <div className="space-y-5">
-                          <div className="bg-surface/60 border border-border/60 p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+                          <div className="bg-surface/60 border border-border/60 p-4 md:p-5">
                             <svg viewBox="0 0 300 130" className="w-full h-auto text-foreground/70">
                               <g fill="none" stroke="currentColor" strokeWidth="1">
                                 <rect x="40" y="40" width="80" height="50" rx="6" />
@@ -202,7 +202,7 @@ function PDP() {
                               </g>
                             </svg>
                           </div>
-                          <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+                          <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
                             {[
                               [t("pdp.spec.model"), p.modelCode],
                               [t("pdp.spec.frameW"), `${p.dims.frameWidth} mm`],
@@ -215,7 +215,7 @@ function PDP() {
                             ].map(([k2, v]) => (
                               <div key={k2 as string}>
                                 <dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">{k2}</dt>
-                                <dd className="text-foreground mt-0.5">{v}</dd>
+                                <dd className="text-foreground mt-1">{v}</dd>
                               </div>
                             ))}
                           </dl>
