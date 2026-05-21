@@ -466,6 +466,105 @@ function PipelineMini({ status, ft }: { status: OrderStatus; ft: FulfillmentType
   );
 }
 
+// ── Status-specific Actions ─────────────────────────────────────────────────
+function StatusActions({ order }: { order: Order }) {
+  const ft = orderFulfillmentType(order);
+  const review = order.rxReview ?? { status: "pending" as const };
+  const f = order.sourcing?.frame ?? {};
+  const l = order.sourcing?.lens ?? {};
+  const lab = order.lab ?? {};
+  const updateFrame = (patch: Partial<typeof f>) => cart.updateOrder(order.id, { sourcing: { ...(order.sourcing ?? {}), frame: { ...f, ...patch } } });
+  const updateLens  = (patch: Partial<typeof l>) => cart.updateOrder(order.id, { sourcing: { ...(order.sourcing ?? {}), lens:  { ...l, ...patch } } });
+  const updateLab   = (patch: Partial<typeof lab>) => cart.updateOrder(order.id, { lab: { ...lab, ...patch } });
+
+  type Btn = { label: string; tone?: "primary" | "danger" | "neutral"; onClick: () => void };
+  const buttons: Btn[] = [];
+
+  switch (order.status) {
+    case "paid":
+      if (ft === "prescription") buttons.push({ label: "Send to Rx review", tone: "primary", onClick: () => cart.setStatus(order.id, "rx-pending", "Prescription queued for review") });
+      else buttons.push({ label: "Start sourcing", tone: "primary", onClick: () => cart.setStatus(order.id, "sourcing", "Order entered sourcing queue") });
+      break;
+    case "rx-pending":
+      buttons.push(
+        { label: "Approve prescription", tone: "primary", onClick: () => { cart.updateOrder(order.id, { rxReview: { ...review, status: "approved", reviewedAt: Date.now(), reviewer: "Mira" } }); cart.setStatus(order.id, "rx-approved", "Prescription approved"); } },
+        { label: "Request clarification", tone: "danger", onClick: () => { cart.updateOrder(order.id, { rxReview: { ...review, status: "clarification", reviewedAt: Date.now(), reviewer: "Mira" } }); cart.setStatus(order.id, "rx-clarification", "Requested clarification from customer"); } },
+      );
+      break;
+    case "rx-clarification":
+      buttons.push(
+        { label: "Mark customer replied", onClick: () => cart.addEvent(order.id, "Customer replied — re-reviewing prescription") },
+        { label: "Approve after clarification", tone: "primary", onClick: () => { cart.updateOrder(order.id, { rxReview: { ...review, status: "approved", reviewedAt: Date.now(), reviewer: "Mira" } }); cart.setStatus(order.id, "rx-approved", "Approved after clarification"); } },
+      );
+      break;
+    case "rx-approved":
+      buttons.push({ label: "Start sourcing", tone: "primary", onClick: () => cart.setStatus(order.id, "sourcing", "Started frame & lens sourcing") });
+      break;
+    case "sourcing":
+      buttons.push({ label: "Mark frame ordered", onClick: () => updateFrame({ status: "ordered" }) });
+      if (ft !== "frame-only") buttons.push({ label: "Mark lenses ordered", onClick: () => updateLens({ status: "ordered" }) });
+      buttons.push({ label: "Mark frame received", onClick: () => updateFrame({ status: "received" }) });
+      if (ft !== "frame-only") buttons.push({ label: "Mark lenses received", onClick: () => updateLens({ status: "received" }) });
+      if (ft === "frame-only") buttons.push({ label: "Move to Ready to Ship", tone: "primary", onClick: () => cart.setStatus(order.id, "ready-to-ship", "Frame received — ready to ship") });
+      else buttons.push({ label: "Send to local lab", tone: "primary", onClick: () => { updateLab({ sentToMomAt: Date.now() }); cart.setStatus(order.id, "sent-to-lab", "Parcel sent to mom for local lab"); } });
+      break;
+    case "sent-to-lab":
+      buttons.push(
+        { label: "Mark received by mom", onClick: () => updateLab({ momReceivedAt: Date.now() }) },
+        { label: "Mark sent to optical shop", onClick: () => updateLab({ sentToShopAt: Date.now() }) },
+        { label: "Move to In Production", tone: "primary", onClick: () => { updateLab({ productionStatus: "in-progress" }); cart.setStatus(order.id, "in-production", "Local lab started production"); } },
+      );
+      break;
+    case "in-production":
+      buttons.push(
+        { label: "Mark production completed", onClick: () => updateLab({ productionStatus: "completed" }) },
+        { label: "Move to Quality Check", tone: "primary", onClick: () => cart.setStatus(order.id, "qc", "Production complete — moved to QC") },
+      );
+      break;
+    case "qc":
+      buttons.push(
+        { label: "Mark QC passed", tone: "primary", onClick: () => { updateLab({ qcResult: "pass", qcChecklist: { ...(lab.qcChecklist ?? {}), readyToShip: true } }); cart.addEvent(order.id, "QC passed"); } },
+        { label: "Request remake", tone: "danger", onClick: () => { updateLab({ qcResult: "remake" }); cart.setStatus(order.id, "in-production", "QC remake requested"); } },
+        { label: "Move to Ready to Ship", onClick: () => cart.setStatus(order.id, "ready-to-ship", "QC complete — ready to ship") },
+      );
+      break;
+    case "ready-to-ship":
+      buttons.push({ label: "Mark shipped", tone: "primary", onClick: () => { cart.updateOrder(order.id, { shippingInfo: { ...(order.shippingInfo ?? {}), shippedAt: Date.now() } }); cart.setStatus(order.id, "shipped", `Shipped via ${order.shippingInfo?.carrier ?? "Yanwen"}`); } });
+      break;
+    case "shipped":
+      buttons.push(
+        { label: "Mark delivered", tone: "primary", onClick: () => { cart.updateOrder(order.id, { shippingInfo: { ...(order.shippingInfo ?? {}), deliveredAt: Date.now() } }); cart.setStatus(order.id, "delivered", "Marked delivered"); } },
+        { label: "Open after-sale case", tone: "danger", onClick: () => cart.setStatus(order.id, "after-sale", "After-sale case opened") },
+      );
+      break;
+    case "delivered":
+      buttons.push({ label: "Open after-sale case", tone: "danger", onClick: () => cart.setStatus(order.id, "after-sale", "After-sale case opened") });
+      break;
+    case "after-sale":
+      buttons.push({ label: "Resolve & mark delivered", tone: "primary", onClick: () => cart.setStatus(order.id, "delivered", "After-sale resolved") });
+      break;
+  }
+
+  if (buttons.length === 0) return null;
+  const tones: Record<NonNullable<Btn["tone"]>, string> = {
+    primary: "bg-foreground text-background hover:opacity-90",
+    danger:  "bg-red-600 text-white hover:bg-red-700",
+    neutral: "bg-background border border-border hover:bg-secondary",
+  };
+  return (
+    <div className="bg-card border border-border rounded-xl p-4">
+      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-3">Actions for {STATUS_META[order.status].label}</div>
+      <div className="flex flex-wrap gap-2">
+        {buttons.map((b, i) => (
+          <button key={i} onClick={b.onClick} className={`px-3 py-1.5 rounded-md text-xs font-medium ${tones[b.tone ?? "neutral"]}`}>
+            {b.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Copy Buttons ────────────────────────────────────────────────────────────
 function CopyButtons({ order }: { order: Order }) {
   const ft = orderFulfillmentType(order);
