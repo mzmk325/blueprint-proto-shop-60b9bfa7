@@ -160,95 +160,97 @@ function PDP() {
             <li className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="size-3.5" /> {t("pdp.warranty")}</li>
             <li className="flex items-center gap-2 text-muted-foreground"><Truck className="size-3.5" /> {t("pdp.shipTime")}</li>
           </ul>
+        </div>
+      </div>
 
-          <div className="border-t border-border/60 pt-2">
-            {[
-              { k: "details", tt: t("pdp.sec.details") },
-              { k: "lens", tt: t("pdp.sec.lens") },
-              { k: "shipping", tt: t("pdp.sec.shipping") },
-              { k: "reviews", tt: `${t("pdp.sec.reviews")} (1,284)` },
-            ].map(({ k, tt }) => {
-              const open = openSection === k;
-              return (
-                <div key={k} className="border-b border-border/60">
-                  <button
-                    onClick={() => setOpenSection(open ? null : k)}
-                    className="w-full flex justify-between items-center py-4 text-left"
-                  >
-                    <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">{tt}</span>
-                    {open ? <Minus className="size-4" /> : <Plus className="size-4" />}
-                  </button>
-                  {open && (
-                    <div className="pb-5 text-sm text-muted-foreground">
-                      {k === "details" && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
-                          <div className="bg-surface/60 border border-border/60 p-4 md:p-5">
-                            <svg viewBox="0 0 300 130" className="w-full h-auto text-foreground/70">
-                              <g fill="none" stroke="currentColor" strokeWidth="1">
-                                <rect x="40" y="40" width="80" height="50" rx="6" />
-                                <rect x="180" y="40" width="80" height="50" rx="6" />
-                                <line x1="120" y1="65" x2="180" y2="65" />
-                                <line x1="40" y1="20" x2="260" y2="20" strokeDasharray="2 3" />
-                                <line x1="40" y1="100" x2="40" y2="115" />
-                                <line x1="120" y1="100" x2="120" y2="115" />
-                                <line x1="120" y1="40" x2="120" y2="25" />
-                                <line x1="180" y1="40" x2="180" y2="25" />
-                              </g>
-                              <g fill="currentColor" fontSize="9" fontFamily="DM Sans" textAnchor="middle">
-                                <text x="150" y="15">{p.dims.frameWidth} mm</text>
-                                <text x="80" y="115">{p.dims.lensWidth} mm</text>
-                                <text x="150" y="60">{p.dims.bridge}</text>
-                                <text x="280" y="65">{p.dims.lensHeight}</text>
-                              </g>
-                            </svg>
-                          </div>
-                          <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
-                            {[
-                              [t("pdp.spec.model"), p.modelCode],
-                              [t("pdp.spec.frameW"), `${p.dims.frameWidth} mm`],
-                              [t("pdp.spec.lensW"), `${p.dims.lensWidth} mm`],
-                              [t("pdp.spec.lensH"), `${p.dims.lensHeight} mm`],
-                              [t("pdp.spec.bridge"), `${p.dims.bridge} mm`],
-                              [t("pdp.spec.temple"), `${p.dims.temple} mm`],
-                              [t("pdp.spec.material"), p.material],
-                              [t("pdp.spec.weight"), p.weight],
-                            ].map(([k2, v]) => (
-                              <div key={k2 as string}>
-                                <dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">{k2}</dt>
-                                <dd className="text-foreground mt-1">{v}</dd>
-                              </div>
-                            ))}
-                          </dl>
+      <div className="mx-auto max-w-7xl px-6 pb-10">
+        <div className="border-t border-border/60">
+          {[
+            { k: "details", tt: t("pdp.sec.details") },
+            { k: "lens", tt: t("pdp.sec.lens") },
+            { k: "shipping", tt: t("pdp.sec.shipping") },
+            { k: "reviews", tt: `${t("pdp.sec.reviews")} (1,284)` },
+          ].map(({ k, tt }) => {
+            const open = openSection === k;
+            return (
+              <div key={k} className="border-b border-border/60">
+                <button
+                  onClick={() => setOpenSection(open ? null : k)}
+                  className="w-full flex justify-between items-center py-4 text-left"
+                >
+                  <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">{tt}</span>
+                  {open ? <Minus className="size-4" /> : <Plus className="size-4" />}
+                </button>
+                {open && (
+                  <div className="pb-6 text-sm text-muted-foreground">
+                    {k === "details" && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+                        <div className="bg-surface/60 border border-border/60 p-6 md:p-8">
+                          <svg viewBox="0 0 300 130" className="w-full h-auto text-foreground/70">
+                            <g fill="none" stroke="currentColor" strokeWidth="1">
+                              <rect x="40" y="40" width="80" height="50" rx="6" />
+                              <rect x="180" y="40" width="80" height="50" rx="6" />
+                              <line x1="120" y1="65" x2="180" y2="65" />
+                              <line x1="40" y1="20" x2="260" y2="20" strokeDasharray="2 3" />
+                              <line x1="40" y1="100" x2="40" y2="115" />
+                              <line x1="120" y1="100" x2="120" y2="115" />
+                              <line x1="120" y1="40" x2="120" y2="25" />
+                              <line x1="180" y1="40" x2="180" y2="25" />
+                            </g>
+                            <g fill="currentColor" fontSize="9" fontFamily="DM Sans" textAnchor="middle">
+                              <text x="150" y="15">{p.dims.frameWidth} mm</text>
+                              <text x="80" y="115">{p.dims.lensWidth} mm</text>
+                              <text x="150" y="60">{p.dims.bridge}</text>
+                              <text x="280" y="65">{p.dims.lensHeight}</text>
+                            </g>
+                          </svg>
                         </div>
-                      )}
-                      {k === "lens" && <p>{t("pdp.lensRec")}</p>}
-                      {k === "shipping" && <p>{t("pdp.shipDesc")}</p>}
-                      {k === "reviews" && (
-                        <div className="space-y-4">
-                          <div className="flex items-baseline gap-3">
-                            <span className="font-display text-3xl text-foreground">4.6</span>
-                            <span className="text-xs">{t("pdp.basedOn")} 1,284 {t("pdp.reviews")}</span>
-                          </div>
+                        <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
                           {[
-                            [t("rev.love.t"), t("rev.love.b"), "A. M."],
-                            [t("rev.fit.t"), t("rev.fit.b"), "J. R."],
-                          ].map(([tt, b, n]) => (
-                            <div key={tt} className="pt-3 border-t border-border/60">
-                              <div className="flex items-center justify-between">
-                                <span className="text-foreground font-medium text-sm">{tt}</span>
-                                <div className="flex">{[1,2,3,4,5].map((i) => <Star key={i} className="size-3 fill-foreground text-foreground" />)}</div>
-                              </div>
-                              <p className="text-xs mt-1">{b} — {n}</p>
+                            [t("pdp.spec.model"), p.modelCode],
+                            [t("pdp.spec.frameW"), `${p.dims.frameWidth} mm`],
+                            [t("pdp.spec.lensW"), `${p.dims.lensWidth} mm`],
+                            [t("pdp.spec.lensH"), `${p.dims.lensHeight} mm`],
+                            [t("pdp.spec.bridge"), `${p.dims.bridge} mm`],
+                            [t("pdp.spec.temple"), `${p.dims.temple} mm`],
+                            [t("pdp.spec.material"), p.material],
+                            [t("pdp.spec.weight"), p.weight],
+                          ].map(([k2, v]) => (
+                            <div key={k2 as string}>
+                              <dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">{k2}</dt>
+                              <dd className="text-foreground mt-1 text-base">{v}</dd>
                             </div>
                           ))}
+                        </dl>
+                      </div>
+                    )}
+                    {k === "lens" && <p className="max-w-3xl">{t("pdp.lensRec")}</p>}
+                    {k === "shipping" && <p className="max-w-3xl">{t("pdp.shipDesc")}</p>}
+                    {k === "reviews" && (
+                      <div className="space-y-4 max-w-3xl">
+                        <div className="flex items-baseline gap-3">
+                          <span className="font-display text-3xl text-foreground">4.6</span>
+                          <span className="text-xs">{t("pdp.basedOn")} 1,284 {t("pdp.reviews")}</span>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                        {[
+                          [t("rev.love.t"), t("rev.love.b"), "A. M."],
+                          [t("rev.fit.t"), t("rev.fit.b"), "J. R."],
+                        ].map(([tt2, b, n]) => (
+                          <div key={tt2} className="pt-3 border-t border-border/60">
+                            <div className="flex items-center justify-between">
+                              <span className="text-foreground font-medium text-sm">{tt2}</span>
+                              <div className="flex">{[1,2,3,4,5].map((i) => <Star key={i} className="size-3 fill-foreground text-foreground" />)}</div>
+                            </div>
+                            <p className="text-xs mt-1">{b} — {n}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
