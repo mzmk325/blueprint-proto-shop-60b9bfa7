@@ -127,7 +127,7 @@ export default function LensFlow() {
 
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="aspect-[4/3] w-full max-w-md bg-surface flex items-center justify-center">
-              <img src={productImage(p, p.colors.findIndex(c => c.name === color))} alt={p.name} className="w-full h-full object-contain" />
+              <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt={p.name} className="w-full h-full object-contain" />
             </div>
             <h2 className="font-display text-2xl mt-6">{p.name} <span className="text-muted-foreground">({color})</span></h2>
           </div>
