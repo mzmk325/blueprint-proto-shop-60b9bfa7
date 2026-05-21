@@ -98,18 +98,19 @@ function PDP() {
           {/* Color */}
           <div>
             <div className="flex justify-between items-baseline mb-3">
-              <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">Color</span>
+              <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">Frame color</span>
               <span className="text-xs text-muted-foreground">{p.colors[colorIdx].name}</span>
             </div>
-            <div className="flex gap-2.5 flex-wrap">
+            <div className="flex gap-2 flex-wrap">
               {p.colors.map((c, i) => (
                 <button
                   key={c.name}
                   onClick={() => { setColorIdx(i); setActiveImg(0); }}
-                  className={`size-10 rounded-full border ${i === colorIdx ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "border-border"}`}
-                  style={{ background: c.hex }}
+                  className={`size-14 overflow-hidden border-2 transition ${i === colorIdx ? "border-foreground" : "border-transparent hover:border-border"}`}
                   aria-label={c.name}
-                />
+                >
+                  <img src={productImage(p, i)} alt={c.name} className="w-full h-full object-cover" />
+                </button>
               ))}
             </div>
           </div>
