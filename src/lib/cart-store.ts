@@ -1,9 +1,20 @@
 import { useSyncExternalStore } from "react";
 
+export type FulfillmentType = "frame-only" | "non-rx" | "prescription";
+export type PrescriptionStatus =
+  | "none"
+  | "pending"
+  | "uploaded"
+  | "pd-unknown"
+  | "prism-review"
+  | "clarification";
+
 export type LensChoice = {
   type: "frame-only" | "non-rx" | "blue-light" | "single-vision" | "reading";
   label: string;
   priceAdd: number;
+  fulfillmentType?: FulfillmentType;
+  prescriptionStatus?: PrescriptionStatus;
   rxType?: "single-vision" | "reading" | "non-rx" | "frame-only";
   rxTypeLabel?: string;
   fn?: { key: string; label: string; price: number };
@@ -15,9 +26,26 @@ export type LensChoice = {
     od?: { sph: string; cyl: string; axis: string };
     os?: { sph: string; cyl: string; axis: string };
     pd?: string;
+    pdRight?: string;
+    pdLeft?: string;
     dontKnowPd?: boolean;
     hasPrism?: boolean;
   };
+};
+
+export const FULFILLMENT_LABEL: Record<FulfillmentType, string> = {
+  "frame-only": "Frame only",
+  "non-rx": "Non-prescription lens",
+  prescription: "Prescription lens",
+};
+
+export const RX_STATUS_LABEL: Record<PrescriptionStatus, string> = {
+  none: "No prescription required",
+  pending: "Pending human review",
+  uploaded: "Uploaded — pending review",
+  "pd-unknown": "PD unknown — pending review",
+  "prism-review": "Prism — pending review",
+  clarification: "Needs clarification",
 };
 
 export type CartLine = {
@@ -211,6 +239,22 @@ export function useCart() {
 export function lineTotal(l: CartLine) { return (l.unitPrice + l.lens.priceAdd) * l.qty; }
 export function cartSubtotal(lines: CartLine[]) { return lines.reduce((s, l) => s + lineTotal(l), 0); }
 export const FREE_SHIPPING_THRESHOLD = 75;
+
+export function getFulfillmentType(l: LensChoice): FulfillmentType {
+  if (l.fulfillmentType) return l.fulfillmentType;
+  if (l.rxType === "frame-only" || l.type === "frame-only") return "frame-only";
+  if (l.rxType === "non-rx" || l.type === "non-rx") return "non-rx";
+  return "prescription";
+}
+export function getPrescriptionStatus(l: LensChoice): PrescriptionStatus {
+  if (l.prescriptionStatus) return l.prescriptionStatus;
+  const ft = getFulfillmentType(l);
+  if (ft !== "prescription") return "none";
+  if (l.rx?.hasPrism) return "prism-review";
+  if (l.rx?.dontKnowPd) return "pd-unknown";
+  if (l.rx?.method === "upload") return "uploaded";
+  return "pending";
+}
 
 // Margin estimation defaults
 export function estimateMargin(o: Order) {

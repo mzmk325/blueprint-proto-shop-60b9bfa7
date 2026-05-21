@@ -1,8 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Layout } from "@/components/site/Layout";
-import { useCart, cart, lineTotal, cartSubtotal, FREE_SHIPPING_THRESHOLD } from "@/lib/cart-store";
+import {
+  useCart,
+  cart,
+  lineTotal,
+  cartSubtotal,
+  FREE_SHIPPING_THRESHOLD,
+  getFulfillmentType,
+  getPrescriptionStatus,
+  FULFILLMENT_LABEL,
+  RX_STATUS_LABEL,
+} from "@/lib/cart-store";
 import { getProduct, productImage } from "@/lib/products";
-import { Trash2 } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 
@@ -14,6 +24,7 @@ export const Route = createFileRoute("/cart")({
 function CartPage() {
   const { lines } = useCart();
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [coupon, setCoupon] = useState("");
   const [applied, setApplied] = useState(0);
   const subtotal = cartSubtotal(lines);
@@ -50,58 +61,107 @@ function CartPage() {
             <div className="space-y-4">
               {lines.map((l) => {
                 const p = getProduct(l.productId);
+                const ft = getFulfillmentType(l.lens);
+                const rxStatus = getPrescriptionStatus(l.lens);
+                const isPrescription = ft === "prescription";
+                const isFrameOnly = ft === "frame-only";
+                const isNonRx = ft === "non-rx";
                 const rxMethodLabel = l.lens.rx
-                  ? l.lens.rx.method === "upload" ? t("cart.rxUploaded")
-                  : l.lens.rx.method === "manual" ? t("cart.rxManual")
-                  : t("cart.rxLater")
-                  : null;
+                  ? l.lens.rx.method === "upload" ? "Uploaded"
+                  : l.lens.rx.method === "manual" ? "Manual entry"
+                  : "Send later"
+                  : "None";
+
+                const pdDisplay = !l.lens.rx ? null
+                  : l.lens.rx.dontKnowPd ? "Unknown"
+                  : l.lens.rx.pdRight || l.lens.rx.pdLeft ? `R ${l.lens.rx.pdRight || "—"} / L ${l.lens.rx.pdLeft || "—"}`
+                  : l.lens.rx.pd || "—";
+
                 return (
                   <div key={l.lineId} className="flex gap-4 border rounded-xl p-4 bg-card">
                     <img src={p ? productImage(p) : ""} alt="" className="size-28 rounded-lg bg-secondary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between gap-2">
                         <div className="min-w-0">
+                          <span className={`inline-block text-[10px] uppercase tracking-[0.12em] font-semibold px-2 py-0.5 mb-1.5 ${
+                            isFrameOnly ? "bg-slate-200 text-slate-700" :
+                            isNonRx ? "bg-blue-100 text-blue-800" :
+                            "bg-amber-100 text-amber-800"
+                          }`}>{FULFILLMENT_LABEL[ft]}</span>
                           <div className="font-medium text-base">{l.name}</div>
                           <div className="text-xs text-muted-foreground mt-0.5">{l.color}{l.size ? ` · ${l.size}` : ""}</div>
                         </div>
-                        <button onClick={() => cart.remove(l.lineId)} className="text-muted-foreground hover:text-foreground shrink-0"><Trash2 className="size-4" /></button>
+                        <button onClick={() => cart.remove(l.lineId)} className="text-muted-foreground hover:text-foreground shrink-0" aria-label="Remove"><Trash2 className="size-4" /></button>
                       </div>
 
                       <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-                        <dt className="text-muted-foreground">{t("cart.framePrice")}</dt>
+                        <dt className="text-muted-foreground">Frame price</dt>
                         <dd className="text-right">${l.unitPrice.toFixed(2)}</dd>
-                        {l.lens.rxTypeLabel && <>
-                          <dt className="text-muted-foreground">{t("cart.rxType")}</dt>
+
+                        {!isFrameOnly && l.lens.rxTypeLabel && <>
+                          <dt className="text-muted-foreground">Prescription type</dt>
                           <dd className="text-right">{l.lens.rxTypeLabel}</dd>
                         </>}
-                        {l.lens.fn && <>
-                          <dt className="text-muted-foreground">{t("cart.fn")}</dt>
-                          <dd className="text-right">{l.lens.fn.label} <span className="text-muted-foreground">{l.lens.fn.price > 0 ? `+$${l.lens.fn.price}` : ""}</span></dd>
+
+                        {!isFrameOnly && l.lens.fn && <>
+                          <dt className="text-muted-foreground">Lens function</dt>
+                          <dd className="text-right">{l.lens.fn.label} <span className="text-muted-foreground">{l.lens.fn.price > 0 ? `+$${l.lens.fn.price}` : "(included)"}</span></dd>
                         </>}
-                        {l.lens.thickness && <>
-                          <dt className="text-muted-foreground">{t("cart.thick")}</dt>
-                          <dd className="text-right">{l.lens.thickness.label} <span className="text-muted-foreground">{l.lens.thickness.price > 0 ? `+$${l.lens.thickness.price}` : t("common.included")}</span></dd>
+                        {!isFrameOnly && l.lens.thickness && <>
+                          <dt className="text-muted-foreground">Lens thickness</dt>
+                          <dd className="text-right">{l.lens.thickness.label} <span className="text-muted-foreground">{l.lens.thickness.price > 0 ? `+$${l.lens.thickness.price}` : "(included)"}</span></dd>
                         </>}
                         {l.lens.addon && l.lens.addon.key !== "none" && <>
-                          <dt className="text-muted-foreground">{t("cart.addon")}</dt>
+                          <dt className="text-muted-foreground">Add-on</dt>
                           <dd className="text-right">{l.lens.addon.label} <span className="text-muted-foreground">{l.lens.addon.price > 0 ? `+$${l.lens.addon.price}` : ""}</span></dd>
                         </>}
-                        {rxMethodLabel && <>
-                          <dt className="text-muted-foreground">{t("cart.rxMethod")}</dt>
+
+                        {isPrescription && <>
+                          <dt className="text-muted-foreground">Rx method</dt>
                           <dd className="text-right">{rxMethodLabel}</dd>
-                          <dt className="text-muted-foreground">{t("cart.rxStatus")}</dt>
-                          <dd className="text-right text-sale">{t("cart.rxPending")}</dd>
+                          <dt className="text-muted-foreground">PD</dt>
+                          <dd className="text-right">{pdDisplay}</dd>
+                          <dt className="text-muted-foreground">Rx status</dt>
+                          <dd className="text-right text-sale font-medium">{RX_STATUS_LABEL[rxStatus]}</dd>
+                        </>}
+
+                        {isNonRx && <>
+                          <dt className="text-muted-foreground">Rx status</dt>
+                          <dd className="text-right">No prescription required</dd>
                         </>}
                       </dl>
 
-                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/60">
-                        <div className="flex items-center border rounded-full">
-                          <button onClick={() => cart.setQty(l.lineId, l.qty - 1)} className="size-8">−</button>
-                          <span className="w-8 text-center text-sm">{l.qty}</span>
-                          <button onClick={() => cart.setQty(l.lineId, l.qty + 1)} className="size-8">+</button>
+                      {/* Type-specific hint */}
+                      <p className={`mt-3 text-[11px] p-2 border-l-2 ${
+                        isFrameOnly ? "border-slate-400 bg-slate-50 text-slate-700" :
+                        isNonRx ? "border-blue-400 bg-blue-50 text-blue-800" :
+                        "border-sale bg-sale/5 text-foreground"
+                      }`}>
+                        {isFrameOnly && "Ships with demo lenses only."}
+                        {isNonRx && "No prescription required."}
+                        {isPrescription && "Every prescription is reviewed by our team before production."}
+                      </p>
+
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/60 gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center border rounded-full">
+                            <button onClick={() => cart.setQty(l.lineId, l.qty - 1)} className="size-8">−</button>
+                            <span className="w-8 text-center text-sm">{l.qty}</span>
+                            <button onClick={() => cart.setQty(l.lineId, l.qty + 1)} className="size-8">+</button>
+                          </div>
+                          {!isFrameOnly && (
+                            <button onClick={() => { cart.remove(l.lineId); navigate({ to: "/lens/$id", params: { id: l.productId }, search: { color: l.color } }); }} className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+                              <Pencil className="size-3" /> Edit lenses
+                            </button>
+                          )}
+                          {isPrescription && (
+                            <button onClick={() => { cart.remove(l.lineId); navigate({ to: "/lens/$id", params: { id: l.productId }, search: { color: l.color } }); }} className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+                              <Pencil className="size-3" /> Edit Rx
+                            </button>
+                          )}
                         </div>
                         <div className="text-right">
-                          <div className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{t("cart.itemTotal")}</div>
+                          <div className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Item total</div>
                           <div className="font-medium text-base">${lineTotal(l).toFixed(2)}</div>
                         </div>
                       </div>
@@ -110,8 +170,6 @@ function CartPage() {
                 );
               })}
             </div>
-
-            <p className="mt-4 text-xs text-muted-foreground bg-secondary/40 border-l-2 border-sale p-3">{t("cart.trustNote")}</p>
           </div>
 
           <aside className="border rounded-xl p-6 h-fit bg-card space-y-4">

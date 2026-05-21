@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
-import { RecentlyViewed } from "@/components/site/RecentlyViewed";
+
 import { products, shapes, categories } from "@/lib/products";
 import { ArrowRight, ShieldCheck, RotateCcw, Truck, Star } from "lucide-react";
 import { useI18n, type TKey } from "@/lib/i18n";
@@ -186,7 +186,7 @@ function Home() {
         </div>
       </section>
 
-      <RecentlyViewed />
+      {/* RecentlyViewed hidden on homepage to keep main rhythm intact */}
 
       <section className="py-20 px-6 lg:px-8 bg-surface/50">
         <div className="text-center mb-12">
