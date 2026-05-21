@@ -163,7 +163,8 @@ export default function LensFlow() {
             <Link to="/product/$id" params={{ id: p.id }} aria-label="Close" className="size-9 flex items-center justify-center hover:bg-background"><X className="size-5" /></Link>
           </div>
 
-          <div className="max-w-xl mx-auto pb-32 space-y-4">
+          <div className="flex-1 overflow-y-auto px-8 lg:px-12 py-8">
+            <div className="max-w-xl mx-auto space-y-4">
             {step === "rx-type" && (
               <>
                 {([
