@@ -1,11 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { Search, User, Heart, Menu } from "lucide-react";
+import { Heart, Menu } from "lucide-react";
 import { useState } from "react";
 import { useUser } from "@/lib/user-store";
 import { MiniCart } from "./MiniCart";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useI18n } from "@/lib/i18n";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { SearchPopover } from "./SearchPopover";
+import { SupportPopover } from "./SupportPopover";
+import { AccountPopover } from "./AccountPopover";
 
 export function PromoBar() {
   const { t } = useI18n();
@@ -74,9 +77,7 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-5 text-foreground/80">
-          <LanguageSwitcher />
-          <button aria-label={t("a11y.search")} className="hover:text-foreground transition-colors"><Search className="size-[18px]" strokeWidth={1.5} /></button>
-          <Link to="/admin" aria-label={t("a11y.account")} className="hover:text-foreground transition-colors hidden sm:block"><User className="size-[18px]" strokeWidth={1.5} /></Link>
+          <SearchPopover />
           <Link to="/wishlist" aria-label={t("a11y.wishlist")} className="relative hover:text-foreground transition-colors hidden sm:block">
             <Heart className="size-[18px]" strokeWidth={1.5} />
             {wishlist.length > 0 && (
@@ -84,6 +85,9 @@ export function Header() {
             )}
           </Link>
           <MiniCart />
+          <SupportPopover />
+          <AccountPopover />
+          <LanguageSwitcher />
         </div>
       </div>
     </header>

@@ -344,6 +344,31 @@ const dict = {
     "rev.love.b": "Lightweight and exactly as pictured. Lots of compliments.",
     "rev.fit.t": "Great fit",
     "rev.fit.b": "Frames sit perfectly. Lenses are crystal clear.",
+    // search
+    "search.placeholder": "Search frames, shapes, colors…",
+    "search.hot": "Hot Search",
+    "search.empty": "Sorry, your search for '{q}' did not match any products.",
+    "search.faqTitle": "FAQ",
+    "search.viewMore": "View More",
+    // support
+    "support.label": "Support",
+    "support.track": "Track Order",
+    "support.help": "Help Center",
+    "support.contact": "Contact Us",
+    // account
+    "acct.rewards": "Miravue Rewards",
+    "acct.profile": "My Profile",
+    "acct.orders": "My Orders",
+    "acct.address": "My Address Book",
+    "acct.rx": "My Prescription",
+    "acct.coupons": "My Coupons",
+    "acct.wishlist": "My Wishlist",
+    "acct.points": "My Points",
+    "acct.recent": "Recently Viewed",
+    "acct.signOut": "Sign Out",
+    // language & currency
+    "lc.language": "Language",
+    "lc.currency": "Currency",
   },
   zh: {
     // chrome
@@ -685,6 +710,31 @@ const dict = {
     "rev.fit.t": "佩戴贴合",
     "rev.fit.b": "镜框完美贴合,镜片通透清晰。",
     "lang.label": "语言",
+    // search
+    "search.placeholder": "搜索镜框、款型、颜色…",
+    "search.hot": "热门搜索",
+    "search.empty": "抱歉，未找到与 \"{q}\" 相关的产品。",
+    "search.faqTitle": "常见问题",
+    "search.viewMore": "查看更多",
+    // support
+    "support.label": "客服",
+    "support.track": "订单追踪",
+    "support.help": "帮助中心",
+    "support.contact": "联系我们",
+    // account
+    "acct.rewards": "会员权益",
+    "acct.profile": "个人资料",
+    "acct.orders": "我的订单",
+    "acct.address": "收货地址",
+    "acct.rx": "我的处方",
+    "acct.coupons": "我的优惠券",
+    "acct.wishlist": "我的心愿单",
+    "acct.points": "我的积分",
+    "acct.recent": "最近浏览",
+    "acct.signOut": "退出登录",
+    // language & currency
+    "lc.language": "语言",
+    "lc.currency": "货币",
   },
 } as const;
 
