@@ -74,19 +74,6 @@ export default function LensFlow() {
   const techObj = TECHS.find((t) => t.key === tech)!;
   const materialObj = MATERIALS.find((m) => m.key === material)!;
 
-  const lensTotal = useMemo(() => {
-    if (rxType === "frame-only") return 0;
-    const passed = (s: Step) => steps.indexOf(s) >= 0 && steps.indexOf(s) < steps.indexOf(step) || step === s;
-    let t = 0;
-    if (passed("lens-type")) t += lensTypeObj.priceAdd;
-    if (passed("lens-tech")) t += techObj.price - 46.75;
-    if (passed("material")) t += materialObj.priceAdd;
-    return t;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rxType, lensTypeObj, techObj, materialObj, step]);
-
-  const total = p.price + lensTotal;
-
   const steps: Step[] = rxType === "frame-only"
     ? ["rx-type"]
     : rxType === "single-vision" || rxType === "reading"
@@ -95,6 +82,19 @@ export default function LensFlow() {
 
   const idx = steps.indexOf(step);
   const progress = ((idx + 1) / steps.length) * 100;
+
+  const lensTotal = useMemo(() => {
+    if (rxType === "frame-only") return 0;
+    const passedOrCurrent = (s: Step) => steps.indexOf(s) <= idx;
+    let t = 0;
+    if (passedOrCurrent("lens-type")) t += lensTypeObj.priceAdd;
+    if (passedOrCurrent("lens-tech")) t += techObj.price - 46.75;
+    if (passedOrCurrent("material")) t += materialObj.priceAdd;
+    return t;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rxType, lensTypeObj, techObj, materialObj, idx]);
+
+  const total = p.price + lensTotal;
 
   function next() {
     if (idx < steps.length - 1) setStep(steps[idx + 1]);
