@@ -234,7 +234,7 @@ function mockLine(over: Partial<CartLine> & { name: string; color: string; unitP
 function cryptoId() {
   try { return crypto.randomUUID(); } catch { return Math.random().toString(36).slice(2); }
 }
-const day = 86400_000;
+
 
 function seedOrders(): Order[] {
   const now = Date.now();
@@ -294,7 +294,7 @@ function seedOrders(): Order[] {
       ],
     }),
     base({
-      createdAt: now - 1 * day, name: "Sofia Bianchi", email: "sofia.b@example.com",
+      createdAt: now - 1 * 86400000, name: "Sofia Bianchi", email: "sofia.b@example.com",
       phone: "+39 333 555 7788", country: "Italy",
       address: "Via Roma 45, 20121 Milano, Italy",
       lines: [mockLine({
@@ -311,14 +311,14 @@ function seedOrders(): Order[] {
       rxReview: { status: "approved", reviewedAt: now - 20 * 3600_000, reviewer: "Mira" },
       sourcing: { frameSourceUrl: "https://1688.com/example", frameCost: 14, lensSupplier: "Wenzhou Optical Co.", lensCost: 6, notes: "Frame in stock at workshop." },
       timeline: [
-        { at: now - 1 * day, status: "paid", message: "Payment received" },
+        { at: now - 1 * 86400000, status: "paid", message: "Payment received" },
         { at: now - 22 * 3600_000, status: "rx-pending", message: "Rx submitted" },
         { at: now - 20 * 3600_000, status: "rx-approved", message: "Prescription approved", author: "Mira" },
         { at: now - 18 * 3600_000, status: "sourcing", message: "Started sourcing frame and lenses" },
       ],
     }),
     base({
-      createdAt: now - 3 * day, name: "Daniel Park", email: "d.park@example.com",
+      createdAt: now - 3 * 86400000, name: "Daniel Park", email: "d.park@example.com",
       phone: "+82 10 4422 6611", country: "South Korea",
       address: "12 Gangnam-daero, Gangnam-gu, Seoul 06236, South Korea",
       lines: [mockLine({
@@ -333,18 +333,18 @@ function seedOrders(): Order[] {
         },
       })],
       subtotal: 178, total: 184.95, status: "in-production",
-      rxReview: { status: "approved", reviewedAt: now - 2 * day, reviewer: "Mira" },
+      rxReview: { status: "approved", reviewedAt: now - 2 * 86400000, reviewer: "Mira" },
       sourcing: { frameCost: 17, lensCost: 28, lensSupplier: "Wenzhou Optical Co.", notes: "Lenses ordered, ETA 2 days." },
-      lab: { sentToMomAt: now - 2 * day, localShop: "Mira's Optical Workshop", processingFee: 10, qcNotes: "" },
+      lab: { sentToMomAt: now - 2 * 86400000, localShop: "Mira's Optical Workshop", processingFee: 10, qcNotes: "" },
       timeline: [
-        { at: now - 3 * day, status: "paid", message: "Payment received" },
-        { at: now - 2.5 * day, status: "rx-approved", message: "Rx approved" },
-        { at: now - 2 * day, status: "sent-to-lab", message: "Frame + lenses sent to mom" },
-        { at: now - 1 * day, status: "in-production", message: "Lab started edging lenses" },
+        { at: now - 3 * 86400000, status: "paid", message: "Payment received" },
+        { at: now - 2.5 * 86400000, status: "rx-approved", message: "Rx approved" },
+        { at: now - 2 * 86400000, status: "sent-to-lab", message: "Frame + lenses sent to mom" },
+        { at: now - 1 * 86400000, status: "in-production", message: "Lab started edging lenses" },
       ],
     }),
     base({
-      createdAt: now - 5 * day, name: "Aisha Khan", email: "aisha.k@example.com",
+      createdAt: now - 5 * 86400000, name: "Aisha Khan", email: "aisha.k@example.com",
       phone: "+971 50 123 4567", country: "United Arab Emirates",
       address: "Marina Plaza, Dubai Marina, Dubai, UAE",
       lines: [mockLine({
@@ -359,20 +359,20 @@ function seedOrders(): Order[] {
         },
       })],
       subtotal: 93, total: 99.95, status: "ready-to-ship",
-      rxReview: { status: "approved", reviewedAt: now - 4 * day, reviewer: "Mira" },
+      rxReview: { status: "approved", reviewedAt: now - 4 * 86400000, reviewer: "Mira" },
       sourcing: { frameCost: 15, lensCost: 12, lensSupplier: "Wenzhou Optical Co." },
-      lab: { sentToMomAt: now - 4 * day, localShop: "Mira's Optical Workshop", processingFee: 8, qcNotes: "Passed QC. No scratches." },
+      lab: { sentToMomAt: now - 4 * 86400000, localShop: "Mira's Optical Workshop", processingFee: 8, qcNotes: "Passed QC. No scratches." },
       timeline: [
-        { at: now - 5 * day, status: "paid", message: "Payment received" },
-        { at: now - 4.5 * day, status: "rx-approved", message: "Rx approved" },
-        { at: now - 4 * day, status: "sent-to-lab", message: "Sent to mom" },
-        { at: now - 2 * day, status: "in-production", message: "In production" },
-        { at: now - 1 * day, status: "qc", message: "Quality check" },
+        { at: now - 5 * 86400000, status: "paid", message: "Payment received" },
+        { at: now - 4.5 * 86400000, status: "rx-approved", message: "Rx approved" },
+        { at: now - 4 * 86400000, status: "sent-to-lab", message: "Sent to mom" },
+        { at: now - 2 * 86400000, status: "in-production", message: "In production" },
+        { at: now - 1 * 86400000, status: "qc", message: "Quality check" },
         { at: now - 12 * 3600_000, status: "ready-to-ship", message: "Packed, ready for Yanwen pickup" },
       ],
     }),
     base({
-      createdAt: now - 9 * day, name: "Thomas Müller", email: "t.muller@example.com",
+      createdAt: now - 9 * 86400000, name: "Thomas Müller", email: "t.muller@example.com",
       phone: "+49 151 2233 4455", country: "Germany",
       address: "Friedrichstraße 200, 10117 Berlin, Germany",
       lines: [mockLine({
@@ -386,13 +386,13 @@ function seedOrders(): Order[] {
         },
       })],
       subtotal: 40.5, total: 47.45, status: "shipped",
-      rxReview: { status: "approved", reviewedAt: now - 8 * day, reviewer: "Mira" },
+      rxReview: { status: "approved", reviewedAt: now - 8 * 86400000, reviewer: "Mira" },
       sourcing: { frameCost: 12, lensCost: 4, lensSupplier: "Wenzhou Optical Co." },
-      lab: { sentToMomAt: now - 8 * day, localShop: "Mira's Optical Workshop", processingFee: 8, qcNotes: "OK" },
-      shippingInfo: { carrier: "Yanwen", tracking: "YW123456789CN", shippedAt: now - 3 * day, deliveryStatus: "In transit (Frankfurt)", trackingNotes: "Customs cleared" },
+      lab: { sentToMomAt: now - 8 * 86400000, localShop: "Mira's Optical Workshop", processingFee: 8, qcNotes: "OK" },
+      shippingInfo: { carrier: "Yanwen", tracking: "YW123456789CN", shippedAt: now - 3 * 86400000, deliveryStatus: "In transit (Frankfurt)", trackingNotes: "Customs cleared" },
       timeline: [
-        { at: now - 9 * day, status: "paid", message: "Payment received" },
-        { at: now - 3 * day, status: "shipped", message: "Handed to Yanwen — YW123456789CN" },
+        { at: now - 9 * 86400000, status: "paid", message: "Payment received" },
+        { at: now - 3 * 86400000, status: "shipped", message: "Handed to Yanwen — YW123456789CN" },
       ],
     }),
   ];
