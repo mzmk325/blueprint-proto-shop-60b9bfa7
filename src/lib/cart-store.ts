@@ -13,8 +13,8 @@ export type LensChoice = {
   type: "frame-only" | "non-rx" | "blue-light" | "single-vision" | "reading";
   label: string;
   priceAdd: number;
-  fulfillmentType: FulfillmentType;
-  prescriptionStatus: PrescriptionStatus;
+  fulfillmentType?: FulfillmentType;
+  prescriptionStatus?: PrescriptionStatus;
   rxType?: "single-vision" | "reading" | "non-rx" | "frame-only";
   rxTypeLabel?: string;
   fn?: { key: string; label: string; price: number };
