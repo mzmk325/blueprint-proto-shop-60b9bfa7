@@ -313,10 +313,11 @@ export default function LensFlow() {
                 })}
               </>
             )}
+            </div>
           </div>
 
           {/* Sticky CTA */}
-          <div className="absolute bottom-0 left-0 right-0 bg-surface border-t border-border/60 px-8 lg:px-16 py-5">
+          <div className="shrink-0 bg-surface border-t border-border/60 px-8 lg:px-12 py-5">
             <button
               onClick={step === "rx-entry" ? () => setShowConfirm(true) : next}
               className="w-full bg-sale text-white py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
