@@ -14,8 +14,8 @@ function Checkout() {
   const navigate = useNavigate();
   const { t } = useI18n();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [contact, setContact] = useState({ email: "", name: "" });
-  const [addr, setAddr] = useState({ line1: "", city: "", state: "", zip: "" });
+  const [contact, setContact] = useState({ email: "", name: "", phone: "" });
+  const [addr, setAddr] = useState({ country: "United States", line1: "", line2: "", city: "", state: "", zip: "" });
   const [shipping, setShipping] = useState<"standard" | "express">("standard");
 
   const subtotal = cartSubtotal(lines);
