@@ -27,7 +27,7 @@ function OrderConfirm() {
   }));
   const hasPrescription = lineSummaries.some((x) => x.ft === "prescription");
   const hasNonRx = lineSummaries.some((x) => x.ft === "non-rx");
-  const hasFrameOnly = lineSummaries.some((x) => x.ft === "frame-only");
+  void hasNonRx;
 
   const headlineType = hasPrescription ? "prescription" : hasNonRx ? "non-rx" : "frame-only";
   const headline =
