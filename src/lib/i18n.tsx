@@ -447,6 +447,7 @@ const dict = {
     "co.country": "Country",
     "co.address1": "Address line 1",
     "co.address2": "Address line 2 (optional)",
+  },
   zh: {
     // chrome
     "promo.banner": "订单满 $75 免运费 · 首单 85 折，优惠码",
