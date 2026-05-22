@@ -60,19 +60,19 @@ function PDP() {
 
       <div className="mx-auto max-w-7xl px-6 py-6 grid md:grid-cols-[80px_1fr_440px] gap-8">
         <div className="hidden md:flex flex-col gap-3 order-1">
-          {thumbs.map((i) => (
+          {galleryImgs.map((src, i) => (
             <button
               key={i}
               onClick={() => setActiveImg(i)}
               className={`aspect-square w-full overflow-hidden bg-surface border ${activeImg === i ? "border-foreground" : "border-transparent hover:border-border"} transition-colors`}
             >
-              <img src={productImage(p, (colorIdx + i) % p.colors.length)} alt="" className="w-full h-full object-cover" />
+              <img src={src} alt="" className="w-full h-full object-cover" />
             </button>
           ))}
         </div>
 
         <div className="order-2 relative aspect-[4/5] bg-surface overflow-hidden">
-          <img src={productImage(p, (colorIdx + activeImg) % p.colors.length)} alt={p.name} className="w-full h-full object-cover" />
+          <img src={heroImg} alt={p.name} className="w-full h-full object-cover" />
           <button className="absolute bottom-5 right-5 bg-background/95 text-foreground text-[10px] uppercase tracking-[0.18em] font-semibold px-4 py-2 hover:bg-foreground hover:text-background transition-colors">
             {t("common.tryOn")}
           </button>
@@ -90,6 +90,7 @@ function PDP() {
             <div className="flex items-center gap-2 mb-2">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{t(`shape.${p.shape}` as TKey)} · {p.collection}</p>
               {p.badge === "NEW" && <span className="text-[10px] bg-foreground text-background px-2 py-0.5 uppercase tracking-wider">{t("pdp.newArrival")}</span>}
+              {promoLabel && <span className="text-[10px] bg-sale text-white px-2 py-0.5 uppercase tracking-wider">{promoLabel}</span>}
             </div>
             <h1 className="font-display text-3xl md:text-4xl tracking-tight leading-tight">{p.name}</h1>
             <p className="text-sm text-muted-foreground mt-2">{p.descriptor}</p>
@@ -99,11 +100,12 @@ function PDP() {
             <div className="flex items-center gap-x-3 gap-y-2 flex-wrap">
               <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{t("pdp.frameFrom")}</span>
               <span className="font-display text-2xl">${p.price.toFixed(2)}</span>
-              {p.originalPrice && <span className="text-sm text-muted-foreground line-through">${p.originalPrice.toFixed(2)}</span>}
-              {p.discountPct && <span className="text-[10px] bg-sale text-white px-2 py-0.5 font-bold uppercase tracking-tighter">{p.discountPct}% {t("common.off")}</span>}
+              {p.saleEnabled && p.originalPrice && (
+                <span className="text-sm text-muted-foreground line-through">${p.originalPrice.toFixed(2)}</span>
+              )}
               <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-                <div className="flex">{[1,2,3,4,5].map((i) => <Star key={i} className="size-3 fill-foreground text-foreground" />)}</div>
-                <span>(1,284)</span>
+                <div className="flex">{[1,2,3,4,5].map((i) => <Star key={i} className={`size-3 ${i <= Math.round(avgRating) ? "fill-foreground text-foreground" : "text-muted-foreground"}`} />)}</div>
+                <span>({reviewCount || "—"})</span>
               </div>
             </div>
             <p className="text-xs text-muted-foreground">{t("pdp.framePriceNote")}</p>
@@ -113,35 +115,17 @@ function PDP() {
           <div>
             <div className="flex justify-between items-baseline mb-3">
               <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">{t("pdp.frameColor")}</span>
-              <span className="text-xs text-muted-foreground">{p.colors[colorIdx].name}</span>
+              <span className="text-xs text-muted-foreground">{variants[colorIdx]?.color ?? ""}</span>
             </div>
             <div className="flex gap-2 flex-wrap">
-              {p.colors.map((cc, i) => (
+              {variants.map((cc, i) => (
                 <button
-                  key={cc.name}
+                  key={cc.color + i}
                   onClick={() => { setColorIdx(i); setActiveImg(0); }}
                   className={`size-14 overflow-hidden border-2 transition ${i === colorIdx ? "border-foreground" : "border-transparent hover:border-border"}`}
-                  aria-label={cc.name}
+                  aria-label={cc.color}
                 >
-                  <img src={productImage(p, i)} alt={cc.name} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between items-baseline mb-3">
-              <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">{t("pdp.size")}</span>
-              <button className="text-xs text-muted-foreground underline underline-offset-2">{t("pdp.sizeGuide")}</button>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {(["S", "M", "L"] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSize(s)}
-                  className={`py-3 text-xs uppercase tracking-[0.15em] border transition-colors ${size === s ? "border-foreground bg-foreground text-background" : "border-border hover:border-foreground"}`}
-                >
-                  {s === "S" ? t("pdp.sizeSmall") : s === "M" ? t("pdp.sizeMedium") : t("pdp.sizeLarge")}
+                  <img src={cc.images[0]} alt={cc.color} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -151,25 +135,22 @@ function PDP() {
             <Link
               to="/lens/$id"
               params={{ id: p.id }}
-              search={{ color: p.colors[colorIdx].name }}
-              className="relative block w-full bg-sale text-white text-center py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
+              search={{ color: variants[colorIdx]?.color ?? p.colors[0]?.name }}
+              className="block w-full bg-sale text-white text-center py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
             >
               {t("pdp.selectLenses")}
-              <span className="absolute top-0 right-3 -translate-y-1/2 bg-foreground text-background text-[9px] px-2 py-0.5 tracking-wider">15% {t("common.off")}</span>
             </Link>
             <Link
               to="/lens/$id"
               params={{ id: p.id }}
-              search={{ color: p.colors[colorIdx].name, frameOnly: true }}
+              search={{ color: variants[colorIdx]?.color ?? p.colors[0]?.name, frameOnly: true }}
               className="block w-full bg-foreground text-background text-center py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
             >
               {t("pdp.frameOnly")}
             </Link>
             <p className="text-[11px] text-muted-foreground text-center pt-1">{t("pdp.lensesAvailable")}</p>
-            <p className="text-[11px] text-muted-foreground text-center">
-              {t("pdp.klarna")} ${(p.price / 4).toFixed(2)} {t("pdp.klarnaWith")}
-            </p>
           </div>
+
 
           <ul className="grid grid-cols-2 gap-3 pt-4 border-t border-border/60 text-[11px]">
             <li className="flex items-center gap-2 text-muted-foreground"><Truck className="size-3.5" /> {t("pdp.freeShip")}</li>
