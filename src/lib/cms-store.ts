@@ -159,7 +159,10 @@ export type CMSAILog = {
   rolledBackAt: number | null;
 };
 
+export const CMS_SCHEMA_VERSION = 2;
+
 export type CMSState = {
+  schemaVersion: number;
   products: CMSProduct[];
   categories: CMSCategory[];
   reviews: CMSReview[];
