@@ -173,7 +173,7 @@ const dict = {
     "home.trust.warrantyT": "365-Day Warranty",
     "home.trust.warrantyS": "Quality guaranteed",
     "home.trust.shipT": "Free Shipping",
-    "home.trust.shipS": "Over $75",
+    "home.trust.shipS": "Over {ship}",
     "home.trust.ratingS": "20,000+ reviews",
     // shapes
     "shape.Round": "Round",
