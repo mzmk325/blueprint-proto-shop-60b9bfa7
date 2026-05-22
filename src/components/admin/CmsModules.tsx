@@ -12,6 +12,7 @@ import {
   Plus, Trash2, Copy, Eye, EyeOff, Search, ImagePlus, Sparkles, Upload,
   RotateCcw, ChevronRight, Pencil, X, Check, ExternalLink, Flame, Star,
 } from "lucide-react";
+import { DEFAULT_LANGUAGES, DEFAULT_CURRENCIES, ROUNDING_LABEL, type RoundingRule, type StorefrontCurrency } from "@/lib/admin-i18n";
 
 // ── shared atoms ────────────────────────────────────────────────────────────
 export function PageHeader({ title, desc, action }: { title: string; desc?: string; action?: React.ReactNode }) {
