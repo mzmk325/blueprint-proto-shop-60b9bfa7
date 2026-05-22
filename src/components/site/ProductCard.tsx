@@ -94,7 +94,8 @@ export function ProductCard({ p }: { p: CardProduct }) {
           {variants.slice(0, 5).map((vv, i) => (
             <button
               key={vv.color + i}
-              onClick={(e) => { e.preventDefault(); setVariantIdx(i); }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setVariantIdx(i); }}
+              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
               onMouseEnter={() => setVariantIdx(i)}
               aria-label={vv.color}
               title={vv.color}
