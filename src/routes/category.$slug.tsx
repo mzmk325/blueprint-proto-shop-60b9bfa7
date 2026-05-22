@@ -87,48 +87,16 @@ function Category() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-6 py-10 grid grid-cols-1 md:grid-cols-[220px_1fr] gap-x-12 gap-y-8">
-        <aside className="space-y-8 text-sm">
-          <FilterGroup
-            title={t("cat.shape")}
-            current={search.shape}
-            onSelect={(v) => setParam("shape", v)}
-            options={[...shapes]}
-            labelOf={(o) => t(`shape.${o}` as TKey)}
-            allLabel={t("cat.allOf") + " " + t("cat.shape")}
-          />
-          <FilterGroup
-            title={t("cat.collection")}
-            current={search.collection}
-            onSelect={(v) => setParam("collection", v)}
-            options={[...collections]}
-            labelOf={(o) => o}
-            allLabel={t("cat.allOf") + " " + t("cat.collection")}
-          />
-          <div>
-            <h3 className="text-[11px] uppercase tracking-[0.18em] font-semibold mb-3">{t("cat.color")}</h3>
-            <div className="grid grid-cols-6 gap-2">
-              <button
-                onClick={() => setParam("color", undefined)}
-                className={`size-7 rounded-full border ${!search.color ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "border-border"} bg-gradient-to-br from-secondary to-muted`}
-                aria-label={t("cat.allColors")}
-              />
-              {Object.entries(COLOR_SWATCHES).map(([name, hex]) => (
-                <button
-                  key={name}
-                  onClick={() => setParam("color", name)}
-                  className={`size-7 rounded-full border ${search.color === name ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "border-border"}`}
-                  style={{ background: hex }}
-                  aria-label={name}
-                  title={name}
-                />
-              ))}
-            </div>
-          </div>
+      <div className="mx-auto max-w-7xl px-6 py-6 md:py-10 grid grid-cols-1 md:grid-cols-[220px_1fr] gap-x-12 gap-y-8">
+        <aside className="hidden md:block space-y-8 text-sm">
+          <FiltersInner search={search} setParam={setParam} t={t} />
         </aside>
 
         <div>
-          <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-8">
+          {/* Mobile filter + sort row */}
+          <MobileFilterBar search={search} setParam={setParam} t={t} />
+
+          <div className="hidden md:flex items-center justify-between border-b border-border/60 pb-4 mb-8">
             <div className="flex flex-wrap gap-2">
               {(["shape", "collection", "color"] as const).map((k) =>
                 search[k] ? (
@@ -157,7 +125,7 @@ function Category() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 sm:gap-x-6 gap-y-10 sm:gap-y-12">
             {list.map((p) => <ProductCard key={p.id} p={p} />)}
           </div>
 
