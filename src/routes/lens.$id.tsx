@@ -353,20 +353,20 @@ function LensFlow() {
 
                   {rxMethod === "upload" && (
                     <div className="bg-background p-8 space-y-4">
-                      <p className="text-sm text-muted-foreground">Upload a clear photo or PDF of your prescription. Our team will review it before production.</p>
+                      <p className="text-sm text-muted-foreground">{t("lens.uploadNote")}</p>
                       <label className="border-2 border-dashed border-border block p-10 cursor-pointer hover:border-foreground transition text-center">
                         <Upload className="size-6 mx-auto mb-3" />
-                        <div className="text-sm">Drop your prescription here or <span className="text-sale underline">click to upload</span></div>
-                        <div className="text-xs text-muted-foreground mt-1">(Max 20 MB)</div>
+                        <div className="text-sm">{t("lens.dropHere")} <span className="text-sale underline">{t("lens.clickUpload")}</span></div>
+                        <div className="text-xs text-muted-foreground mt-1">{t("lens.maxSize")}</div>
                         <input type="file" className="sr-only" accept="image/*,.pdf" onChange={(e) => setUploadedFile(e.target.files?.[0]?.name ?? "prescription.jpg")} />
                       </label>
-                      {uploadedFile && <div className="text-xs text-sale">✓ {uploadedFile} ready to submit</div>}
-                      <div className="text-center text-xs text-muted-foreground">— or —</div>
-                      <button onClick={() => setUploadedFile("camera-capture.jpg")} className="w-full bg-sale text-white py-3 text-[11px] uppercase tracking-[0.18em] font-semibold flex items-center justify-center gap-2"><Camera className="size-4" /> Take a photo</button>
+                      {uploadedFile && <div className="text-xs text-sale">✓ {uploadedFile} {t("lens.fileReady")}</div>}
+                      <div className="text-center text-xs text-muted-foreground">{t("lens.or")}</div>
+                      <button onClick={() => setUploadedFile("camera-capture.jpg")} className="w-full bg-sale text-white py-3 text-[11px] uppercase tracking-[0.18em] font-semibold flex items-center justify-center gap-2"><Camera className="size-4" /> {t("lens.takePhoto")}</button>
 
                       <label className="flex items-center gap-2 text-sm pt-2 border-t border-border/60">
                         <input type="checkbox" checked={dontKnowPd} onChange={(e) => setDontKnowPd(e.target.checked)} className="size-4" />
-                        I don't know my PD (we'll contact you)
+                        {t("lens.dontKnowPdShort")}
                       </label>
 
                       {errors.length > 0 && (
