@@ -280,7 +280,7 @@ function PDP() {
 
       <RecentlyViewed excludeId={p.id} />
 
-      <section className="mx-auto max-w-7xl px-6 py-20 border-t border-border/60">
+      <section className="mx-auto max-w-7xl px-6 py-20 border-t border-border/60 pb-24 md:pb-20">
         <div className="flex items-end justify-between mb-8">
           <h2 className="font-display text-2xl md:text-3xl tracking-tight">{t("pdp.alsoLike")}</h2>
           <Link to="/category/$slug" params={{ slug: "all" }} className="text-[11px] uppercase tracking-[0.18em] underline underline-offset-4">{t("common.viewAll")}</Link>
@@ -289,6 +289,22 @@ function PDP() {
           {products.filter((x) => x.id !== p.id).slice(0, 4).map((r) => <ProductCard key={r.id} p={r} />)}
         </div>
       </section>
+
+      {/* Mobile sticky purchase bar */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur border-t border-border px-4 py-3 flex items-center gap-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+        <div className="flex flex-col leading-tight min-w-0">
+          <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{t("pdp.frameFrom")}</span>
+          <span className="font-display text-lg font-semibold">${p.price.toFixed(2)}</span>
+        </div>
+        <Link
+          to="/lens/$id"
+          params={{ id: p.id }}
+          search={{ color: p.colors[colorIdx].name }}
+          className="ml-auto flex-1 bg-sale text-white text-center py-3 text-[11px] uppercase tracking-[0.18em] font-semibold hover:opacity-90 transition-opacity"
+        >
+          {t("pdp.selectLenses")}
+        </Link>
+      </div>
     </Layout>
   );
 }
