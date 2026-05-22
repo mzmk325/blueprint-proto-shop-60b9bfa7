@@ -9,12 +9,13 @@ export function AccountPopover() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!open) return;
     function onDoc(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
+  }, [open]);
 
   const close = () => setOpen(false);
   const itemCls = "flex items-center justify-between py-2.5 text-sm hover:text-foreground text-foreground/80";
