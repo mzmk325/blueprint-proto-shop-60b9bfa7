@@ -234,7 +234,7 @@ const dict = {
     "pdp.spec.material": "Material",
     "pdp.spec.weight": "Weight",
     "pdp.lensRec": "Recommended: Blue Light Blocking for daily screen use, Photochromic for indoor/outdoor versatility. Configure on the next step.",
-    "pdp.shipDesc": "Ships in 13–20 days. Free over $75. 30-day returns, no questions asked. 365-day quality warranty.",
+    "pdp.shipDesc": "Ships in 13–20 days. Free over {ship}. 30-day returns, no questions asked. 365-day quality warranty.",
     "pdp.basedOn": "Based on",
     "pdp.reviews": "reviews",
     "pdp.alsoLike": "You may also like",
