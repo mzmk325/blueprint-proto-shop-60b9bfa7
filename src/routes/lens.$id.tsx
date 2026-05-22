@@ -245,13 +245,13 @@ function LensFlow() {
         <section className="bg-surface flex flex-col min-h-0 order-2 lg:order-1 overflow-hidden">
           <div className="flex items-center justify-between px-4 sm:px-6 lg:px-12 py-4 lg:py-5 shrink-0 border-b border-border/40">
             {idx > 0 ? (
-              <button onClick={back} aria-label="Back" className="size-9 flex items-center justify-center hover:bg-background"><ArrowLeft className="size-5" /></button>
-            ) : <Link to="/product/$id" params={{ id: p.id }} aria-label="Back to product" className="size-9 flex items-center justify-center hover:bg-background"><ArrowLeft className="size-5" /></Link>}
+              <button onClick={back} aria-label={t("common.back")} className="size-9 flex items-center justify-center hover:bg-background"><ArrowLeft className="size-5" /></button>
+            ) : <Link to="/product/$id" params={{ id: p.id }} aria-label={t("lens.back")} className="size-9 flex items-center justify-center hover:bg-background"><ArrowLeft className="size-5" /></Link>}
             <div className="flex-1 text-center">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">Step {idx + 1} / {steps.length}</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">{t("lens.step")} {idx + 1} / {steps.length}</div>
               <h3 className="font-display text-base sm:text-lg">{stepTitle(step)}</h3>
             </div>
-            <Link to="/product/$id" params={{ id: p.id }} aria-label="Close" className="size-9 flex items-center justify-center hover:bg-background"><X className="size-5" /></Link>
+            <Link to="/product/$id" params={{ id: p.id }} aria-label={t("common.close")} className="size-9 flex items-center justify-center hover:bg-background"><X className="size-5" /></Link>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-12 py-6 lg:py-8">
