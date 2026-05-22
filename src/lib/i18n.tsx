@@ -196,7 +196,7 @@ const dict = {
     "cat.reset": "Reset filters",
     "cat.about": "About the collection",
     "cat.aboutTitle": "Frames designed for the way you actually live.",
-    "cat.aboutDesc": "Every pair includes scratch-resistant lenses, anti-reflective coating, and free shipping on orders over $75. Try on virtually, ship in 13–20 days, return within 30.",
+    "cat.aboutDesc": "Every pair includes scratch-resistant lenses, anti-reflective coating, and free shipping on orders over {ship}. Try on virtually, ship in 13–20 days, return within 30.",
     "cat.faq1Q": "Do you offer prescription lenses?",
     "cat.faq1A": "Yes — single vision, blue-light, and frame-only are all available at checkout.",
     "cat.faq2Q": "How do I find the right style?",
