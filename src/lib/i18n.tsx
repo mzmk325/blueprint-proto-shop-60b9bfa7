@@ -1140,10 +1140,17 @@ function resolveDictKey(l: Locale): "en" | "zh" {
   return "en";
 }
 
+type TVars = Record<string, string | number>;
+
+function interpolate(s: string, vars?: TVars): string {
+  if (!vars) return s;
+  return s.replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? String(vars[k]) : `{${k}}`));
+}
+
 type Ctx = {
   locale: Locale;
   setLocale: (l: Locale) => void;
-  t: (k: TKey) => string;
+  t: (k: TKey, vars?: TVars) => string;
 };
 
 const I18nContext = createContext<Ctx | null>(null);
