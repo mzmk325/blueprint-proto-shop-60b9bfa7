@@ -281,22 +281,19 @@ function LensFlow() {
               {step === "rx-entry" && (
                 <>
                   <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                    <button onClick={() => setRxMethod("manual")} className={`bg-background p-3 sm:p-4 text-sm font-medium border ${rxMethod === "manual" ? "border-sale" : "border-transparent"}`}>Enter manually</button>
-                    <button onClick={() => setRxMethod("upload")} className={`bg-background p-3 sm:p-4 text-sm font-medium border ${rxMethod === "upload" ? "border-sale" : "border-transparent"}`}>Upload prescription</button>
+                    <button onClick={() => setRxMethod("manual")} className={`bg-background p-3 sm:p-4 text-sm font-medium border ${rxMethod === "manual" ? "border-sale" : "border-transparent"}`}>{t("lens.enterManual")}</button>
+                    <button onClick={() => setRxMethod("upload")} className={`bg-background p-3 sm:p-4 text-sm font-medium border ${rxMethod === "upload" ? "border-sale" : "border-transparent"}`}>{t("lens.uploadRx")}</button>
                   </div>
 
                   {rxMethod === "manual" && (
                     <div className="space-y-3">
-                      {/* OD card */}
-                      <EyeCard label="Right Eye" sub="OD" val={od} setVal={setOd} />
-                      {/* OS card */}
-                      <EyeCard label="Left Eye" sub="OS" val={os} setVal={setOs} />
+                      <EyeCard label={t("lens.rightEye")} sub="OD" val={od} setVal={setOd} />
+                      <EyeCard label={t("lens.leftEye")} sub="OS" val={os} setVal={setOs} />
 
-                      {/* PD card */}
                       <div className="bg-background p-4 space-y-3">
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                           <span className="text-sm font-semibold flex items-center gap-1.5">
-                            PD <span className="text-xs text-muted-foreground font-normal">(Pupillary Distance)</span>
+                            {t("lens.pd")} <span className="text-xs text-muted-foreground font-normal">(Pupillary Distance)</span>
                             <button onClick={() => setShowPd(true)} aria-label="help"><HelpCircle className="size-3.5 text-muted-foreground" /></button>
                           </span>
                           <label className="text-xs flex items-center gap-1.5 shrink-0">
