@@ -14,12 +14,13 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
   useEffect(() => { setZhVisible(isZhPreviewEnabled()); }, []);
 
   useEffect(() => {
+    if (!open) return;
     function onDoc(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
+  }, [open]);
 
   const locales = zhVisible
     ? [...PUBLIC_LOCALES, ...INTERNAL_LOCALES]
