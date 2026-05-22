@@ -1201,11 +1201,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const t = useCallback(
-    (k: TKey) => {
+    (k: TKey, vars?: TVars) => {
       const key = resolveDictKey(locale);
-      return (dict[key] as Record<string, string>)[k]
+      const raw = (dict[key] as Record<string, string>)[k]
         ?? (dict.en as Record<string, string>)[k]
         ?? k;
+      return interpolate(raw, vars);
     },
     [locale]
   );
@@ -1221,7 +1222,7 @@ export function useI18n() {
     return {
       locale: "en-US" as Locale,
       setLocale: () => {},
-      t: (k: TKey) => (dict.en as Record<string, string>)[k] ?? k,
+      t: (k: TKey, vars?: TVars) => interpolate((dict.en as Record<string, string>)[k] ?? k, vars),
     };
   }
   return ctx;
