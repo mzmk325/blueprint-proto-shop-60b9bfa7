@@ -14,12 +14,13 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
   useEffect(() => { setZhVisible(isZhPreviewEnabled()); }, []);
 
   useEffect(() => {
+    if (!open) return;
     function onDoc(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
+  }, [open]);
 
   const locales = zhVisible
     ? [...PUBLIC_LOCALES, ...INTERNAL_LOCALES]
@@ -28,7 +29,6 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
   return (
     <div ref={ref} className={`relative ${className}`}>
       <button
-        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => setOpen((v) => !v)}
         className="grid size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
         aria-label="Language and currency"
