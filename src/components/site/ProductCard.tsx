@@ -14,9 +14,11 @@ type CardProduct = Product | StorefrontProduct;
 export function ProductCard({ p }: { p: CardProduct }) {
   const { wishlist } = useUser();
   const { t } = useI18n();
+  const fmt = usePriceFormatter();
   const promo = useActivePromotion();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
 
   // Lazily enrich legacy Product callers so variant images always exist.
   const enriched: StorefrontProduct =
