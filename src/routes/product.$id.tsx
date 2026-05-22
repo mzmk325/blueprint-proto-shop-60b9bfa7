@@ -245,19 +245,26 @@ function PDP() {
                     {k === "reviews" && (
                       <div className="space-y-4 max-w-3xl">
                         <div className="flex items-baseline gap-3">
-                          <span className="font-display text-3xl text-foreground">4.6</span>
-                          <span className="text-xs">{t("pdp.basedOn")} 1,284 {t("pdp.reviews")}</span>
+                          <span className="font-display text-3xl text-foreground">{avgRating.toFixed(1)}</span>
+                          <span className="text-xs">{t("pdp.basedOn")} {reviewCount} {t("pdp.reviews")}</span>
                         </div>
-                        {[
-                          [t("rev.love.t"), t("rev.love.b"), "A. M."],
-                          [t("rev.fit.t"), t("rev.fit.b"), "J. R."],
-                        ].map(([tt2, b, n]) => (
-                          <div key={tt2} className="pt-3 border-t border-border/60">
+                        {reviews.length === 0 && (
+                          <p className="text-xs text-muted-foreground pt-3 border-t border-border/60">No reviews yet for this frame.</p>
+                        )}
+                        {reviews.map((r) => (
+                          <div key={r.id} className="pt-3 border-t border-border/60">
                             <div className="flex items-center justify-between">
-                              <span className="text-foreground font-medium text-sm">{tt2}</span>
-                              <div className="flex">{[1,2,3,4,5].map((i) => <Star key={i} className="size-3 fill-foreground text-foreground" />)}</div>
+                              <span className="text-foreground font-medium text-sm">{r.user} · {r.country}</span>
+                              <div className="flex">{[1,2,3,4,5].map((i) => <Star key={i} className={`size-3 ${i <= r.stars ? "fill-foreground text-foreground" : "text-muted-foreground"}`} />)}</div>
                             </div>
-                            <p className="text-xs mt-1">{b} — {n}</p>
+                            <p className="text-xs mt-1">{r.body}</p>
+                            {r.images.length > 0 && (
+                              <div className="flex gap-2 mt-2">
+                                {r.images.slice(0, 4).map((src, i) => (
+                                  <img key={i} src={src} alt="" className="size-16 object-cover rounded" />
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
