@@ -11,6 +11,8 @@ import {
   FREE_SHIPPING_THRESHOLD,
 } from "@/lib/cart-store";
 import { ArrowLeft, X, Upload, Camera, HelpCircle, Check, Pencil, ChevronDown } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
+import { usePriceFormatter } from "@/lib/currency-store";
 
 const searchSchema = z.object({
   color: z.string().optional(),
