@@ -1,8 +1,57 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { currencyStore, type Currency } from "./currency-store";
 
-export type Locale = "en" | "zh";
+// Public storefront locales + hidden internal Chinese preview.
+export type Locale =
+  | "en-US"
+  | "en-GB"
+  | "de-DE"
+  | "fr-FR"
+  | "es-ES"
+  | "it-IT"
+  | "nl-NL"
+  | "zh-CN"
+  // back-compat: previously persisted as "en" / "zh"
+  | "en"
+  | "zh";
 
 const STORAGE_KEY = "miravue:locale";
+const PREVIEW_FLAG_KEY = "miravue:preview-zh";
+
+// Language → display currency mapping (business rule).
+export const LOCALE_CURRENCY: Record<string, Currency> = {
+  "en-US": "USD",
+  "en-GB": "GBP",
+  "de-DE": "EUR",
+  "fr-FR": "EUR",
+  "es-ES": "EUR",
+  "it-IT": "EUR",
+  "nl-NL": "EUR",
+  "zh-CN": "USD", // internal preview keeps USD (admin manages CNY separately)
+  en: "USD",
+  zh: "USD",
+};
+
+export const PUBLIC_LOCALES: { code: Locale; label: string; native: string }[] = [
+  { code: "en-US", label: "English (US)", native: "English (US)" },
+  { code: "en-GB", label: "English (UK)", native: "English (UK)" },
+  { code: "de-DE", label: "Deutsch",      native: "Deutsch" },
+  { code: "fr-FR", label: "Français",     native: "Français" },
+  { code: "es-ES", label: "Español",      native: "Español" },
+  { code: "it-IT", label: "Italiano",     native: "Italiano" },
+  { code: "nl-NL", label: "Nederlands",   native: "Nederlands" },
+];
+
+export const INTERNAL_LOCALES: { code: Locale; label: string; native: string }[] = [
+  { code: "zh-CN", label: "中文（内部预览）", native: "中文" },
+];
+
+function htmlLang(l: Locale): string {
+  if (l === "zh" || l === "zh-CN") return "zh-CN";
+  if (l === "en") return "en-US";
+  return l;
+}
+
 
 const dict = {
   en: {
@@ -894,7 +943,17 @@ const dict = {
   },
 } as const;
 
+
+
+
 export type TKey = keyof (typeof dict)["en"];
+
+// Resolve a locale to a dict key. Public European locales fall back to English
+// while the structure is ready for full translation later.
+function resolveDictKey(l: Locale): "en" | "zh" {
+  if (l === "zh" || l === "zh-CN") return "zh";
+  return "en";
+}
 
 type Ctx = {
   locale: Locale;
@@ -904,26 +963,58 @@ type Ctx = {
 
 const I18nContext = createContext<Ctx | null>(null);
 
+// Read ?preview_lang=zh from URL; if present, persist a flag so the option
+// stays visible across navigations within the session.
+function detectPreviewZh(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("preview_lang") === "zh") {
+      sessionStorage.setItem(PREVIEW_FLAG_KEY, "1");
+      return true;
+    }
+    return sessionStorage.getItem(PREVIEW_FLAG_KEY) === "1";
+  } catch { return false; }
+}
+
+export function isZhPreviewEnabled(): boolean {
+  return detectPreviewZh();
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("en");
+  const [locale, setLocaleState] = useState<Locale>("en-US");
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY) as Locale | null;
-      if (saved === "en" || saved === "zh") setLocaleState(saved);
-    } catch {}
+      let saved = localStorage.getItem(STORAGE_KEY) as Locale | null;
+      // migrate legacy "en"/"zh"
+      if (saved === "en") saved = "en-US";
+      if (saved === "zh") saved = "zh-CN";
+      // strip zh if user is no longer in preview mode
+      if (saved === "zh-CN" && !detectPreviewZh()) saved = "en-US";
+      if (saved) setLocaleState(saved);
+    } catch { /* noop */ }
   }, []);
+
+  // Whenever locale changes, sync display currency.
+  useEffect(() => {
+    const cur = LOCALE_CURRENCY[locale];
+    if (cur) currencyStore.set(cur);
+    try { document.documentElement.lang = htmlLang(locale); } catch { /* noop */ }
+  }, [locale]);
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
-    try {
-      localStorage.setItem(STORAGE_KEY, l);
-      document.documentElement.lang = l === "zh" ? "zh-CN" : "en";
-    } catch {}
+    try { localStorage.setItem(STORAGE_KEY, l); } catch { /* noop */ }
   }, []);
 
   const t = useCallback(
-    (k: TKey) => (dict[locale] as Record<string, string>)[k] ?? (dict.en as Record<string, string>)[k] ?? k,
+    (k: TKey) => {
+      const key = resolveDictKey(locale);
+      return (dict[key] as Record<string, string>)[k]
+        ?? (dict.en as Record<string, string>)[k]
+        ?? k;
+    },
     [locale]
   );
 
@@ -936,10 +1027,11 @@ export function useI18n() {
   const ctx = useContext(I18nContext);
   if (!ctx) {
     return {
-      locale: "en" as Locale,
+      locale: "en-US" as Locale,
       setLocale: () => {},
       t: (k: TKey) => (dict.en as Record<string, string>)[k] ?? k,
     };
   }
   return ctx;
 }
+

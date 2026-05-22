@@ -6,15 +6,19 @@ import { useUser, user } from "@/lib/user-store";
 import { useI18n } from "@/lib/i18n";
 import { useActivePromotion, promoShortLabel } from "@/lib/promotions";
 import { getStorefrontProduct, type StorefrontProduct } from "@/lib/storefront-cms";
+import { usePriceFormatter } from "@/lib/currency-store";
+
 
 type CardProduct = Product | StorefrontProduct;
 
 export function ProductCard({ p }: { p: CardProduct }) {
   const { wishlist } = useUser();
   const { t } = useI18n();
+  const fmt = usePriceFormatter();
   const promo = useActivePromotion();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
 
   // Lazily enrich legacy Product callers so variant images always exist.
   const enriched: StorefrontProduct =
@@ -78,11 +82,12 @@ export function ProductCard({ p }: { p: CardProduct }) {
           <h3 className="font-display text-[15px] font-semibold tracking-tight">{p.name}</h3>
           <div className="flex items-baseline gap-1.5 whitespace-nowrap">
             <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Frame from</span>
-            <span className="font-display text-[15px] font-semibold">${p.price.toFixed(2)}</span>
+            <span className="font-display text-[15px] font-semibold">{fmt(p.price)}</span>
             {isProductOnSale(p) && (
-              <span className="text-[11px] text-muted-foreground line-through">${p.originalPrice!.toFixed(2)}</span>
+              <span className="text-[11px] text-muted-foreground line-through">{fmt(p.originalPrice!)}</span>
             )}
           </div>
+
         </div>
         <p className="text-[11px] text-muted-foreground line-clamp-1 mt-1">{p.descriptor}</p>
         <div className="flex items-center gap-1.5 mt-2.5">

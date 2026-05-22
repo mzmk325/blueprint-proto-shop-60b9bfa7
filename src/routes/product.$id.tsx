@@ -9,6 +9,8 @@ import { useUser, user } from "@/lib/user-store";
 import { Star, Truck, RefreshCw, ShieldCheck, Heart, Minus, Plus } from "lucide-react";
 import { useI18n, type TKey } from "@/lib/i18n";
 import { useActivePromotion, promoShortLabel } from "@/lib/promotions";
+import { usePriceFormatter } from "@/lib/currency-store";
+
 
 export const Route = createFileRoute("/product/$id")({
   loader: ({ params }) => {
@@ -35,10 +37,12 @@ function PDP() {
   const [openSection, setOpenSection] = useState<string | null>("details");
   const { wishlist } = useUser();
   const { t } = useI18n();
+  const fmt = usePriceFormatter();
   const promo = useActivePromotion();
   const promoLabel = promo ? promoShortLabel(promo) : "";
   const wished = wishlist.includes(p.id);
   useEffect(() => { user.pushRecent(p.id); }, [p.id]);
+
 
   const v = variants[colorIdx] ?? variants[0];
   const galleryImgs = v?.images?.length ? v.images : [""];
@@ -99,9 +103,9 @@ function PDP() {
           <div className="pb-5 border-b border-border/60 space-y-2">
             <div className="flex items-center gap-x-3 gap-y-2 flex-wrap">
               <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{t("pdp.frameFrom")}</span>
-              <span className="font-display text-2xl">${p.price.toFixed(2)}</span>
+              <span className="font-display text-2xl">{fmt(p.price)}</span>
               {p.saleEnabled && p.originalPrice && (
-                <span className="text-sm text-muted-foreground line-through">${p.originalPrice.toFixed(2)}</span>
+                <span className="text-sm text-muted-foreground line-through">{fmt(p.originalPrice)}</span>
               )}
               <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                 <div className="flex">{[1,2,3,4,5].map((i) => <Star key={i} className={`size-3 ${i <= Math.round(avgRating) ? "fill-foreground text-foreground" : "text-muted-foreground"}`} />)}</div>
@@ -293,7 +297,7 @@ function PDP() {
       <div className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur border-t border-border px-4 py-3 flex items-center gap-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
         <div className="flex flex-col leading-tight min-w-0">
           <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{t("pdp.frameFrom")}</span>
-          <span className="font-display text-lg font-semibold">${p.price.toFixed(2)}</span>
+          <span className="font-display text-lg font-semibold">{fmt(p.price)}</span>
         </div>
         <Link
           to="/lens/$id"
