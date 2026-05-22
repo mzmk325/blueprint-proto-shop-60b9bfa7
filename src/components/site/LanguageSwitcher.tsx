@@ -29,7 +29,6 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
   return (
     <div ref={ref} className={`relative ${className}`}>
       <button
-        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => setOpen((v) => !v)}
         className="grid size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
         aria-label="Language and currency"
