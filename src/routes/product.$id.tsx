@@ -245,7 +245,7 @@ function PDP() {
                       </div>
                     )}
                     {k === "lens" && <p className="max-w-3xl">{t("pdp.lensRec")}</p>}
-                    {k === "shipping" && <p className="max-w-3xl">{t("pdp.shipDesc")}</p>}
+                    {k === "shipping" && <p className="max-w-3xl">{t("pdp.shipDesc", { ship: fmt(75) })}</p>}
                     {k === "reviews" && (
                       <div className="space-y-4 max-w-3xl">
                         <div className="flex items-baseline gap-3">
