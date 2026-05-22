@@ -3,7 +3,9 @@ import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
 import { products, shapes, collections, categories } from "@/lib/products";
 import { z } from "zod";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useI18n, type TKey } from "@/lib/i18n";
 
 const searchSchema = z.object({
