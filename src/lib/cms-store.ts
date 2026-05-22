@@ -3,7 +3,7 @@
 // first load. Frontend still reads products.ts directly; CMS data is admin-only
 // except for PromoBar and first-order discount (consumed where applicable).
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { products as seedProducts, shapes, categories as seedCategories } from "./products";
 
 const KEY = "miravue_cms_v1";
@@ -179,8 +179,14 @@ export type CMSState = {
 // ── Seed ────────────────────────────────────────────────────────────────────
 function uid(prefix = "id") { return `${prefix}-${Math.random().toString(36).slice(2, 9)}`; }
 
+const SERVER_SEED_NOW = Date.UTC(2026, 0, 1);
+
+function isClient() {
+  return typeof window !== "undefined";
+}
+
 function seed(): CMSState {
-  const now = Date.now();
+  const now = isClient() ? Date.now() : SERVER_SEED_NOW;
   const cats: CMSCategory[] = [
     { id: "cat-all",   name: "全部眼镜",   nameEn: "All Eyeglasses",     type: "main",     slug: "all",                 image: "", sortOrder: 10, showInNav: true,  showOnHome: false, enabled: true },
     { id: "cat-wom",   name: "女款光学镜", nameEn: "Women's Eyeglasses", type: "gender",   slug: "women-eyeglasses",    image: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800", sortOrder: 20, showInNav: true,  showOnHome: true,  enabled: true },
@@ -312,7 +318,7 @@ function seed(): CMSState {
 }
 
 // ── Store ───────────────────────────────────────────────────────────────────
-let state: CMSState = load();
+let state: CMSState = seed();
 const listeners = new Set<() => void>();
 
 function migrate(s: CMSState): CMSState {
@@ -362,6 +368,10 @@ function subscribe(l: () => void) {
 }
 
 export function useCMS<T>(selector: (s: CMSState) => T): T {
+  useEffect(() => {
+    state = load();
+    listeners.forEach((l) => l());
+  }, []);
   return useSyncExternalStore(subscribe, () => selector(state), () => selector(state));
 }
 
