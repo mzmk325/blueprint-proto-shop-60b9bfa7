@@ -37,10 +37,12 @@ function PDP() {
   const [openSection, setOpenSection] = useState<string | null>("details");
   const { wishlist } = useUser();
   const { t } = useI18n();
+  const fmt = usePriceFormatter();
   const promo = useActivePromotion();
   const promoLabel = promo ? promoShortLabel(promo) : "";
   const wished = wishlist.includes(p.id);
   useEffect(() => { user.pushRecent(p.id); }, [p.id]);
+
 
   const v = variants[colorIdx] ?? variants[0];
   const galleryImgs = v?.images?.length ? v.images : [""];
