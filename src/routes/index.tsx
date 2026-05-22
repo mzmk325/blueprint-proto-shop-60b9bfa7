@@ -2,7 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
 
-import { products, shapes, categories } from "@/lib/products";
+import { shapes, categories } from "@/lib/products";
+import {
+  getHomepageCMS,
+  getBestsellers,
+  getNewArrivals,
+  shapeBannerImage,
+} from "@/lib/storefront-cms";
 import { ArrowRight, ShieldCheck, RotateCcw, Truck, Star } from "lucide-react";
 import { useI18n, type TKey } from "@/lib/i18n";
 
@@ -16,9 +22,9 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const heroImg =
+const heroImgFallback =
   "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=2000&q=80";
-const tile = {
+const tileFallback = {
   women: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=900&q=80",
   men: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=900&q=80",
   sunW: "https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&w=900&q=80",
@@ -30,10 +36,32 @@ const editorial = {
   daily: "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=1200&q=80",
 };
 
+// Convert a CMS link like "/category/women-eyeglasses" into a category slug.
+function linkToSlug(link: string): string {
+  const m = link.match(/\/category\/([^/?#]+)/);
+  return m?.[1] ?? "all";
+}
+
 function Home() {
   const { t } = useI18n();
-  const bestsellers = products.slice(0, 4);
-  const newArrivals = products.slice(4, 8);
+  const { heroes, homeCards, shapeBanners } = getHomepageCMS();
+  const hero = heroes[0];
+  const heroImg = hero?.desktopImage || heroImgFallback;
+  const bestsellers = getBestsellers(4);
+  const newArrivals = getNewArrivals(4);
+
+  const tiles = homeCards.length
+    ? homeCards.slice(0, 4).map((c) => ({ slug: linkToSlug(c.link), label: c.title, img: c.image }))
+    : [
+        { slug: "women-eyeglasses", label: t("home.tile.women"),   img: tileFallback.women },
+        { slug: "men-eyeglasses",   label: t("home.tile.men"),     img: tileFallback.men },
+        { slug: "sunglasses",       label: t("home.tile.womenSun"), img: tileFallback.sunW },
+        { slug: "sunglasses",       label: t("home.tile.menSun"),  img: tileFallback.sunM },
+      ];
+
+  const banners = shapeBanners.length
+    ? shapeBanners
+    : shapes.map((s, i) => ({ id: `fb-${s}`, shape: s, image: "", link: `/category/all?shape=${encodeURIComponent(s)}`, sortOrder: i, active: true }));
 
   return (
     <Layout>
