@@ -36,7 +36,7 @@ function MobileNav() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button aria-label={t("a11y.menu")} className="sm:hidden -ml-1 grid size-10 place-items-center hover:opacity-60 transition-opacity">
+        <button aria-label={t("a11y.menu")} className="lg:hidden -ml-1 grid size-10 place-items-center hover:opacity-60 transition-opacity">
           <Menu className="size-5" />
         </button>
       </SheetTrigger>
