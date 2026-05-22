@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
-import { getProduct, productImage, products, type Product } from "@/lib/products";
+import { getProduct, products, type Product } from "@/lib/products";
+import { getStorefrontProduct, getProductReviews, type StorefrontProduct } from "@/lib/storefront-cms";
 import { useUser, user } from "@/lib/user-store";
 import { Star, Truck, RefreshCw, ShieldCheck, Heart, Minus, Plus } from "lucide-react";
 import { useI18n, type TKey } from "@/lib/i18n";
+import { useActivePromotion, promoShortLabel } from "@/lib/promotions";
 
 export const Route = createFileRoute("/product/$id")({
   loader: ({ params }) => {
@@ -25,17 +27,26 @@ export const Route = createFileRoute("/product/$id")({
 });
 
 function PDP() {
-  const p = Route.useLoaderData() as Product;
+  const base = Route.useLoaderData() as Product;
+  const p: StorefrontProduct = getStorefrontProduct(base.id) ?? ({ ...base, variants: [] } as StorefrontProduct);
+  const variants = p.variants.length ? p.variants : base.colors.map((c) => ({ color: c.name, hex: c.hex, images: [] as string[] }));
   const [colorIdx, setColorIdx] = useState(0);
   const [activeImg, setActiveImg] = useState(0);
-  const [size, setSize] = useState<"S" | "M" | "L">("M");
   const [openSection, setOpenSection] = useState<string | null>("details");
   const { wishlist } = useUser();
   const { t } = useI18n();
+  const promo = useActivePromotion();
+  const promoLabel = promo ? promoShortLabel(promo) : "";
   const wished = wishlist.includes(p.id);
   useEffect(() => { user.pushRecent(p.id); }, [p.id]);
 
-  const thumbs = [0, 1, 2, 3];
+  const v = variants[colorIdx] ?? variants[0];
+  const galleryImgs = v?.images?.length ? v.images : [""];
+  const heroImg = galleryImgs[activeImg] ?? galleryImgs[0];
+  const reviews = getProductReviews(p.id);
+  const avgRating = reviews.length ? (reviews.reduce((a, r) => a + r.stars, 0) / reviews.length) : 4.6;
+  const reviewCount = reviews.length || 0;
+
 
   return (
     <Layout>
