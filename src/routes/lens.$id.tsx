@@ -70,6 +70,8 @@ function LensFlow() {
   const p = Route.useLoaderData();
   const search = Route.useSearch();
   const navigate = useNavigate();
+  const { t } = useI18n();
+  const fmt = usePriceFormatter();
   const color = search.color ?? p.colors[0].name;
 
   const [step, setStep] = useState<Step>("rx-type");
