@@ -167,7 +167,7 @@ function PDP() {
             { k: "details", tt: t("pdp.sec.details") },
             { k: "lens", tt: t("pdp.sec.lens") },
             { k: "shipping", tt: t("pdp.sec.shipping") },
-            { k: "reviews", tt: `${t("pdp.sec.reviews")} (1,284)` },
+            { k: "reviews", tt: `${t("pdp.sec.reviews")}${reviewCount ? ` (${reviewCount})` : ""}` },
           ].map(({ k, tt }) => {
             const open = openSection === k;
             return (
