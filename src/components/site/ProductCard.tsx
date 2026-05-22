@@ -6,6 +6,8 @@ import { useUser, user } from "@/lib/user-store";
 import { useI18n } from "@/lib/i18n";
 import { useActivePromotion, promoShortLabel } from "@/lib/promotions";
 import { getStorefrontProduct, type StorefrontProduct } from "@/lib/storefront-cms";
+import { usePriceFormatter } from "@/lib/currency-store";
+
 
 type CardProduct = Product | StorefrontProduct;
 
