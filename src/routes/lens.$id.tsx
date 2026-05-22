@@ -547,13 +547,13 @@ function LensFlow() {
       </div>
 
       {showPd && (
-        <Modal onClose={() => setShowPd(false)} title="How to measure your PD">
-          <p className="text-sm text-muted-foreground">PD (Pupillary Distance) is the distance between the centres of your pupils. Adult PD is typically 54–74 mm. Your optician usually measures it during an eye exam — but you can also measure it yourself with a mirror and a ruler.</p>
+        <Modal onClose={() => setShowPd(false)} title={t("lens.pdTitle")}>
+          <p className="text-sm text-muted-foreground">{t("lens.pdDesc")}</p>
         </Modal>
       )}
       {showPrism && (
-        <Modal onClose={() => setShowPrism(false)} title="Prism">
-          <p className="text-sm text-muted-foreground">Prism is a measure in prism diopters. We process prism prescriptions for strabismus, double vision and convergence correction. Because prism is complex, we ask you to upload your prescription so our optician can verify the values manually.</p>
+        <Modal onClose={() => setShowPrism(false)} title={t("lens.prismTitle")}>
+          <p className="text-sm text-muted-foreground">{t("lens.prismDesc")}</p>
         </Modal>
       )}
     </div>
