@@ -12,7 +12,7 @@ import {
   FULFILLMENT_LABEL,
   RX_STATUS_LABEL,
 } from "@/lib/cart-store";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, LOCALE_COUNTRY } from "@/lib/i18n";
 import { usePriceFormatter } from "@/lib/currency-store";
 import { computeAutoDiscount, hasOrderedBefore, markOrderedNow, useActivePromotion } from "@/lib/promotions";
 
