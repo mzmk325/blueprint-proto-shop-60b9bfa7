@@ -40,7 +40,6 @@ export function SearchPopover() {
   return (
     <div ref={ref} className="relative">
       <button
-        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => setOpen((v) => !v)}
         aria-label={t("a11y.search")}
         className="grid size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
