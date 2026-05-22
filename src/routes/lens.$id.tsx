@@ -260,10 +260,10 @@ function LensFlow() {
               {step === "rx-type" && (
                 <>
                   {([
-                    { k: "single-vision", tt: "Single Vision", d: "Correct nearsightedness, intermediate, or farsightedness." },
-                    { k: "reading", tt: "Reading Glasses", d: "Magnify close-up vision for comfortable reading." },
-                    { k: "non-rx", tt: "Non-Prescription", d: "Stylish protection without vision correction." },
-                    { k: "frame-only", tt: "Frame Only", d: "Ships with demo lenses only — take to your local optician." },
+                    { k: "single-vision", tt: t("lens.rx.single"), d: t("lens.rx.singleD") },
+                    { k: "reading", tt: t("lens.rx.reading"), d: t("lens.rx.readingD") },
+                    { k: "non-rx", tt: t("lens.rx.non"), d: t("lens.rx.nonD") },
+                    { k: "frame-only", tt: t("lens.rx.frame"), d: t("lens.rx.frameD") },
                   ] as const).map((o) => (
                     <button key={o.k} onClick={() => setRxType(o.k as RxType)} className={`w-full text-left bg-background p-5 border-2 transition ${rxType === o.k ? "border-sale" : "border-transparent hover:border-border"}`}>
                       <div className="font-medium">{o.tt}</div>
@@ -272,7 +272,7 @@ function LensFlow() {
                   ))}
                   {rxType === "frame-only" && (
                     <p className="text-xs text-muted-foreground bg-background border-l-2 border-sale p-3 mt-4">
-                      Frame only orders ship with demo lenses. No prescription or lens production required.
+                      {t("lens.frameOnlyHint")}
                     </p>
                   )}
                 </>
