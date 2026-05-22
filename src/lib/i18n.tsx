@@ -943,51 +943,8 @@ const dict = {
   },
 } as const;
 
-export type TKey = keyof (typeof dict)["en"];
 
-type Ctx = {
-  locale: Locale;
-  setLocale: (l: Locale) => void;
-  t: (k: TKey) => string;
-};
 
-const I18nContext = createContext<Ctx | null>(null);
-
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("en");
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY) as Locale | null;
-      if (saved === "en" || saved === "zh") setLocaleState(saved);
-    } catch {}
-  }, []);
-
-  const setLocale = useCallback((l: Locale) => {
-    setLocaleState(l);
-    try {
-      localStorage.setItem(STORAGE_KEY, l);
-      document.documentElement.lang = l === "zh" ? "zh-CN" : "en";
-    } catch {}
-  }, []);
-
-  const t = useCallback(
-    (k: TKey) => (dict[locale] as Record<string, string>)[k] ?? (dict.en as Record<string, string>)[k] ?? k,
-    [locale]
-  );
-
-  const value = useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
-
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
-}
-
-export function useI18n() {
-  const ctx = useContext(I18nContext);
-  if (!ctx) {
-    return {
-      locale: "en" as Locale,
-      setLocale: () => {},
-} as const;
 
 export type TKey = keyof (typeof dict)["en"];
 
