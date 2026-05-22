@@ -13,7 +13,7 @@ import {
   Boxes, Tag, Image as ImageIcon, Star, Percent, Globe, Sparkles, Headphones,
 } from "lucide-react";
 import { toast } from "sonner";
-import { STATUS_LABEL_ZH, STATUS_TONE, FULFILLMENT_LABEL_ZH, FT_BADGE_TONE, translateRisk, L } from "@/lib/admin-i18n";
+import { STATUS_LABEL_ZH, STATUS_TONE, FULFILLMENT_LABEL_ZH, FT_BADGE_TONE, translateRisk, translateNextAction, L } from "@/lib/admin-i18n";
 import { activePromotion, useCMS } from "@/lib/cms-store";
 import {
   ProductsModule, CategoriesModule, ReviewsModule, PromotionsModule,
@@ -261,7 +261,7 @@ function Dashboard({ orders, onOpen, onJump }: { orders: Order[]; onOpen: (id: s
                           <ChevronRight className="size-4 text-muted-foreground shrink-0" />
                         </div>
                         <div className="mt-2 text-xs text-foreground bg-secondary/60 rounded px-2 py-1 inline-block">
-                          → {na.label}
+                          → {translateNextAction(na.label)}
                         </div>
                       </button>
                     );
@@ -358,7 +358,7 @@ function OrdersList({ orders, onOpen, title }: { orders: Order[]; onOpen: (id: s
                     <Td>{ft === "prescription" ? <RxBadge order={o} /> : <span className="text-xs text-muted-foreground">—</span>}</Td>
                     <Td><StatusBadge status={o.status} /></Td>
                     <Td className="text-xs">{o.shippingInfo?.tracking ?? o.shipping}</Td>
-                    <Td className="text-xs">{na.label}</Td>
+                    <Td className="text-xs">{translateNextAction(na.label)}</Td>
                     <Td className="text-right">
                       <div className="text-sm font-medium">{money(m.gross)}</div>
                       <div className="text-[11px] text-muted-foreground">{m.marginPct}%</div>
@@ -434,10 +434,10 @@ function OrderDetail({ order, onBack }: { order: Order; onBack: () => void }) {
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">下一步操作</div>
-          <div className="mt-2 text-sm font-medium">{na.label}</div>
+          <div className="mt-2 text-sm font-medium">{translateNextAction(na.label)}</div>
           {na.nextStatus && (
-            <button onClick={() => cart.setStatus(order.id, na.nextStatus!, na.label)} className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-foreground text-background text-xs font-medium">
-              {na.label} <ChevronRight className="size-3.5" />
+            <button onClick={() => cart.setStatus(order.id, na.nextStatus!, translateNextAction(na.label))} className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-foreground text-background text-xs font-medium">
+              {translateNextAction(na.label)} <ChevronRight className="size-3.5" />
             </button>
           )}
         </div>
