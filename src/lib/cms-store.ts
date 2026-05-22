@@ -365,6 +365,9 @@ export function useCMS<T>(selector: (s: CMSState) => T): T {
   return useSyncExternalStore(subscribe, () => selector(state), () => selector(state));
 }
 
+// Sync snapshot for non-React consumers (storefront-cms bridge).
+export function cmsSnapshot(): CMSState { return state; }
+
 // ── Derived helpers ─────────────────────────────────────────────────────────
 export function isNewArrival(p: CMSProduct, days = state.settings.newArrivalDays) {
   if (p.newOverride === "force-in") return true;
