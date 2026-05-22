@@ -323,7 +323,11 @@ function migrate(s: CMSState): CMSState {
   if (v >= CMS_SCHEMA_VERSION) return s;
   // v1 -> v2: replace legacy promo bar copy
   if (s.promoBar && s.promoBar.text === "FREE SHIPPING OVER $75 · USE CODE") {
-    s.promoBar = { ...s.promoBar, text: "First pair 15% off · Free shipping over $75" };
+    s.promoBar = { ...s.promoBar, text: "First pair 15% off · {ship}" };
+  }
+  // v2 -> v3: convert hardcoded "$75" into currency-aware {ship} template
+  if (s.promoBar && typeof s.promoBar.text === "string" && /Free shipping over \$75/i.test(s.promoBar.text)) {
+    s.promoBar = { ...s.promoBar, text: s.promoBar.text.replace(/Free shipping over \$75/gi, "{ship}") };
   }
   s.schemaVersion = CMS_SCHEMA_VERSION;
   return s;
