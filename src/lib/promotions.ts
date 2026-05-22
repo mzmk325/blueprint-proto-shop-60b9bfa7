@@ -55,7 +55,7 @@ export function promoBarCopy(opts: {
 }): string {
   if (opts.promoBarText && opts.promoBarText.trim()) return opts.promoBarText;
   const ship = opts.freeShipLabel ?? "Free shipping over $75";
-  if (opts.promo) return `${opts.promo.frontCopy} · ${ship}`;
+  if (opts.promo) return `${promoShortLabel(opts.promo)} · ${ship}`;
   return `First pair 15% off · ${ship}`;
 }
 
