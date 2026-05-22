@@ -4,13 +4,16 @@ import { Heart } from "lucide-react";
 import { useUser, user } from "@/lib/user-store";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n";
+import { useActivePromotion, promoShortLabel } from "@/lib/promotions";
 
 export function ProductCard({ p }: { p: Product }) {
   const { wishlist } = useUser();
   const { t } = useI18n();
+  const promo = useActivePromotion();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const wished = mounted && wishlist.includes(p.id);
+  const promoLabel = promo ? promoShortLabel(promo) : "";
   return (
     <Link to="/product/$id" params={{ id: p.id }} className="group block">
       <div className="relative aspect-[4/5] overflow-hidden bg-surface">
@@ -20,8 +23,8 @@ export function ProductCard({ p }: { p: Product }) {
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
         />
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-          {p.discountPct ? (
-            <span className="bg-sale text-white text-[9px] font-bold uppercase tracking-tighter px-1.5 py-0.5">{p.discountPct}% OFF</span>
+          {promoLabel ? (
+            <span className="bg-sale text-white text-[9px] font-bold uppercase tracking-tighter px-1.5 py-0.5">{promoLabel}</span>
           ) : null}
           {p.badge ? (
             <span className="bg-background/90 backdrop-blur text-foreground text-[9px] font-bold uppercase tracking-tighter px-1.5 py-0.5">{p.badge}</span>
