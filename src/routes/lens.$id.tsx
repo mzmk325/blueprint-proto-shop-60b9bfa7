@@ -537,7 +537,7 @@ function LensFlow() {
               </div>
               <div className="min-w-0">
                 <h2 className="font-display text-lg leading-tight">{p.name}</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">{color} · M</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{color}</p>
               </div>
             </div>
             <SummaryBody {...{ p, rxType, fnReached, fnObj, fnPrice, thickReached, thickObj, thickPrice, addonReached, addonObj, addonPrice, shipFree, shipping, total, goto, rxTypeLabelOf, t, fmt }} />
