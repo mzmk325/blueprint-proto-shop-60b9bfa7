@@ -23,12 +23,12 @@ export const Route = createFileRoute("/checkout")({
 
 function Checkout() {
   const { lines } = useCart();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const fmt = usePriceFormatter();
   const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [contact, setContact] = useState({ email: "", name: "", phone: "" });
-  const [addr, setAddr] = useState({ country: "United States", line1: "", line2: "", city: "", state: "", zip: "" });
+  const [addr, setAddr] = useState({ country: LOCALE_COUNTRY[locale] ?? "United States", line1: "", line2: "", city: "", state: "", zip: "" });
   const [shipping, setShipping] = useState<"standard" | "express">("standard");
   const [ackFrameOnly, setAckFrameOnly] = useState(false);
   const [ackNonRx, setAckNonRx] = useState(false);
