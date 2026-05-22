@@ -261,7 +261,7 @@ function Dashboard({ orders, onOpen, onJump }: { orders: Order[]; onOpen: (id: s
                           <ChevronRight className="size-4 text-muted-foreground shrink-0" />
                         </div>
                         <div className="mt-2 text-xs text-foreground bg-secondary/60 rounded px-2 py-1 inline-block">
-                          → {na.label}
+                          → {translateNextAction(na.label)}
                         </div>
                       </button>
                     );
