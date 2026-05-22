@@ -258,7 +258,7 @@ function Home() {
           {[
             { icon: RotateCcw, tt: t("home.trust.returnsT"), s: t("home.trust.returnsS") },
             { icon: ShieldCheck, tt: t("home.trust.warrantyT"), s: t("home.trust.warrantyS") },
-            { icon: Truck, tt: t("home.trust.shipT"), s: t("home.trust.shipS") },
+            { icon: Truck, tt: t("home.trust.shipT"), s: t("home.trust.shipS", { ship: fmt(75) }) },
             { icon: Star, tt: "4.6 / 5", s: t("home.trust.ratingS") },
           ].map((b) => (
             <div key={b.tt} className="flex flex-col items-center gap-2">
