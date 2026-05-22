@@ -8,6 +8,7 @@ import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useI18n, type TKey } from "@/lib/i18n";
+import { usePriceFormatter } from "@/lib/currency-store";
 
 const searchSchema = z.object({
   shape: z.string().optional(),
@@ -37,6 +38,7 @@ function Category() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const { t, locale } = useI18n();
+  const fmt = usePriceFormatter();
   const mockCat = categories.find((c) => c.slug === slug);
   const cmsCat = getStorefrontCategoryBySlug(slug);
   const cat = mockCat ?? (cmsCat ? { slug, title: cmsCat.title, gender: null as null | "Women" | "Men" } : undefined);
@@ -146,7 +148,7 @@ function Category() {
             {t("cat.aboutTitle")}
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
-            {t("cat.aboutDesc")}
+            {t("cat.aboutDesc", { ship: fmt(75) })}
           </p>
           <div className="mt-12 divide-y divide-border/60 border-y border-border/60">
             {[

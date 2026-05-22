@@ -11,6 +11,7 @@ import {
 } from "@/lib/storefront-cms";
 import { ArrowRight, ShieldCheck, RotateCcw, Truck, Star } from "lucide-react";
 import { useI18n, type TKey } from "@/lib/i18n";
+import { usePriceFormatter } from "@/lib/currency-store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -44,6 +45,7 @@ function linkToSlug(link: string): string {
 
 function Home() {
   const { t } = useI18n();
+  const fmt = usePriceFormatter();
   const { heroes, homeCards, shapeBanners } = getHomepageCMS();
   const hero = heroes[0];
   const heroImg = hero?.desktopImage || heroImgFallback;
@@ -258,7 +260,7 @@ function Home() {
           {[
             { icon: RotateCcw, tt: t("home.trust.returnsT"), s: t("home.trust.returnsS") },
             { icon: ShieldCheck, tt: t("home.trust.warrantyT"), s: t("home.trust.warrantyS") },
-            { icon: Truck, tt: t("home.trust.shipT"), s: t("home.trust.shipS") },
+            { icon: Truck, tt: t("home.trust.shipT"), s: t("home.trust.shipS", { ship: fmt(75) }) },
             { icon: Star, tt: "4.6 / 5", s: t("home.trust.ratingS") },
           ].map((b) => (
             <div key={b.tt} className="flex flex-col items-center gap-2">

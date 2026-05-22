@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Layout } from "@/components/site/Layout";
 import { useI18n, type TKey } from "@/lib/i18n";
+import { usePriceFormatter } from "@/lib/currency-store";
 
 export const Route = createFileRoute("/faq")({
   head: () => ({ meta: [{ title: "FAQ, Shipping & Returns — MIRAVUE" }, { name: "description", content: "Help, shipping, returns, FSA/HSA." }] }),
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/faq")({
 
 function FAQ() {
   const { t } = useI18n();
+  const fmt = usePriceFormatter();
   const items: [TKey, TKey][] = [
     ["faq.q1", "faq.a1"],
     ["faq.q2", "faq.a2"],
@@ -26,7 +28,7 @@ function FAQ() {
           {items.map(([q, a]) => (
             <details key={q} className="border rounded-xl p-5 bg-card">
               <summary className="cursor-pointer font-medium">{t(q)}</summary>
-              <p className="text-sm text-muted-foreground mt-3">{t(a)}</p>
+              <p className="text-sm text-muted-foreground mt-3">{t(a, { ship: fmt(75) })}</p>
             </details>
           ))}
         </div>

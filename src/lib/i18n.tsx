@@ -32,6 +32,20 @@ export const LOCALE_CURRENCY: Record<string, Currency> = {
   zh: "USD",
 };
 
+// Locale → default checkout country (business rule).
+export const LOCALE_COUNTRY: Record<string, string> = {
+  "en-US": "United States",
+  "en-GB": "United Kingdom",
+  "de-DE": "Germany",
+  "fr-FR": "France",
+  "es-ES": "Spain",
+  "it-IT": "Italy",
+  "nl-NL": "Netherlands",
+  "zh-CN": "China",
+  en: "United States",
+  zh: "China",
+};
+
 export const PUBLIC_LOCALES: { code: Locale; label: string; native: string }[] = [
   { code: "en-US", label: "English (US)", native: "English (US)" },
   { code: "en-GB", label: "English (UK)", native: "English (UK)" },
@@ -56,7 +70,7 @@ function htmlLang(l: Locale): string {
 const dict = {
   en: {
     // chrome
-    "promo.banner": "Free shipping on orders over $75 · 15% off first order with",
+    "promo.banner": "Free shipping on orders over {ship} · 15% off first order with",
     "nav.eyeglasses": "Eyeglasses",
     "nav.women": "Women",
     "nav.men": "Men",
@@ -159,7 +173,7 @@ const dict = {
     "home.trust.warrantyT": "365-Day Warranty",
     "home.trust.warrantyS": "Quality guaranteed",
     "home.trust.shipT": "Free Shipping",
-    "home.trust.shipS": "Over $75",
+    "home.trust.shipS": "Over {ship}",
     "home.trust.ratingS": "20,000+ reviews",
     // shapes
     "shape.Round": "Round",
@@ -182,7 +196,7 @@ const dict = {
     "cat.reset": "Reset filters",
     "cat.about": "About the collection",
     "cat.aboutTitle": "Frames designed for the way you actually live.",
-    "cat.aboutDesc": "Every pair includes scratch-resistant lenses, anti-reflective coating, and free shipping on orders over $75. Try on virtually, ship in 13–20 days, return within 30.",
+    "cat.aboutDesc": "Every pair includes scratch-resistant lenses, anti-reflective coating, and free shipping on orders over {ship}. Try on virtually, ship in 13–20 days, return within 30.",
     "cat.faq1Q": "Do you offer prescription lenses?",
     "cat.faq1A": "Yes — single vision, blue-light, and frame-only are all available at checkout.",
     "cat.faq2Q": "How do I find the right style?",
@@ -203,7 +217,7 @@ const dict = {
     "pdp.frameOnly": "Frame only",
     "pdp.klarna": "or 4 interest-free payments of",
     "pdp.klarnaWith": "with Klarna",
-    "pdp.freeShip": "Free shipping $75+",
+    "pdp.freeShip": "Free shipping {ship}+",
     "pdp.returns": "30-day returns",
     "pdp.warranty": "365-day warranty",
     "pdp.shipTime": "Ships in 13–20 days",
@@ -220,7 +234,7 @@ const dict = {
     "pdp.spec.material": "Material",
     "pdp.spec.weight": "Weight",
     "pdp.lensRec": "Recommended: Blue Light Blocking for daily screen use, Photochromic for indoor/outdoor versatility. Configure on the next step.",
-    "pdp.shipDesc": "Ships in 13–20 days. Free over $75. 30-day returns, no questions asked. 365-day quality warranty.",
+    "pdp.shipDesc": "Ships in 13–20 days. Free over {ship}. 30-day returns, no questions asked. 365-day quality warranty.",
     "pdp.basedOn": "Based on",
     "pdp.reviews": "reviews",
     "pdp.alsoLike": "You may also like",
@@ -311,7 +325,7 @@ const dict = {
     "faq.title": "Help & FAQ",
     "faq.sub": "Quick answers about shipping, returns, and your prescription.",
     "faq.q1": "How long does shipping take?",
-    "faq.a1": "Standard delivery is 13–20 days. Express is 5–8 days. Free shipping on orders over $75.",
+    "faq.a1": "Standard delivery is 13–20 days. Express is 5–8 days. Free shipping on orders over {ship}.",
     "faq.q2": "What's your return policy?",
     "faq.a2": "30 days, no questions asked, on all unused frames.",
     "faq.q3": "Do you accept FSA/HSA?",
@@ -592,7 +606,7 @@ const dict = {
   },
   zh: {
     // chrome
-    "promo.banner": "订单满 $75 免运费 · 首单 85 折，优惠码",
+    "promo.banner": "订单满 {ship} 免运费 · 首单 85 折，优惠码",
     "nav.eyeglasses": "光学镜",
     "nav.women": "女款",
     "nav.men": "男款",
@@ -695,7 +709,7 @@ const dict = {
     "home.trust.warrantyT": "365 天质保",
     "home.trust.warrantyS": "品质保证",
     "home.trust.shipT": "免费配送",
-    "home.trust.shipS": "满 $75 即享",
+    "home.trust.shipS": "满 {ship} 即享",
     "home.trust.ratingS": "20,000+ 条好评",
     // shapes
     "shape.Round": "圆形",
@@ -718,7 +732,7 @@ const dict = {
     "cat.reset": "重置筛选",
     "cat.about": "关于此系列",
     "cat.aboutTitle": "为你真实的生活方式而设计。",
-    "cat.aboutDesc": "每一副都包含防刮镜片、抗反射涂层,订单满 $75 免运费。在线虚拟试戴,13–20 天送达,30 天无理由退换。",
+    "cat.aboutDesc": "每一副都包含防刮镜片、抗反射涂层,订单满 {ship} 免运费。在线虚拟试戴,13–20 天送达,30 天无理由退换。",
     "cat.faq1Q": "是否提供处方镜片?",
     "cat.faq1A": "是的 —— 单光、防蓝光、纯镜框均可在结算时选购。",
     "cat.faq2Q": "如何挑选合适的款式?",
@@ -739,7 +753,7 @@ const dict = {
     "pdp.frameOnly": "仅镜框",
     "pdp.klarna": "或 4 期免息每期",
     "pdp.klarnaWith": "(Klarna)",
-    "pdp.freeShip": "满 $75 免运",
+    "pdp.freeShip": "满 {ship} 免运",
     "pdp.returns": "30 天退换",
     "pdp.warranty": "365 天质保",
     "pdp.shipTime": "13–20 天发货",
@@ -756,7 +770,7 @@ const dict = {
     "pdp.spec.material": "材质",
     "pdp.spec.weight": "重量",
     "pdp.lensRec": "推荐:日常用屏选「防蓝光」,室内外切换选「变色镜片」。下一步即可配置。",
-    "pdp.shipDesc": "13–20 天送达。订单满 $75 免运费。30 天无理由退换,365 天质量保证。",
+    "pdp.shipDesc": "13–20 天送达。订单满 {ship} 免运费。30 天无理由退换,365 天质量保证。",
     "pdp.basedOn": "基于",
     "pdp.reviews": "条评价",
     "pdp.alsoLike": "你可能还喜欢",
@@ -846,7 +860,7 @@ const dict = {
     "faq.title": "帮助与常见问题",
     "faq.sub": "关于配送、退换、处方的快速解答。",
     "faq.q1": "配送需要多久?",
-    "faq.a1": "标准配送 13–20 天,加急 5–8 天。订单满 $75 免运费。",
+    "faq.a1": "标准配送 13–20 天,加急 5–8 天。订单满 {ship} 免运费。",
     "faq.q2": "退货政策如何?",
     "faq.a2": "所有未使用的镜框 30 天内无理由退换。",
     "faq.q3": "支持 FSA/HSA 吗?",
@@ -1140,10 +1154,17 @@ function resolveDictKey(l: Locale): "en" | "zh" {
   return "en";
 }
 
+type TVars = Record<string, string | number>;
+
+function interpolate(s: string, vars?: TVars): string {
+  if (!vars) return s;
+  return s.replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? String(vars[k]) : `{${k}}`));
+}
+
 type Ctx = {
   locale: Locale;
   setLocale: (l: Locale) => void;
-  t: (k: TKey) => string;
+  t: (k: TKey, vars?: TVars) => string;
 };
 
 const I18nContext = createContext<Ctx | null>(null);
@@ -1194,11 +1215,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const t = useCallback(
-    (k: TKey) => {
+    (k: TKey, vars?: TVars) => {
       const key = resolveDictKey(locale);
-      return (dict[key] as Record<string, string>)[k]
+      const raw = (dict[key] as Record<string, string>)[k]
         ?? (dict.en as Record<string, string>)[k]
         ?? k;
+      return interpolate(raw, vars);
     },
     [locale]
   );
@@ -1214,7 +1236,7 @@ export function useI18n() {
     return {
       locale: "en-US" as Locale,
       setLocale: () => {},
-      t: (k: TKey) => (dict.en as Record<string, string>)[k] ?? k,
+      t: (k: TKey, vars?: TVars) => interpolate((dict.en as Record<string, string>)[k] ?? k, vars),
     };
   }
   return ctx;

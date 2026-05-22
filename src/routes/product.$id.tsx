@@ -157,7 +157,7 @@ function PDP() {
 
 
           <ul className="grid grid-cols-2 gap-3 pt-4 border-t border-border/60 text-[11px]">
-            <li className="flex items-center gap-2 text-muted-foreground"><Truck className="size-3.5" /> {t("pdp.freeShip")}</li>
+            <li className="flex items-center gap-2 text-muted-foreground"><Truck className="size-3.5" /> {t("pdp.freeShip", { ship: fmt(75) })}</li>
             <li className="flex items-center gap-2 text-muted-foreground"><RefreshCw className="size-3.5" /> {t("pdp.returns")}</li>
             <li className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="size-3.5" /> {t("pdp.warranty")}</li>
             <li className="flex items-center gap-2 text-muted-foreground"><Truck className="size-3.5" /> {t("pdp.shipTime")}</li>
@@ -245,7 +245,7 @@ function PDP() {
                       </div>
                     )}
                     {k === "lens" && <p className="max-w-3xl">{t("pdp.lensRec")}</p>}
-                    {k === "shipping" && <p className="max-w-3xl">{t("pdp.shipDesc")}</p>}
+                    {k === "shipping" && <p className="max-w-3xl">{t("pdp.shipDesc", { ship: fmt(75) })}</p>}
                     {k === "reviews" && (
                       <div className="space-y-4 max-w-3xl">
                         <div className="flex items-baseline gap-3">
