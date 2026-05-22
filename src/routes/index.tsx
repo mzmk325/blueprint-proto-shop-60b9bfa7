@@ -279,25 +279,3 @@ function Home() {
   );
 }
 
-function ShapeIcon({ shape }: { shape: string }) {
-  const common = "fill-none stroke-current";
-  switch (shape) {
-    case "Round":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><circle cx="14" cy="15" r="11" strokeWidth="2" className={common} /><circle cx="46" cy="15" r="11" strokeWidth="2" className={common} /><line x1="25" y1="15" x2="35" y2="15" strokeWidth="2" className={common} /></svg>;
-    case "Square":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><rect x="3" y="5" width="22" height="20" strokeWidth="2" className={common} /><rect x="35" y="5" width="22" height="20" strokeWidth="2" className={common} /><line x1="25" y1="15" x2="35" y2="15" strokeWidth="2" className={common} /></svg>;
-    case "Cat eye":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><path d="M2,18 Q5,5 25,8 Q27,18 14,22 Z" strokeWidth="2" className={common} /><path d="M35,8 Q55,5 58,18 Q46,22 33,18 Z" strokeWidth="2" className={common} /></svg>;
-    case "Aviator":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><path d="M3,8 L25,5 L22,25 L8,25 Z" strokeWidth="2" className={common} /><path d="M35,5 L57,8 L52,25 L38,25 Z" strokeWidth="2" className={common} /></svg>;
-    case "Rectangle":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><rect x="3" y="9" width="22" height="14" strokeWidth="2" className={common} /><rect x="35" y="9" width="22" height="14" strokeWidth="2" className={common} /></svg>;
-    case "Geometric":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><polygon points="3,8 25,6 22,25 5,23" strokeWidth="2" className={common} /><polygon points="35,6 57,8 55,23 38,25" strokeWidth="2" className={common} /></svg>;
-    case "Butterfly":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><path d="M3,12 Q5,5 25,7 Q26,22 8,24 Z" strokeWidth="2" className={common} /><path d="M35,7 Q55,5 57,12 Q52,24 34,22 Z" strokeWidth="2" className={common} /></svg>;
-    case "Oval":
-    default:
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><ellipse cx="14" cy="15" rx="11" ry="8" strokeWidth="2" className={common} /><ellipse cx="46" cy="15" rx="11" ry="8" strokeWidth="2" className={common} /></svg>;
-  }
-}
