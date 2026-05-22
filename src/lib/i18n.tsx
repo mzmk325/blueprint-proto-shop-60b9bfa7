@@ -784,6 +784,10 @@ const dict = {
     "cart.rxUploaded": "已上传",
     "cart.rxManual": "手动录入",
     "cart.rxLater": "稍后提交",
+    "promo.firstOrderAuto": "新客首单自动享折扣,无需优惠码。",
+    "promo.sitewideAuto": "全站折扣已自动应用。",
+    "promo.secondHalfAuto": "第二副镜框自动半价。",
+    "promo.freeShipOver": "订单满",
     // mini cart
     "mini.title": "购物袋",
     "mini.empty": "购物袋是空的。",
