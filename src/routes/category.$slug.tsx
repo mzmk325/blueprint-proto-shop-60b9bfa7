@@ -37,7 +37,9 @@ function Category() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const { t, locale } = useI18n();
-  const cat = categories.find((c) => c.slug === slug) ?? getStorefrontCategoryBySlug(slug) ? { slug, title: getStorefrontCategoryBySlug(slug)?.title ?? "Shop", gender: null as null | "Women" | "Men" } : undefined;
+  const mockCat = categories.find((c) => c.slug === slug);
+  const cmsCat = getStorefrontCategoryBySlug(slug);
+  const cat = mockCat ?? (cmsCat ? { slug, title: cmsCat.title, gender: null as null | "Women" | "Men" } : undefined);
 
   let list = getProductsByCategorySlug(slug).filter((p) => {
     if (search.shape && p.shape !== search.shape) return false;
