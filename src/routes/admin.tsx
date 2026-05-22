@@ -13,7 +13,7 @@ import {
   Boxes, Tag, Image as ImageIcon, Star, Percent, Globe, Sparkles, Headphones,
 } from "lucide-react";
 import { toast } from "sonner";
-import { STATUS_LABEL_ZH, STATUS_TONE, FULFILLMENT_LABEL_ZH, FT_BADGE_TONE, translateRisk, L } from "@/lib/admin-i18n";
+import { STATUS_LABEL_ZH, STATUS_TONE, FULFILLMENT_LABEL_ZH, FT_BADGE_TONE, translateRisk, translateNextAction, L } from "@/lib/admin-i18n";
 import { activePromotion, useCMS } from "@/lib/cms-store";
 import {
   ProductsModule, CategoriesModule, ReviewsModule, PromotionsModule,
