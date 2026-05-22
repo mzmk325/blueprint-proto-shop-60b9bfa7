@@ -32,6 +32,20 @@ export const LOCALE_CURRENCY: Record<string, Currency> = {
   zh: "USD",
 };
 
+// Locale → default checkout country (business rule).
+export const LOCALE_COUNTRY: Record<string, string> = {
+  "en-US": "United States",
+  "en-GB": "United Kingdom",
+  "de-DE": "Germany",
+  "fr-FR": "France",
+  "es-ES": "Spain",
+  "it-IT": "Italy",
+  "nl-NL": "Netherlands",
+  "zh-CN": "China",
+  en: "United States",
+  zh: "China",
+};
+
 export const PUBLIC_LOCALES: { code: Locale; label: string; native: string }[] = [
   { code: "en-US", label: "English (US)", native: "English (US)" },
   { code: "en-GB", label: "English (UK)", native: "English (UK)" },
