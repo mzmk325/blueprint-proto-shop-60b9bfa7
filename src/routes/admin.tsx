@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { STATUS_LABEL_ZH, STATUS_TONE, FULFILLMENT_LABEL_ZH, FT_BADGE_TONE, translateRisk, L } from "@/lib/admin-i18n";
-import { activePromotion } from "@/lib/cms-store";
+import { activePromotion, useCMS } from "@/lib/cms-store";
 import {
   ProductsModule, CategoriesModule, ReviewsModule, PromotionsModule,
   HomeCmsModule, AssetsModule, LangCurrencyModule, AIConsoleModule,
