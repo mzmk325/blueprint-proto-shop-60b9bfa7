@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { STATUS_LABEL_ZH, STATUS_TONE, FULFILLMENT_LABEL_ZH, FT_BADGE_TONE, translateRisk, L } from "@/lib/admin-i18n";
-import { activePromotion } from "@/lib/cms-store";
+import { activePromotion, useCMS } from "@/lib/cms-store";
 import {
   ProductsModule, CategoriesModule, ReviewsModule, PromotionsModule,
   HomeCmsModule, AssetsModule, LangCurrencyModule, AIConsoleModule,
@@ -277,9 +277,6 @@ function Dashboard({ orders, onOpen, onJump }: { orders: Order[]; onOpen: (id: s
 }
 
 function useCmsCount(_kind: "products") {
-  // Lightweight import to avoid circular default; reads CMS store products length
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { useCMS } = require("@/lib/cms-store") as typeof import("@/lib/cms-store");
   return useCMS((s) => s.products.filter((p) => p.status === "published").length);
 }
 
