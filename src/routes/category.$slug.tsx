@@ -38,6 +38,7 @@ function Category() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const { t, locale } = useI18n();
+  const fmt = usePriceFormatter();
   const mockCat = categories.find((c) => c.slug === slug);
   const cmsCat = getStorefrontCategoryBySlug(slug);
   const cat = mockCat ?? (cmsCat ? { slug, title: cmsCat.title, gender: null as null | "Women" | "Men" } : undefined);
