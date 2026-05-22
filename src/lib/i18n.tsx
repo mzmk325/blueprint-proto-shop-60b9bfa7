@@ -325,7 +325,7 @@ const dict = {
     "faq.title": "Help & FAQ",
     "faq.sub": "Quick answers about shipping, returns, and your prescription.",
     "faq.q1": "How long does shipping take?",
-    "faq.a1": "Standard delivery is 13–20 days. Express is 5–8 days. Free shipping on orders over $75.",
+    "faq.a1": "Standard delivery is 13–20 days. Express is 5–8 days. Free shipping on orders over {ship}.",
     "faq.q2": "What's your return policy?",
     "faq.a2": "30 days, no questions asked, on all unused frames.",
     "faq.q3": "Do you accept FSA/HSA?",
