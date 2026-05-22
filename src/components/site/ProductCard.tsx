@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { type Product, productImage } from "@/lib/products";
+import { type Product, productImage, isProductOnSale } from "@/lib/products";
 import { Heart } from "lucide-react";
 import { useUser, user } from "@/lib/user-store";
 import { useEffect, useState } from "react";
