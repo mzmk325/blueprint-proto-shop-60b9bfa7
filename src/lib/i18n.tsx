@@ -70,7 +70,7 @@ function htmlLang(l: Locale): string {
 const dict = {
   en: {
     // chrome
-    "promo.banner": "Free shipping on orders over $75 · 15% off first order with",
+    "promo.banner": "Free shipping on orders over {ship} · 15% off first order with",
     "nav.eyeglasses": "Eyeglasses",
     "nav.women": "Women",
     "nav.men": "Men",
