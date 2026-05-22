@@ -178,6 +178,7 @@ export type CMSState = {
 
 // ── Seed ────────────────────────────────────────────────────────────────────
 function uid(prefix = "id") { return `${prefix}-${Math.random().toString(36).slice(2, 9)}`; }
+function seededId(prefix: string, index: number) { return `${prefix}-${index + 1}`; }
 
 const SERVER_SEED_NOW = Date.UTC(2026, 0, 1);
 
@@ -271,8 +272,8 @@ function seed(now = SERVER_SEED_NOW): CMSState {
   });
 
   const reviews: CMSReview[] = products.flatMap((p, i) => ([
-    { id: uid("rv"), productId: p.id, user: ["A. Müller", "J. Roberts", "S. Tanaka"][i % 3], country: ["DE", "US", "JP"][i % 3], stars: 5, body: "镜框很轻，戴一整天也不累，色差和图片几乎一致。", images: [], publishedAt: now - 86400_000 * (i + 1), visible: true, sortOrder: 10, featured: true },
-    { id: uid("rv"), productId: p.id, user: ["E. Davis", "L. Schmidt", "M. Chen"][i % 3], country: ["UK", "DE", "CA"][i % 3], stars: 4, body: "整体很好，物流稍微慢了几天。", images: [], publishedAt: now - 86400_000 * (i + 3), visible: true, sortOrder: 20, featured: false },
+    { id: seededId("rv", i * 2), productId: p.id, user: ["A. Müller", "J. Roberts", "S. Tanaka"][i % 3], country: ["DE", "US", "JP"][i % 3], stars: 5, body: "镜框很轻，戴一整天也不累，色差和图片几乎一致。", images: [], publishedAt: now - 86400_000 * (i + 1), visible: true, sortOrder: 10, featured: true },
+    { id: seededId("rv", i * 2 + 1), productId: p.id, user: ["E. Davis", "L. Schmidt", "M. Chen"][i % 3], country: ["UK", "DE", "CA"][i % 3], stars: 4, body: "整体很好，物流稍微慢了几天。", images: [], publishedAt: now - 86400_000 * (i + 3), visible: true, sortOrder: 20, featured: false },
   ]));
 
   return {
