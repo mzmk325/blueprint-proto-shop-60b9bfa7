@@ -248,6 +248,11 @@ const dict = {
     "cart.rxUploaded": "uploaded",
     "cart.rxManual": "manual entry",
     "cart.rxLater": "send later",
+    // promo (customer-facing auto-discount copy)
+    "promo.firstOrderAuto": "First pair discount automatically applied. No code needed.",
+    "promo.sitewideAuto": "Sitewide discount automatically applied.",
+    "promo.secondHalfAuto": "Second pair 50% off automatically applied.",
+    "promo.freeShipOver": "Free shipping over",
     // mini cart
     "mini.title": "Your cart",
     "mini.empty": "Your cart is empty.",
