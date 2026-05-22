@@ -434,10 +434,10 @@ function OrderDetail({ order, onBack }: { order: Order; onBack: () => void }) {
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">下一步操作</div>
-          <div className="mt-2 text-sm font-medium">{na.label}</div>
+          <div className="mt-2 text-sm font-medium">{translateNextAction(na.label)}</div>
           {na.nextStatus && (
-            <button onClick={() => cart.setStatus(order.id, na.nextStatus!, na.label)} className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-foreground text-background text-xs font-medium">
-              {na.label} <ChevronRight className="size-3.5" />
+            <button onClick={() => cart.setStatus(order.id, na.nextStatus!, translateNextAction(na.label))} className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-foreground text-background text-xs font-medium">
+              {translateNextAction(na.label)} <ChevronRight className="size-3.5" />
             </button>
           )}
         </div>
