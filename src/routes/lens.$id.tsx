@@ -516,17 +516,17 @@ function LensFlow() {
                   <img src={productImage(p, Math.max(0, p.colors.findIndex((cc: { name: string }) => cc.name === color)))} alt="" className="w-full h-full object-contain" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Order summary</div>
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{t("lens.orderSummary")}</div>
                   <div className="text-sm font-medium truncate">{p.name} · {color}</div>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="font-display text-lg">${total.toFixed(2)}</span>
+                <span className="font-display text-lg">{fmt(total)}</span>
                 <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
               </div>
             </summary>
             <div className="px-4 pb-4">
-              <SummaryBody {...{ p, rxType, fnReached, fnObj, fnPrice, thickReached, thickObj, thickPrice, addonReached, addonObj, addonPrice, shipFree, shipping, total, goto, rxTypeLabelOf }} />
+              <SummaryBody {...{ p, rxType, fnReached, fnObj, fnPrice, thickReached, thickObj, thickPrice, addonReached, addonObj, addonPrice, shipFree, shipping, total, goto, rxTypeLabelOf, t, fmt }} />
             </div>
           </details>
 
@@ -540,7 +540,7 @@ function LensFlow() {
                 <p className="text-xs text-muted-foreground mt-0.5">{color} · M</p>
               </div>
             </div>
-            <SummaryBody {...{ p, rxType, fnReached, fnObj, fnPrice, thickReached, thickObj, thickPrice, addonReached, addonObj, addonPrice, shipFree, shipping, total, goto, rxTypeLabelOf }} />
+            <SummaryBody {...{ p, rxType, fnReached, fnObj, fnPrice, thickReached, thickObj, thickPrice, addonReached, addonObj, addonPrice, shipFree, shipping, total, goto, rxTypeLabelOf, t, fmt }} />
           </div>
         </aside>
 
