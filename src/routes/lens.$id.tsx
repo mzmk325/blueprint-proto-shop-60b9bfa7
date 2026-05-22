@@ -208,7 +208,7 @@ function LensFlow() {
           }
         : {}),
     };
-    cart.add({ productId: p.id, name: p.name, color, size: "M", unitPrice: p.price, lens });
+    cart.add({ productId: p.id, name: p.name, color, unitPrice: p.price, lens });
     navigate({ to: "/cart" });
   }
 
