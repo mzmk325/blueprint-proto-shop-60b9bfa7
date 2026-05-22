@@ -189,3 +189,116 @@ function FilterGroup({ title, current, options, onSelect, labelOf, allLabel }: {
     </div>
   );
 }
+
+type SetParam = (key: string, value?: string) => void;
+type TFn = (k: TKey) => string;
+
+function FiltersInner({ search, setParam, t }: { search: { shape?: string; collection?: string; color?: string }; setParam: SetParam; t: TFn }) {
+  return (
+    <>
+      <FilterGroup
+        title={t("cat.shape")}
+        current={search.shape}
+        onSelect={(v) => setParam("shape", v)}
+        options={[...shapes]}
+        labelOf={(o) => t(`shape.${o}` as TKey)}
+        allLabel={t("cat.allOf") + " " + t("cat.shape")}
+      />
+      <FilterGroup
+        title={t("cat.collection")}
+        current={search.collection}
+        onSelect={(v) => setParam("collection", v)}
+        options={[...collections]}
+        labelOf={(o) => o}
+        allLabel={t("cat.allOf") + " " + t("cat.collection")}
+      />
+      <div>
+        <h3 className="text-[11px] uppercase tracking-[0.18em] font-semibold mb-3">{t("cat.color")}</h3>
+        <div className="grid grid-cols-6 gap-2">
+          <button
+            onClick={() => setParam("color", undefined)}
+            className={`size-7 rounded-full border ${!search.color ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "border-border"} bg-gradient-to-br from-secondary to-muted`}
+            aria-label={t("cat.allColors")}
+          />
+          {Object.entries(COLOR_SWATCHES).map(([name, hex]) => (
+            <button
+              key={name}
+              onClick={() => setParam("color", name)}
+              className={`size-7 rounded-full border ${search.color === name ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "border-border"}`}
+              style={{ background: hex }}
+              aria-label={name}
+              title={name}
+            />
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function MobileFilterBar({ search, setParam, t }: { search: { shape?: string; collection?: string; color?: string; sort?: string }; setParam: SetParam; t: TFn }) {
+  const [open, setOpen] = useState(false);
+  const activeCount = (["shape", "collection", "color"] as const).filter((k) => search[k]).length;
+  return (
+    <div className="md:hidden mb-6">
+      <div className="flex items-center gap-2 border-y border-border/60 py-3">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <button className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 border border-foreground text-[11px] uppercase tracking-[0.18em] font-semibold">
+              <SlidersHorizontal className="size-3.5" />
+              {t("cat.filter" as TKey) !== "cat.filter" ? t("cat.filter" as TKey) : "Filter"}
+              {activeCount > 0 && <span className="ml-1 bg-foreground text-background rounded-full min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center text-[10px] font-bold">{activeCount}</span>}
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[88%] sm:w-80 overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle className="text-left uppercase tracking-[0.18em] text-sm">Filter</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6 space-y-8 pb-8">
+              <FiltersInner search={search} setParam={setParam} t={t} />
+              {activeCount > 0 && (
+                <button
+                  onClick={() => { setParam("shape", undefined); setParam("collection", undefined); setParam("color", undefined); }}
+                  className="w-full text-[11px] uppercase tracking-[0.18em] underline underline-offset-4 py-2"
+                >
+                  {t("cat.reset")}
+                </button>
+              )}
+              <button onClick={() => setOpen(false)} className="w-full bg-foreground text-background py-3 text-[11px] uppercase tracking-[0.18em] font-semibold">
+                Apply
+              </button>
+            </div>
+          </SheetContent>
+        </Sheet>
+        <div className="relative flex-1">
+          <select
+            className="w-full appearance-none text-[11px] uppercase tracking-[0.18em] bg-background border border-border py-2.5 pl-3 pr-8 cursor-pointer focus:outline-none"
+            value={search.sort ?? "recommend"}
+            onChange={(e) => setParam("sort", e.target.value)}
+          >
+            <option value="recommend">{t("common.featured")}</option>
+            <option value="new">{t("common.newest")}</option>
+            <option value="price-asc">{t("common.priceAsc")}</option>
+            <option value="price-desc">{t("common.priceDesc")}</option>
+          </select>
+          <ChevronDown className="size-3 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
+      </div>
+      {activeCount > 0 && (
+        <div className="flex flex-wrap gap-2 mt-3">
+          {(["shape", "collection", "color"] as const).map((k) =>
+            search[k] ? (
+              <button
+                key={k}
+                onClick={() => setParam(k, undefined)}
+                className="text-[10px] uppercase tracking-[0.15em] border border-foreground/80 px-2.5 py-1 hover:bg-foreground hover:text-background transition-colors"
+              >
+                {search[k]} ×
+              </button>
+            ) : null,
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
