@@ -487,7 +487,12 @@ export const cms = {
 
 // Expose categories with derived counts
 export function useCategoriesWithCounts() {
-  return useCMS((s) => s.categories.map((c) => ({ ...c, productCount: s.products.filter((p) => p.categoryIds.includes(c.id)).length })));
+  const categories = useCMS((s) => s.categories);
+  const products = useCMS((s) => s.products);
+  return useMemo(
+    () => categories.map((c) => ({ ...c, productCount: products.filter((p) => p.categoryIds.includes(c.id)).length })),
+    [categories, products],
+  );
 }
 
 // Re-export seed for tests
