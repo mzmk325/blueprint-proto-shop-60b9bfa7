@@ -9,6 +9,8 @@ import { useUser, user } from "@/lib/user-store";
 import { Star, Truck, RefreshCw, ShieldCheck, Heart, Minus, Plus } from "lucide-react";
 import { useI18n, type TKey } from "@/lib/i18n";
 import { useActivePromotion, promoShortLabel } from "@/lib/promotions";
+import { usePriceFormatter } from "@/lib/currency-store";
+
 
 export const Route = createFileRoute("/product/$id")({
   loader: ({ params }) => {
