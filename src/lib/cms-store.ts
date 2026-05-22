@@ -3,7 +3,7 @@
 // first load. Frontend still reads products.ts directly; CMS data is admin-only
 // except for PromoBar and first-order discount (consumed where applicable).
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { products as seedProducts, shapes, categories as seedCategories } from "./products";
 
 const KEY = "miravue_cms_v1";
@@ -178,9 +178,11 @@ export type CMSState = {
 
 // ── Seed ────────────────────────────────────────────────────────────────────
 function uid(prefix = "id") { return `${prefix}-${Math.random().toString(36).slice(2, 9)}`; }
+function seededId(prefix: string, index: number) { return `${prefix}-${index + 1}`; }
 
-function seed(): CMSState {
-  const now = Date.now();
+const SERVER_SEED_NOW = Date.UTC(2026, 0, 1);
+
+function seed(now = SERVER_SEED_NOW): CMSState {
   const cats: CMSCategory[] = [
     { id: "cat-all",   name: "全部眼镜",   nameEn: "All Eyeglasses",     type: "main",     slug: "all",                 image: "", sortOrder: 10, showInNav: true,  showOnHome: false, enabled: true },
     { id: "cat-wom",   name: "女款光学镜", nameEn: "Women's Eyeglasses", type: "gender",   slug: "women-eyeglasses",    image: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800", sortOrder: 20, showInNav: true,  showOnHome: true,  enabled: true },
@@ -270,8 +272,8 @@ function seed(): CMSState {
   });
 
   const reviews: CMSReview[] = products.flatMap((p, i) => ([
-    { id: uid("rv"), productId: p.id, user: ["A. Müller", "J. Roberts", "S. Tanaka"][i % 3], country: ["DE", "US", "JP"][i % 3], stars: 5, body: "镜框很轻，戴一整天也不累，色差和图片几乎一致。", images: [], publishedAt: now - 86400_000 * (i + 1), visible: true, sortOrder: 10, featured: true },
-    { id: uid("rv"), productId: p.id, user: ["E. Davis", "L. Schmidt", "M. Chen"][i % 3], country: ["UK", "DE", "CA"][i % 3], stars: 4, body: "整体很好，物流稍微慢了几天。", images: [], publishedAt: now - 86400_000 * (i + 3), visible: true, sortOrder: 20, featured: false },
+    { id: seededId("rv", i * 2), productId: p.id, user: ["A. Müller", "J. Roberts", "S. Tanaka"][i % 3], country: ["DE", "US", "JP"][i % 3], stars: 5, body: "镜框很轻，戴一整天也不累，色差和图片几乎一致。", images: [], publishedAt: now - 86400_000 * (i + 1), visible: true, sortOrder: 10, featured: true },
+    { id: seededId("rv", i * 2 + 1), productId: p.id, user: ["E. Davis", "L. Schmidt", "M. Chen"][i % 3], country: ["UK", "DE", "CA"][i % 3], stars: 4, body: "整体很好，物流稍微慢了几天。", images: [], publishedAt: now - 86400_000 * (i + 3), visible: true, sortOrder: 20, featured: false },
   ]));
 
   return {
@@ -280,21 +282,21 @@ function seed(): CMSState {
     categories: cats,
     reviews,
     promotions: [
-      { id: uid("promo"), type: "first-order",   title: "首单 15% 折扣", frontCopy: "新客首单自动享 15% 折扣 · 无需优惠码", percent: 15, enabled: true,  priority: 100, startAt: now - 86400_000 * 30, endAt: now + 86400_000 * 60 },
-      { id: uid("promo"), type: "second-half",   title: "第二副半价",      frontCopy: "购买两副镜框 · 第二副自动半价",       percent: 50, enabled: false, priority: 80 },
-      { id: uid("promo"), type: "sitewide",      title: "全站满减",        frontCopy: "全站满 $80 自动减 $10",                 percent: 12, enabled: false, priority: 60 },
+      { id: "promo-first-order", type: "first-order",   title: "首单 15% 折扣", frontCopy: "新客首单自动享 15% 折扣 · 无需优惠码", percent: 15, enabled: true,  priority: 100, startAt: now - 86400_000 * 30, endAt: now + 86400_000 * 60 },
+      { id: "promo-second-half", type: "second-half",   title: "第二副半价",      frontCopy: "购买两副镜框 · 第二副自动半价",       percent: 50, enabled: false, priority: 80 },
+      { id: "promo-sitewide", type: "sitewide",      title: "全站满减",        frontCopy: "全站满 $80 自动减 $10",                 percent: 12, enabled: false, priority: 60 },
     ],
     heroes: [
-      { id: uid("hero"), desktopImage: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=1920&q=80", mobileImage: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=900&q=80", title: "DESIGNED IN ITALY", subtitle: "Architectural acetate, hand-finished frames.", btn1Text: "Shop Eyeglasses", btn1Link: "/category/all", btn2Text: "Shop Sunglasses", btn2Link: "/category/sunglasses", sortOrder: 10, active: true },
+      { id: "hero-home", desktopImage: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=1920&q=80", mobileImage: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=900&q=80", title: "DESIGNED IN ITALY", subtitle: "Architectural acetate, hand-finished frames.", btn1Text: "Shop Eyeglasses", btn1Link: "/category/all", btn2Text: "Shop Sunglasses", btn2Link: "/category/sunglasses", sortOrder: 10, active: true },
     ],
     homeCards: [
-      { id: uid("hc"), image: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800", title: "Women", link: "/category/women-eyeglasses", sortOrder: 10, active: true },
-      { id: uid("hc"), image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=800", title: "Men", link: "/category/men-eyeglasses", sortOrder: 20, active: true },
-      { id: uid("hc"), image: "https://images.unsplash.com/photo-1551803091-e20673f15770?w=800", title: "Women Sun", link: "/category/sunglasses", sortOrder: 30, active: true },
-      { id: uid("hc"), image: "https://images.unsplash.com/photo-1577803645773-f96470509666?w=800", title: "Men Sun", link: "/category/sunglasses", sortOrder: 40, active: true },
+      { id: "hc-women", image: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800", title: "Women", link: "/category/women-eyeglasses", sortOrder: 10, active: true },
+      { id: "hc-men", image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=800", title: "Men", link: "/category/men-eyeglasses", sortOrder: 20, active: true },
+      { id: "hc-women-sun", image: "https://images.unsplash.com/photo-1551803091-e20673f15770?w=800", title: "Women Sun", link: "/category/sunglasses", sortOrder: 30, active: true },
+      { id: "hc-men-sun", image: "https://images.unsplash.com/photo-1577803645773-f96470509666?w=800", title: "Men Sun", link: "/category/sunglasses", sortOrder: 40, active: true },
     ],
     shapeBanners: shapes.map((s, i) => ({
-      id: uid("sb"),
+      id: seededId("sb", i),
       shape: s,
       image: "",
       link: `/category/all?shape=${encodeURIComponent(s)}`,
@@ -305,14 +307,15 @@ function seed(): CMSState {
     assets: [],
     settings: { newArrivalDays: 30, defaultSort: "sort" },
     aiLogs: [
-      { id: uid("ai"), instruction: "批量上架春季新品，参考表格", source: "csv", preview: "新增 12 个商品 · 修改 3 个分类排序", createdAt: Date.now() - 3 * 86400_000, appliedAt: Date.now() - 3 * 86400_000 + 60_000, rolledBackAt: null },
-      { id: uid("ai"), instruction: "把所有 Bold 系列商品的卖点加上'意大利设计'前缀", source: "text", preview: "修改 4 个商品的 bullets 字段", createdAt: Date.now() - 86400_000, appliedAt: null, rolledBackAt: null },
+      { id: "ai-spring-upload", instruction: "批量上架春季新品，参考表格", source: "csv", preview: "新增 12 个商品 · 修改 3 个分类排序", createdAt: now - 3 * 86400_000, appliedAt: now - 3 * 86400_000 + 60_000, rolledBackAt: null },
+      { id: "ai-bold-copy", instruction: "把所有 Bold 系列商品的卖点加上'意大利设计'前缀", source: "text", preview: "修改 4 个商品的 bullets 字段", createdAt: now - 86400_000, appliedAt: null, rolledBackAt: null },
     ],
   };
 }
 
 // ── Store ───────────────────────────────────────────────────────────────────
-let state: CMSState = load();
+let state: CMSState = seed();
+let hydrated = false;
 const listeners = new Set<() => void>();
 
 function migrate(s: CMSState): CMSState {
@@ -331,7 +334,7 @@ function load(): CMSState {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) {
-      const s = seed();
+      const s = seed(Date.now());
       localStorage.setItem(KEY, JSON.stringify(s));
       return s;
     }
@@ -361,7 +364,15 @@ function subscribe(l: () => void) {
   return () => listeners.delete(l);
 }
 
+function hydrate() {
+  if (hydrated) return;
+  hydrated = true;
+  state = load();
+  listeners.forEach((l) => l());
+}
+
 export function useCMS<T>(selector: (s: CMSState) => T): T {
+  useEffect(() => { hydrate(); }, []);
   return useSyncExternalStore(subscribe, () => selector(state), () => selector(state));
 }
 

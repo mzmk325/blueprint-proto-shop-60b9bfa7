@@ -2,7 +2,7 @@
 // Display currency is derived from the active locale (see i18n.tsx).
 // Base product prices are stored in USD; this module converts + rounds for display.
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import {
   DEFAULT_CURRENCIES,
   type StorefrontCurrency,
@@ -23,7 +23,7 @@ export const CURRENCIES: { code: Currency; label: string; flag: string }[] = [
 const KEY = "mv-currency";
 
 // ── store ──────────────────────────────────────────────────────────────────
-let value: Currency = load();
+let value: Currency = "USD";
 let lastUpdated: number = Date.now();
 const listeners = new Set<() => void>();
 
@@ -39,9 +39,17 @@ function load(): Currency {
 export const currencyStore = {
   subscribe(l: () => void) { listeners.add(l); return () => listeners.delete(l); },
   get() { return value; },
+  hydrate() {
+    const stored = load();
+    if (stored === value) return;
+    value = stored;
+    lastUpdated = Date.now();
+    listeners.forEach((l) => l());
+  },
   set(v: Currency) {
     if (v === value) return;
     value = v;
+    lastUpdated = Date.now();
     try { localStorage.setItem(KEY, v); } catch { /* noop */ }
     listeners.forEach((l) => l());
   },
@@ -49,6 +57,7 @@ export const currencyStore = {
 };
 
 export function useCurrency() {
+  useEffect(() => { currencyStore.hydrate(); }, []);
   return useSyncExternalStore(currencyStore.subscribe, currencyStore.get, () => "USD" as Currency);
 }
 
