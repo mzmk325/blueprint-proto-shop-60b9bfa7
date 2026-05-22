@@ -298,7 +298,7 @@ function PDP() {
         <Link
           to="/lens/$id"
           params={{ id: p.id }}
-          search={{ color: p.colors[colorIdx].name }}
+          search={{ color: variants[colorIdx]?.color ?? p.colors[0]?.name }}
           className="ml-auto flex-1 bg-sale text-white text-center py-3 text-[11px] uppercase tracking-[0.18em] font-semibold hover:opacity-90 transition-opacity"
         >
           {t("pdp.selectLenses")}
