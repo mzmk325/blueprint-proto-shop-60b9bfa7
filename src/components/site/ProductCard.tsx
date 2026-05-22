@@ -94,7 +94,7 @@ export function ProductCard({ p }: { p: CardProduct }) {
           <p className="text-[11px] text-muted-foreground line-clamp-1 mt-1">{p.descriptor}</p>
         </div>
       </Link>
-      <div className="flex items-center gap-1.5 mt-2.5 px-0.5">
+      <div className="flex items-center gap-1.5 mt-2.5 px-0.5" onMouseLeave={() => setVariantIdx(0)}>
         {variants.slice(0, 5).map((vv, i) => (
           <button
             key={vv.color + i}
