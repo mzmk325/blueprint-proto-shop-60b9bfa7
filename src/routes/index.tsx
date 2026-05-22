@@ -45,6 +45,7 @@ function linkToSlug(link: string): string {
 
 function Home() {
   const { t } = useI18n();
+  const fmt = usePriceFormatter();
   const { heroes, homeCards, shapeBanners } = getHomepageCMS();
   const hero = heroes[0];
   const heroImg = hero?.desktopImage || heroImgFallback;
