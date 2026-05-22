@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 type State = { wishlist: string[]; recent: string[] };
 const KEY = "mv-user-v1";
@@ -10,17 +10,22 @@ function load(): State {
   catch { return { wishlist: [], recent: [] }; }
 }
 
-let state: State = load();
+let state: State = { wishlist: [], recent: [] };
 const listeners = new Set<() => void>();
+function notify() { listeners.forEach((l) => l()); }
 function persist() {
   if (typeof window !== "undefined") localStorage.setItem(KEY, JSON.stringify(state));
-  listeners.forEach((l) => l());
+  notify();
 }
 function set(updater: (s: State) => State) { state = updater(state); persist(); }
 
 export const user = {
   subscribe(l: () => void) { listeners.add(l); return () => listeners.delete(l); },
   get() { return state; },
+  hydrate() {
+    state = load();
+    notify();
+  },
   toggleWish(id: string) {
     set((s) => ({ ...s, wishlist: s.wishlist.includes(id) ? s.wishlist.filter((x) => x !== id) : [id, ...s.wishlist] }));
   },
@@ -30,5 +35,6 @@ export const user = {
 };
 
 export function useUser() {
-  return useSyncExternalStore(user.subscribe, user.get, user.get);
+  useEffect(() => { user.hydrate(); }, []);
+  return useSyncExternalStore(user.subscribe, user.get, () => ({ wishlist: [], recent: [] }));
 }
