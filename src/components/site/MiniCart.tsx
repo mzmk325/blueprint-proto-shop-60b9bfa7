@@ -20,13 +20,13 @@ export function MiniCart() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button aria-label={t("a11y.cart")} className="relative hover:text-foreground">
-          <span className="grid size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground">
+        <button aria-label={t("a11y.cart")} className="hover:text-foreground">
+          <span className="relative grid size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground">
             <ShoppingBag className="size-[18px]" strokeWidth={1.5} />
+            {mounted && count > 0 && (
+              <span className="absolute top-0.5 right-0.5 bg-sale text-white text-[10px] leading-none rounded-full min-w-[16px] h-[16px] px-1 inline-flex items-center justify-center font-semibold tabular-nums ring-2 ring-background">{count > 99 ? "99+" : count}</span>
+            )}
           </span>
-          {mounted && count > 0 && (
-            <span className="absolute -top-2 -right-2 bg-sale text-white text-[10px] leading-none rounded-full min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center font-medium tabular-nums">{count > 99 ? "99+" : count}</span>
-          )}
         </button>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-md flex flex-col">
