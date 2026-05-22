@@ -28,7 +28,7 @@ export function PromoBar() {
   );
   return (
     <div className="bg-promo text-promo-foreground">
-      {promoBar.link ? <Link to={promoBar.link as "/"}>{content}</Link> : content}
+      {promoBar.link ? <a href={promoBar.link}>{content}</a> : content}
     </div>
   );
 }

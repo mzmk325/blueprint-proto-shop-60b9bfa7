@@ -752,18 +752,89 @@ export function AssetsModule() {
 }
 
 // ── 7) 语言与币种 ──────────────────────────────────────────────────────────
+import { DEFAULT_LANGUAGES, DEFAULT_CURRENCIES, ROUNDING_LABEL, type RoundingRule, type StorefrontCurrency } from "@/lib/admin-i18n";
+
 export function LangCurrencyModule() {
   const settings = useCMS((s) => s.settings);
+  const [langs, setLangs] = useState(DEFAULT_LANGUAGES);
+  const [curs, setCurs] = useState(DEFAULT_CURRENCIES);
+  const updLang = (i: number, patch: Partial<typeof langs[number]>) => setLangs((ls) => ls.map((l, k) => k === i ? { ...l, ...patch } : l));
+  const updCur = (i: number, patch: Partial<typeof curs[number]>) => setCurs((cs) => cs.map((c, k) => k === i ? { ...c, ...patch } : c));
   return (
     <div>
-      <PageHeader title="语言与币种" desc="前台默认语言、币种，以及全局运营参数。" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card title="前台语言与币种">
-          <Field label="默认语言"><select className={inputCls} defaultValue="en"><option value="en">English</option><option value="zh">中文</option></select></Field>
-          <Field label="默认币种"><select className={inputCls} defaultValue="USD"><option>USD</option><option>EUR</option><option>GBP</option><option>JPY</option></select></Field>
-          <p className="text-[11px] text-muted-foreground">前台访客可在右上角自行切换；此处为默认值。</p>
-        </Card>
-        <Card title="运营参数">
+      <PageHeader title="语言与币种" desc="前台多语言/多币种映射，所有变更下一轮接入真实 i18n / 汇率服务。当前为运营预设。" />
+      <Card title="前台语言" className="mb-4">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/40 text-xs text-muted-foreground">
+              <tr>
+                <th className="text-left px-3 py-2 font-medium">语言</th>
+                <th className="text-left px-3 py-2 font-medium">代码</th>
+                <th className="text-left px-3 py-2 font-medium">绑定币种</th>
+                <th className="text-center px-3 py-2 font-medium">启用</th>
+                <th className="text-center px-3 py-2 font-medium">前台可见</th>
+                <th className="text-left px-3 py-2 font-medium">备注</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {langs.map((l, i) => (
+                <tr key={l.code}>
+                  <td className="px-3 py-2">{l.name} <span className="text-xs text-muted-foreground">/ {l.nativeName}</span></td>
+                  <td className="px-3 py-2 font-mono text-xs">{l.code}</td>
+                  <td className="px-3 py-2">
+                    <select className={inputCls + " w-24"} value={l.currency} onChange={(e) => updLang(i, { currency: e.target.value as StorefrontCurrency })}>
+                      {curs.map((c) => <option key={c.code} value={c.code}>{c.code}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-3 py-2 text-center"><Toggle checked={l.enabled} onChange={(v) => updLang(i, { enabled: v })} /></td>
+                  <td className="px-3 py-2 text-center"><Toggle checked={l.publicVisible} onChange={(v) => updLang(i, { publicVisible: v })} /></td>
+                  <td className="px-3 py-2 text-xs text-muted-foreground">{l.internalPreview ? "内部预览，仅供后台预览，不在前台显示" : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[11px] text-muted-foreground">中文 (zh-CN) 默认仅作为内部预览，不会在前台语言切换器中显示。</p>
+      </Card>
+
+      <Card title="币种与汇率" className="mb-4">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/40 text-xs text-muted-foreground">
+              <tr>
+                <th className="text-left px-3 py-2 font-medium">币种</th>
+                <th className="text-left px-3 py-2 font-medium">符号</th>
+                <th className="text-right px-3 py-2 font-medium">基准汇率 (vs USD)</th>
+                <th className="text-right px-3 py-2 font-medium">人工覆盖汇率</th>
+                <th className="text-left px-3 py-2 font-medium">取整规则</th>
+                <th className="text-center px-3 py-2 font-medium">启用</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {curs.map((c, i) => (
+                <tr key={c.code}>
+                  <td className="px-3 py-2">{c.code} <span className="text-xs text-muted-foreground">/ {c.name}</span></td>
+                  <td className="px-3 py-2">{c.symbol}</td>
+                  <td className="px-3 py-2 text-right font-mono text-xs">{c.baseRate.toFixed(4)}</td>
+                  <td className="px-3 py-2 text-right">
+                    <input type="number" step="0.0001" className={inputCls + " w-24 text-right"} value={c.overrideRate ?? ""} placeholder="—" onChange={(e) => updCur(i, { overrideRate: e.target.value ? +e.target.value : undefined })} />
+                  </td>
+                  <td className="px-3 py-2">
+                    <select className={inputCls + " w-40"} value={c.rounding} onChange={(e) => updCur(i, { rounding: e.target.value as RoundingRule })}>
+                      {(Object.entries(ROUNDING_LABEL) as [RoundingRule, string][]).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-3 py-2 text-center"><Toggle checked={c.enabled} onChange={(v) => updCur(i, { enabled: v })} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[11px] text-muted-foreground">基准汇率为占位数据；下一轮接入实时汇率源后此处仅显示当前值，人工覆盖汇率优先生效。</p>
+      </Card>
+
+      <Card title="运营参数" className="mb-4">
+        <div className="grid grid-cols-2 gap-3">
           <Field label="新品自动天数（基于上架时间）">
             <input type="number" className={inputCls} value={settings.newArrivalDays} onChange={(e) => cms.setSettings({ newArrivalDays: +e.target.value })} />
           </Field>
@@ -778,9 +849,10 @@ export function LangCurrencyModule() {
               <option value="new">新品优先</option>
             </select>
           </Field>
-        </Card>
-      </div>
-      <Card title="数据维护" className="mt-4">
+        </div>
+      </Card>
+
+      <Card title="数据维护">
         <p className="text-sm text-muted-foreground">重置所有 CMS 数据（商品、分类、首页、活动、评价、图片）回到种子状态。</p>
         <Btn tone="danger" onClick={() => { if (confirm("确认重置全部 CMS 数据？此操作不可撤销。")) { cms.resetAll(); toast.success("已重置"); } }}><RotateCcw className="size-3.5" /> 重置 CMS 数据</Btn>
       </Card>
