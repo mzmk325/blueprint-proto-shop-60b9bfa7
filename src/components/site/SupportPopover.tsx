@@ -20,7 +20,6 @@ export function SupportPopover() {
   return (
     <div ref={ref} className="relative">
       <button
-        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => setOpen((v) => !v)}
         aria-label={t("support.label")}
         className="hidden size-9 place-items-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground sm:grid"
