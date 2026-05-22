@@ -3,7 +3,7 @@
 // first load. Frontend still reads products.ts directly; CMS data is admin-only
 // except for PromoBar and first-order discount (consumed where applicable).
 
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { products as seedProducts, shapes, categories as seedCategories } from "./products";
 
 const KEY = "miravue_cms_v1";
