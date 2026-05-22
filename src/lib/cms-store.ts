@@ -297,7 +297,7 @@ function seed(): CMSState {
       sortOrder: 10 + i * 10,
       active: true,
     })),
-    promoBar: { text: "FREE SHIPPING OVER $75 · USE CODE", link: "/", active: true },
+    promoBar: { text: "First pair 15% off · Free shipping over $75", link: "/", active: true },
     assets: [],
     settings: { newArrivalDays: 30, defaultSort: "sort" },
     aiLogs: [
