@@ -11,6 +11,7 @@ import {
 } from "@/lib/storefront-cms";
 import { ArrowRight, ShieldCheck, RotateCcw, Truck, Star } from "lucide-react";
 import { useI18n, type TKey } from "@/lib/i18n";
+import { usePriceFormatter } from "@/lib/currency-store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
