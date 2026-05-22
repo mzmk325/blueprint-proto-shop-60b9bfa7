@@ -275,6 +275,7 @@ function seed(): CMSState {
   ]));
 
   return {
+    schemaVersion: CMS_SCHEMA_VERSION,
     products,
     categories: cats,
     reviews,
