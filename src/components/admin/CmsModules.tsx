@@ -753,7 +753,6 @@ export function AssetsModule() {
 }
 
 // ── 7) 语言与币种 ──────────────────────────────────────────────────────────
-import { DEFAULT_LANGUAGES, DEFAULT_CURRENCIES, ROUNDING_LABEL, type RoundingRule, type StorefrontCurrency } from "@/lib/admin-i18n";
 
 export function LangCurrencyModule() {
   const settings = useCMS((s) => s.settings);
