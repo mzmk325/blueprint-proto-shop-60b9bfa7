@@ -1,8 +1,57 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { currencyStore, type Currency } from "./currency-store";
 
-export type Locale = "en" | "zh";
+// Public storefront locales + hidden internal Chinese preview.
+export type Locale =
+  | "en-US"
+  | "en-GB"
+  | "de-DE"
+  | "fr-FR"
+  | "es-ES"
+  | "it-IT"
+  | "nl-NL"
+  | "zh-CN"
+  // back-compat: previously persisted as "en" / "zh"
+  | "en"
+  | "zh";
 
 const STORAGE_KEY = "miravue:locale";
+const PREVIEW_FLAG_KEY = "miravue:preview-zh";
+
+// Language → display currency mapping (business rule).
+export const LOCALE_CURRENCY: Record<string, Currency> = {
+  "en-US": "USD",
+  "en-GB": "GBP",
+  "de-DE": "EUR",
+  "fr-FR": "EUR",
+  "es-ES": "EUR",
+  "it-IT": "EUR",
+  "nl-NL": "EUR",
+  "zh-CN": "USD", // internal preview keeps USD (admin manages CNY separately)
+  en: "USD",
+  zh: "USD",
+};
+
+export const PUBLIC_LOCALES: { code: Locale; label: string; native: string }[] = [
+  { code: "en-US", label: "English (US)", native: "English (US)" },
+  { code: "en-GB", label: "English (UK)", native: "English (UK)" },
+  { code: "de-DE", label: "Deutsch",      native: "Deutsch" },
+  { code: "fr-FR", label: "Français",     native: "Français" },
+  { code: "es-ES", label: "Español",      native: "Español" },
+  { code: "it-IT", label: "Italiano",     native: "Italiano" },
+  { code: "nl-NL", label: "Nederlands",   native: "Nederlands" },
+];
+
+export const INTERNAL_LOCALES: { code: Locale; label: string; native: string }[] = [
+  { code: "zh-CN", label: "中文（内部预览）", native: "中文" },
+];
+
+function htmlLang(l: Locale): string {
+  if (l === "zh" || l === "zh-CN") return "zh-CN";
+  if (l === "en") return "en-US";
+  return l;
+}
+
 
 const dict = {
   en: {
