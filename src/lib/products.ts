@@ -12,16 +12,22 @@ export type Product = {
   material: string;
   badge?: "ECO" | "NEW" | "BESTSELLER";
   discountPct?: number;
+  /**
+   * Explicit product-level sale flag. A crossed-out originalPrice should only
+   * render when this is true. The global first-order promotion is NOT a
+   * product-level sale and must never flip this on.
+   */
+  saleEnabled?: boolean;
   dims: { frameWidth: number; lensHeight: number; lensWidth: number; bridge: number; temple: number };
   weight: string;
   modelCode: string;
 };
 
-// A product is on a "real" product-level sale only when it has an explicit
-// discountPct AND an originalPrice. The global first-order promotion is NOT a
-// product-level sale and should never trigger a crossed-out price.
-export function isProductOnSale(p: Pick<Product, "discountPct" | "originalPrice">): boolean {
-  return typeof p.discountPct === "number" && p.discountPct > 0 && typeof p.originalPrice === "number" && p.originalPrice > 0;
+// A product is on a "real" product-level sale only when saleEnabled is true AND
+// originalPrice is set. Legacy discountPct/originalPrice alone do NOT trigger a
+// crossed-out price.
+export function isProductOnSale(p: Pick<Product, "saleEnabled" | "originalPrice">): boolean {
+  return p.saleEnabled === true && typeof p.originalPrice === "number" && p.originalPrice > 0;
 }
 
 const c = {

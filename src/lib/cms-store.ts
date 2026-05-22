@@ -159,7 +159,10 @@ export type CMSAILog = {
   rolledBackAt: number | null;
 };
 
+export const CMS_SCHEMA_VERSION = 2;
+
 export type CMSState = {
+  schemaVersion: number;
   products: CMSProduct[];
   categories: CMSCategory[];
   reviews: CMSReview[];
@@ -272,6 +275,7 @@ function seed(): CMSState {
   ]));
 
   return {
+    schemaVersion: CMS_SCHEMA_VERSION,
     products,
     categories: cats,
     reviews,
@@ -311,6 +315,17 @@ function seed(): CMSState {
 let state: CMSState = load();
 const listeners = new Set<() => void>();
 
+function migrate(s: CMSState): CMSState {
+  const v = s.schemaVersion ?? 1;
+  if (v >= CMS_SCHEMA_VERSION) return s;
+  // v1 -> v2: replace legacy promo bar copy
+  if (s.promoBar && s.promoBar.text === "FREE SHIPPING OVER $75 · USE CODE") {
+    s.promoBar = { ...s.promoBar, text: "First pair 15% off · Free shipping over $75" };
+  }
+  s.schemaVersion = CMS_SCHEMA_VERSION;
+  return s;
+}
+
 function load(): CMSState {
   if (typeof window === "undefined") return seed();
   try {
@@ -320,7 +335,12 @@ function load(): CMSState {
       localStorage.setItem(KEY, JSON.stringify(s));
       return s;
     }
-    return JSON.parse(raw) as CMSState;
+    const parsed = JSON.parse(raw) as CMSState;
+    const migrated = migrate(parsed);
+    if ((parsed.schemaVersion ?? 1) < CMS_SCHEMA_VERSION) {
+      try { localStorage.setItem(KEY, JSON.stringify(migrated)); } catch { /* noop */ }
+    }
+    return migrated;
   } catch {
     return seed();
   }
