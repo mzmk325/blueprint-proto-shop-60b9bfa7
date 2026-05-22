@@ -9,14 +9,26 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 import { SearchPopover } from "./SearchPopover";
 import { SupportPopover } from "./SupportPopover";
 import { AccountPopover } from "./AccountPopover";
+import { useCMS } from "@/lib/cms-store";
+import { useActivePromotion, promoBarCopy } from "@/lib/promotions";
 
 export function PromoBar() {
   const { t } = useI18n();
+  const promoBar = useCMS((s) => s.promoBar);
+  const promo = useActivePromotion();
+  if (!promoBar.active && !promo) return null;
+  const copy = promoBar.active && promoBar.text?.trim()
+    ? promoBar.text
+    : promoBarCopy({ promo });
+  void t;
+  const content = (
+    <div className="mx-auto max-w-7xl px-4 py-2.5 flex items-center justify-center text-[10px] uppercase tracking-[0.25em] font-medium text-center">
+      {copy}
+    </div>
+  );
   return (
     <div className="bg-promo text-promo-foreground">
-      <div className="mx-auto max-w-7xl px-4 py-2.5 flex items-center justify-center text-[10px] uppercase tracking-[0.25em] font-medium text-center">
-        {t("promo.banner")} <span className="ml-1.5 font-bold">HELLO15</span>
-      </div>
+      {promoBar.link ? <Link to={promoBar.link as "/"}>{content}</Link> : content}
     </div>
   );
 }

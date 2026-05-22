@@ -12,9 +12,9 @@ import {
   RX_STATUS_LABEL,
 } from "@/lib/cart-store";
 import { getProduct, productImage } from "@/lib/products";
-import { Trash2, Pencil } from "lucide-react";
-import { useState } from "react";
+import { Trash2, Pencil, BadgePercent } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { computeAutoDiscount, hasOrderedBefore, useActivePromotion } from "@/lib/promotions";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({ meta: [{ title: "Cart — MIRAVUE" }] }),
@@ -25,9 +25,10 @@ function CartPage() {
   const { lines } = useCart();
   const { t } = useI18n();
   const navigate = useNavigate();
-  const [coupon, setCoupon] = useState("");
-  const [applied, setApplied] = useState(0);
+  const promo = useActivePromotion();
   const subtotal = cartSubtotal(lines);
+  const discount = computeAutoDiscount({ subtotal, hasOrdered: hasOrderedBefore(), promo });
+  const applied = discount?.amount ?? 0;
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 6.95;
   const total = subtotal - applied + shipping;
@@ -174,13 +175,18 @@ function CartPage() {
 
           <aside className="border rounded-xl p-6 h-fit bg-card space-y-4">
             <h2 className="font-semibold">{t("cart.summary")}</h2>
-            <div className="flex gap-2">
-              <input value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder={t("cart.coupon")} className="flex-1 border rounded px-3 py-2 text-sm bg-background" />
-              <button onClick={() => { if (coupon.toUpperCase() === "HELLO15") setApplied(subtotal * 0.15); }} className="px-4 py-2 border rounded text-sm">{t("cart.apply")}</button>
-            </div>
+            {discount && (
+              <div className="flex items-start gap-2 rounded-lg bg-sale/10 border border-sale/30 p-3 text-xs">
+                <BadgePercent className="size-4 text-sale shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-semibold text-sale">{discount.label}</div>
+                  <div className="text-muted-foreground mt-0.5">{discount.promo.frontCopy}</div>
+                </div>
+              </div>
+            )}
             <div className="space-y-1 text-sm border-t pt-4">
               <div className="flex justify-between"><span>{t("cart.subtotal")}</span><span>${subtotal.toFixed(2)}</span></div>
-              {applied > 0 && <div className="flex justify-between text-sale"><span>{t("cart.discount")}</span><span>−${applied.toFixed(2)}</span></div>}
+              {applied > 0 && <div className="flex justify-between text-sale"><span>{discount?.label ?? t("cart.discount")}</span><span>−${applied.toFixed(2)}</span></div>}
               <div className="flex justify-between"><span>{t("cart.shipping")}</span><span>{shipping === 0 ? t("cart.free") : `$${shipping.toFixed(2)}`}</span></div>
               <div className="flex justify-between font-semibold text-base border-t pt-2 mt-2"><span>{t("cart.total")}</span><span>${total.toFixed(2)}</span></div>
             </div>

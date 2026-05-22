@@ -12,6 +12,7 @@ import {
   FULFILLMENT_LABEL,
   RX_STATUS_LABEL,
 } from "@/lib/cart-store";
+import { computeAutoDiscount, hasOrderedBefore, markOrderedNow, useActivePromotion } from "@/lib/promotions";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [{ title: "Checkout — MIRAVUE" }] }),
@@ -32,7 +33,10 @@ function Checkout() {
 
   const subtotal = cartSubtotal(lines);
   const shipCost = shipping === "express" ? 14.95 : subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 6.95;
-  const total = subtotal + shipCost;
+  const promo = useActivePromotion();
+  const discount = computeAutoDiscount({ subtotal, hasOrdered: hasOrderedBefore(), promo });
+  const discountAmt = discount?.amount ?? 0;
+  const total = subtotal - discountAmt + shipCost;
 
   const flags = useMemo(() => {
     let frameOnly = false, nonRx = false, prescription = false, pdUnknown = false;
@@ -58,6 +62,7 @@ function Checkout() {
       address: `${addr.line1}${addr.line2 ? ", " + addr.line2 : ""}, ${addr.city}, ${addr.state} ${addr.zip}, ${addr.country}`,
       shipping, shippingCost: shipCost, subtotal, total,
     });
+    markOrderedNow();
     navigate({ to: "/order/$id", params: { id: order.id } });
   }
 
@@ -216,6 +221,7 @@ function Checkout() {
             })}
             <div className="border-t pt-3 space-y-1 text-sm">
               <div className="flex justify-between"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+              {discount && <div className="flex justify-between text-sale"><span>{discount.label}</span><span>−${discountAmt.toFixed(2)}</span></div>}
               <div className="flex justify-between"><span>Shipping</span><span>{shipCost === 0 ? "FREE" : `$${shipCost.toFixed(2)}`}</span></div>
               <div className="flex justify-between font-semibold pt-2 border-t mt-2"><span>Total</span><span>${total.toFixed(2)}</span></div>
             </div>

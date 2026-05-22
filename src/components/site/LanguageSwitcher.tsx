@@ -17,9 +17,10 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
+  // Public storefront is English-first. Chinese is internal-preview only and
+  // intentionally hidden from the public language selector.
   const locales: { code: Locale; label: string }[] = [
     { code: "en", label: "English" },
-    { code: "zh", label: "中文" },
   ];
 
   return (
