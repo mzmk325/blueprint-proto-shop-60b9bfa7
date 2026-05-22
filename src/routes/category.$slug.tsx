@@ -148,7 +148,7 @@ function Category() {
             {t("cat.aboutTitle")}
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
-            {t("cat.aboutDesc")}
+            {t("cat.aboutDesc", { ship: fmt(75) })}
           </p>
           <div className="mt-12 divide-y divide-border/60 border-y border-border/60">
             {[
