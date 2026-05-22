@@ -217,7 +217,7 @@ const dict = {
     "pdp.frameOnly": "Frame only",
     "pdp.klarna": "or 4 interest-free payments of",
     "pdp.klarnaWith": "with Klarna",
-    "pdp.freeShip": "Free shipping $75+",
+    "pdp.freeShip": "Free shipping {ship}+",
     "pdp.returns": "30-day returns",
     "pdp.warranty": "365-day warranty",
     "pdp.shipTime": "Ships in 13–20 days",
