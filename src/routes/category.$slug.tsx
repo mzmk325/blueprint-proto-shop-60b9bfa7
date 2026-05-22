@@ -37,17 +37,16 @@ function Category() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const { t, locale } = useI18n();
-  const cat = categories.find((c) => c.slug === slug);
+  const cat = categories.find((c) => c.slug === slug) ?? getStorefrontCategoryBySlug(slug) ? { slug, title: getStorefrontCategoryBySlug(slug)?.title ?? "Shop", gender: null as null | "Women" | "Men" } : undefined;
 
-  let list = products.filter((p) => {
-    if (cat?.gender && p.gender !== cat.gender && p.gender !== "Unisex") return false;
+  let list = getProductsByCategorySlug(slug).filter((p) => {
     if (search.shape && p.shape !== search.shape) return false;
     if (search.collection && p.collection !== search.collection) return false;
     if (search.color && !p.colors.some((c) => c.name === search.color)) return false;
     return true;
   });
-  if (search.sort === "price-asc") list = [...list].sort((a, b) => a.price - b.price);
-  if (search.sort === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
+  const sortKey = search.sort === "new" ? "new" : search.sort === "price-asc" ? "price-asc" : search.sort === "price-desc" ? "price-desc" : "recommend";
+  list = sortStorefrontProducts(list, sortKey);
 
   const setParam = (key: string, value?: string) =>
     navigate({ to: "/category/$slug", params: { slug }, search: { ...search, [key]: value } as never });
