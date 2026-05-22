@@ -43,24 +43,24 @@ function OrderConfirm() {
     : t("order.next.frameOnly");
 
   const steps = headlineType === "prescription" ? [
-    "We review your order details",
+    "We confirm your order details",
     "Our optician reviews your prescription",
-    "We source the frame and lenses",
-    "Your glasses are assembled at our partner lab",
-    "We quality-check your order",
-    "We ship via Yanwen with tracking · 13–20 days",
+    "We prepare your frame and lenses",
+    "We craft your glasses at our partner lab",
+    "We run a careful quality check",
+    "We ship with tracking · 13–20 days",
   ] : headlineType === "non-rx" ? [
-    "We review your order details",
-    "We source the frame and lenses",
-    "Your glasses are assembled at our partner lab",
-    "We quality-check your order",
-    "We ship via Yanwen with tracking · 13–20 days",
+    "We confirm your order details",
+    "We prepare your frame and lenses",
+    "We assemble your glasses at our partner lab",
+    "We run a careful quality check",
+    "We ship with tracking · 13–20 days",
   ] : [
-    "We review your order details",
-    "We source your frame from our supplier",
-    "We pack the frame with demo lenses",
-    "We quality-check the frame",
-    "We ship via Yanwen with tracking · 13–20 days",
+    "We confirm your order details",
+    "We prepare your frame",
+    "We pack it with demo lenses",
+    "We run a careful quality check",
+    "We ship with tracking · 13–20 days",
   ];
 
   return (
