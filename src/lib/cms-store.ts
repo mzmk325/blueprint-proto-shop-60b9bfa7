@@ -290,13 +290,13 @@ function seed(now = SERVER_SEED_NOW): CMSState {
       { id: "hero-home", desktopImage: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=1920&q=80", mobileImage: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=900&q=80", title: "DESIGNED IN ITALY", subtitle: "Architectural acetate, hand-finished frames.", btn1Text: "Shop Eyeglasses", btn1Link: "/category/all", btn2Text: "Shop Sunglasses", btn2Link: "/category/sunglasses", sortOrder: 10, active: true },
     ],
     homeCards: [
-      { id: uid("hc"), image: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800", title: "Women", link: "/category/women-eyeglasses", sortOrder: 10, active: true },
-      { id: uid("hc"), image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=800", title: "Men", link: "/category/men-eyeglasses", sortOrder: 20, active: true },
-      { id: uid("hc"), image: "https://images.unsplash.com/photo-1551803091-e20673f15770?w=800", title: "Women Sun", link: "/category/sunglasses", sortOrder: 30, active: true },
-      { id: uid("hc"), image: "https://images.unsplash.com/photo-1577803645773-f96470509666?w=800", title: "Men Sun", link: "/category/sunglasses", sortOrder: 40, active: true },
+      { id: "hc-women", image: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800", title: "Women", link: "/category/women-eyeglasses", sortOrder: 10, active: true },
+      { id: "hc-men", image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=800", title: "Men", link: "/category/men-eyeglasses", sortOrder: 20, active: true },
+      { id: "hc-women-sun", image: "https://images.unsplash.com/photo-1551803091-e20673f15770?w=800", title: "Women Sun", link: "/category/sunglasses", sortOrder: 30, active: true },
+      { id: "hc-men-sun", image: "https://images.unsplash.com/photo-1577803645773-f96470509666?w=800", title: "Men Sun", link: "/category/sunglasses", sortOrder: 40, active: true },
     ],
     shapeBanners: shapes.map((s, i) => ({
-      id: uid("sb"),
+      id: seededId("sb", i),
       shape: s,
       image: "",
       link: `/category/all?shape=${encodeURIComponent(s)}`,
