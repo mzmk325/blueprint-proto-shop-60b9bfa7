@@ -17,6 +17,13 @@ export type Product = {
   modelCode: string;
 };
 
+// A product is on a "real" product-level sale only when it has an explicit
+// discountPct AND an originalPrice. The global first-order promotion is NOT a
+// product-level sale and should never trigger a crossed-out price.
+export function isProductOnSale(p: Pick<Product, "discountPct" | "originalPrice">): boolean {
+  return typeof p.discountPct === "number" && p.discountPct > 0 && typeof p.originalPrice === "number" && p.originalPrice > 0;
+}
+
 const c = {
   black: { name: "Black", hex: "#1a1a1a" },
   tortoise: { name: "Tortoise", hex: "#6b3410" },
