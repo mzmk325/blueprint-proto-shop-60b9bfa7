@@ -11,15 +11,18 @@ import { SupportPopover } from "./SupportPopover";
 import { AccountPopover } from "./AccountPopover";
 import { useCMS } from "@/lib/cms-store";
 import { useActivePromotion, promoBarCopy } from "@/lib/promotions";
+import { usePriceFormatter } from "@/lib/currency-store";
 
 export function PromoBar() {
   const { t } = useI18n();
+  const fmt = usePriceFormatter();
   const promoBar = useCMS((s) => s.promoBar);
   const promo = useActivePromotion();
   if (!promoBar.active && !promo) return null;
+  const freeShipLabel = `${t("promo.freeShipOver")} ${fmt(75)}`;
   const copy = promoBar.active && promoBar.text?.trim()
     ? promoBar.text
-    : promoBarCopy({ promo });
+    : promoBarCopy({ promo, freeShipLabel });
   void t;
   const content = (
     <div className="mx-auto max-w-7xl px-4 py-2.5 flex items-center justify-center text-[10px] uppercase tracking-[0.25em] font-medium text-center">
