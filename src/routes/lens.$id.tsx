@@ -381,8 +381,8 @@ function LensFlow() {
 
               {step === "rx-review" && (
                 <div className="bg-background border border-border/60 p-6 space-y-4">
-                  <h4 className="font-display text-xl">Please review your prescription</h4>
-                  <p className="text-xs text-muted-foreground">Double-check the values below. You can edit before continuing.</p>
+                  <h4 className="font-display text-xl">{t("lens.reviewTitle")}</h4>
+                  <p className="text-xs text-muted-foreground">{t("lens.reviewSub")}</p>
 
                   {rxMethod === "manual" ? (
                     <div className="text-sm">
@@ -397,13 +397,13 @@ function LensFlow() {
                         </thead>
                         <tbody>
                           <tr className="border-b border-border/40">
-                            <td className="py-2.5 font-medium">OD (Right)</td>
+                            <td className="py-2.5 font-medium">{t("lens.odRight")}</td>
                             <td className="text-center">{od.sph}</td>
                             <td className="text-center">{od.cyl}</td>
                             <td className="text-center">{od.cyl === "None" ? "—" : (od.axis || "—")}</td>
                           </tr>
                           <tr>
-                            <td className="py-2.5 font-medium">OS (Left)</td>
+                            <td className="py-2.5 font-medium">{t("lens.osLeft")}</td>
                             <td className="text-center">{os.sph}</td>
                             <td className="text-center">{os.cyl}</td>
                             <td className="text-center">{os.cyl === "None" ? "—" : (os.axis || "—")}</td>
@@ -412,42 +412,42 @@ function LensFlow() {
                       </table>
                     </div>
                   ) : (
-                    <div className="text-sm bg-surface p-3">📎 Uploaded: <strong>{uploadedFile || "prescription file"}</strong></div>
+                    <div className="text-sm bg-surface p-3">📎 {t("lens.uploadedPrefix")} <strong>{uploadedFile || "prescription file"}</strong></div>
                   )}
 
                   <dl className="grid grid-cols-2 gap-y-2 text-sm border-t border-border/60 pt-4">
-                    <dt className="text-muted-foreground">PD</dt>
-                    <dd>{dontKnowPd ? "Unknown" : twoPd ? `R ${pdRight || "—"} / L ${pdLeft || "—"}` : (pd || "—")}</dd>
-                    <dt className="text-muted-foreground">Prism</dt>
-                    <dd>{hasPrism ? "Yes" : "No"}</dd>
-                    <dt className="text-muted-foreground">Method</dt>
-                    <dd>{rxMethod === "upload" ? "Uploaded" : "Manual entry"}</dd>
-                    <dt className="text-muted-foreground">Status</dt>
+                    <dt className="text-muted-foreground">{t("lens.pd")}</dt>
+                    <dd>{dontKnowPd ? t("lens.unknown") : twoPd ? `R ${pdRight || "—"} / L ${pdLeft || "—"}` : (pd || "—")}</dd>
+                    <dt className="text-muted-foreground">{t("lens.prism")}</dt>
+                    <dd>{hasPrism ? t("lens.yes") : t("lens.no")}</dd>
+                    <dt className="text-muted-foreground">{t("lens.method")}</dt>
+                    <dd>{rxMethod === "upload" ? t("lens.uploaded") : t("lens.manualEntry")}</dd>
+                    <dt className="text-muted-foreground">{t("lens.status")}</dt>
                     <dd className="text-sale font-medium">
-                      {status === "pending" ? "Pending human review"
-                        : status === "uploaded" ? "Pending human review (uploaded)"
-                        : status === "pd-unknown" ? "PD unknown — pending review"
-                        : status === "prism-review" ? "Prism — pending review"
-                        : "Pending review"}
+                      {status === "pending" ? t("lens.statusPending")
+                        : status === "uploaded" ? t("lens.statusUploaded")
+                        : status === "pd-unknown" ? t("lens.statusPdUnknown")
+                        : status === "prism-review" ? t("lens.statusPrism")
+                        : t("lens.statusPending")}
                     </dd>
                   </dl>
 
                   <div className="flex gap-3 pt-2">
-                    <button onClick={() => setStep("rx-entry")} className="flex-1 border-2 border-foreground/20 py-3 text-[11px] uppercase tracking-[0.18em] font-semibold hover:bg-surface">Edit prescription</button>
+                    <button onClick={() => setStep("rx-entry")} className="flex-1 border-2 border-foreground/20 py-3 text-[11px] uppercase tracking-[0.18em] font-semibold hover:bg-surface">{t("lens.editRx")}</button>
                   </div>
                 </div>
               )}
 
               {step === "fn" && (
                 <>
-                  <p className="text-sm text-muted-foreground mb-2">Choose what your lenses should do.</p>
+                  <p className="text-sm text-muted-foreground mb-2">{t("lens.fn.desc")}</p>
                   {FNS.map((f) => {
                     const active = fnKey === f.key;
                     return (
                       <button key={f.key} onClick={() => setFnKey(f.key)} className={`relative w-full text-left bg-background p-5 border-2 transition ${active ? "border-sale" : "border-transparent hover:border-border"}`}>
                         <div className="flex justify-between items-baseline">
                           <span className="font-medium">{f.label}</span>
-                          <span className="text-sm">{f.price === 0 ? "Included" : `+$${f.price}`}</span>
+                          <span className="text-sm">{f.price === 0 ? t("common.included") : `+${fmt(f.price)}`}</span>
                         </div>
                         <div className="text-sm text-muted-foreground mt-1">{f.desc}</div>
                       </button>
@@ -458,15 +458,15 @@ function LensFlow() {
 
               {step === "thick" && (
                 <>
-                  <p className="text-sm text-muted-foreground mb-1">Choose how thin and lightweight you want your lenses to be.</p>
-                  <p className="text-xs text-muted-foreground bg-background border-l-2 border-sale p-3 mb-2">For stronger prescriptions, thinner lenses can look better and feel lighter.</p>
+                  <p className="text-sm text-muted-foreground mb-1">{t("lens.thick.desc")}</p>
+                  <p className="text-xs text-muted-foreground bg-background border-l-2 border-sale p-3 mb-2">{t("lens.thick.rec")}</p>
                   {THICKS.map((th) => {
                     const active = thickKey === th.key;
                     return (
                       <button key={th.key} onClick={() => setThickKey(th.key)} className={`relative w-full text-left bg-background p-5 border-2 transition ${active ? "border-sale" : "border-transparent hover:border-border"}`}>
                         <div className="flex justify-between items-baseline">
                           <span className="font-medium">{th.label}</span>
-                          <span className="text-sm">{th.price === 0 ? "Included" : `+$${th.price}`}</span>
+                          <span className="text-sm">{th.price === 0 ? t("common.included") : `+${fmt(th.price)}`}</span>
                         </div>
                         <div className="text-sm text-muted-foreground mt-1">{th.desc}</div>
                       </button>
@@ -478,7 +478,7 @@ function LensFlow() {
               {step === "addon" && (
                 <>
                   <div className="bg-background/60 border border-border p-3 text-xs flex items-center gap-2 mb-2">
-                    <Check className="size-3.5 text-sale" /> AR + scratch-resistant coatings — Included
+                    <Check className="size-3.5 text-sale" /> {t("lens.coatingIncluded")}
                   </div>
                   {ADDONS.map((a) => {
                     const active = addonKey === a.key;
@@ -486,7 +486,7 @@ function LensFlow() {
                       <button key={a.key} onClick={() => setAddonKey(a.key)} className={`relative w-full text-left bg-background p-5 border-2 transition ${active ? "border-sale" : "border-transparent hover:border-border"}`}>
                         <div className="flex justify-between items-baseline">
                           <span className="font-medium">{a.label}</span>
-                          <span className="text-sm">{a.price === 0 ? "Included" : `+$${a.price}`}</span>
+                          <span className="text-sm">{a.price === 0 ? t("common.included") : `+${fmt(a.price)}`}</span>
                         </div>
                         <div className="text-sm text-muted-foreground mt-1">{a.desc}</div>
                       </button>
@@ -502,7 +502,7 @@ function LensFlow() {
               onClick={next}
               className="w-full bg-sale text-white py-4 text-[11px] uppercase tracking-[0.2em] font-semibold hover:opacity-90 transition-opacity"
             >
-              {step === "rx-review" ? "Confirm and continue" : nextLabel}
+              {step === "rx-review" ? t("lens.confirmContinue") : nextLabel}
             </button>
           </div>
         </section>
