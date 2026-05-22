@@ -20,9 +20,13 @@ export function PromoBar() {
   const promo = useActivePromotion();
   if (!promoBar.active && !promo) return null;
   const freeShipLabel = `${t("promo.freeShipOver")} ${fmt(75)}`;
-  const copy = promoBar.active && promoBar.text?.trim()
-    ? promoBar.text
-    : promoBarCopy({ promo, freeShipLabel });
+  const rawText = promoBar.active && promoBar.text?.trim() ? promoBar.text : "";
+  const normalizedText = rawText
+    ? rawText
+        .replace(/\{ship\}/g, freeShipLabel)
+        .replace(/Free shipping over \$75/gi, freeShipLabel)
+    : "";
+  const copy = normalizedText || promoBarCopy({ promo, freeShipLabel });
   void t;
   const content = (
     <div className="mx-auto max-w-7xl px-4 py-2.5 flex items-center justify-center text-[10px] uppercase tracking-[0.25em] font-medium text-center">
