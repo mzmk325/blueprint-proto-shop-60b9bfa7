@@ -282,12 +282,12 @@ function seed(now = SERVER_SEED_NOW): CMSState {
     categories: cats,
     reviews,
     promotions: [
-      { id: uid("promo"), type: "first-order",   title: "首单 15% 折扣", frontCopy: "新客首单自动享 15% 折扣 · 无需优惠码", percent: 15, enabled: true,  priority: 100, startAt: now - 86400_000 * 30, endAt: now + 86400_000 * 60 },
-      { id: uid("promo"), type: "second-half",   title: "第二副半价",      frontCopy: "购买两副镜框 · 第二副自动半价",       percent: 50, enabled: false, priority: 80 },
-      { id: uid("promo"), type: "sitewide",      title: "全站满减",        frontCopy: "全站满 $80 自动减 $10",                 percent: 12, enabled: false, priority: 60 },
+      { id: "promo-first-order", type: "first-order",   title: "首单 15% 折扣", frontCopy: "新客首单自动享 15% 折扣 · 无需优惠码", percent: 15, enabled: true,  priority: 100, startAt: now - 86400_000 * 30, endAt: now + 86400_000 * 60 },
+      { id: "promo-second-half", type: "second-half",   title: "第二副半价",      frontCopy: "购买两副镜框 · 第二副自动半价",       percent: 50, enabled: false, priority: 80 },
+      { id: "promo-sitewide", type: "sitewide",      title: "全站满减",        frontCopy: "全站满 $80 自动减 $10",                 percent: 12, enabled: false, priority: 60 },
     ],
     heroes: [
-      { id: uid("hero"), desktopImage: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=1920&q=80", mobileImage: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=900&q=80", title: "DESIGNED IN ITALY", subtitle: "Architectural acetate, hand-finished frames.", btn1Text: "Shop Eyeglasses", btn1Link: "/category/all", btn2Text: "Shop Sunglasses", btn2Link: "/category/sunglasses", sortOrder: 10, active: true },
+      { id: "hero-home", desktopImage: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=1920&q=80", mobileImage: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=900&q=80", title: "DESIGNED IN ITALY", subtitle: "Architectural acetate, hand-finished frames.", btn1Text: "Shop Eyeglasses", btn1Link: "/category/all", btn2Text: "Shop Sunglasses", btn2Link: "/category/sunglasses", sortOrder: 10, active: true },
     ],
     homeCards: [
       { id: uid("hc"), image: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800", title: "Women", link: "/category/women-eyeglasses", sortOrder: 10, active: true },
