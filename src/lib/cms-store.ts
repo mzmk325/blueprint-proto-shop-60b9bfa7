@@ -307,8 +307,8 @@ function seed(now = SERVER_SEED_NOW): CMSState {
     assets: [],
     settings: { newArrivalDays: 30, defaultSort: "sort" },
     aiLogs: [
-      { id: uid("ai"), instruction: "批量上架春季新品，参考表格", source: "csv", preview: "新增 12 个商品 · 修改 3 个分类排序", createdAt: Date.now() - 3 * 86400_000, appliedAt: Date.now() - 3 * 86400_000 + 60_000, rolledBackAt: null },
-      { id: uid("ai"), instruction: "把所有 Bold 系列商品的卖点加上'意大利设计'前缀", source: "text", preview: "修改 4 个商品的 bullets 字段", createdAt: Date.now() - 86400_000, appliedAt: null, rolledBackAt: null },
+      { id: "ai-spring-upload", instruction: "批量上架春季新品，参考表格", source: "csv", preview: "新增 12 个商品 · 修改 3 个分类排序", createdAt: now - 3 * 86400_000, appliedAt: now - 3 * 86400_000 + 60_000, rolledBackAt: null },
+      { id: "ai-bold-copy", instruction: "把所有 Bold 系列商品的卖点加上'意大利设计'前缀", source: "text", preview: "修改 4 个商品的 bullets 字段", createdAt: now - 86400_000, appliedAt: null, rolledBackAt: null },
     ],
   };
 }
