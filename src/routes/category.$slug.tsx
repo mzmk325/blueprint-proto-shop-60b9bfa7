@@ -8,6 +8,7 @@ import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useI18n, type TKey } from "@/lib/i18n";
+import { usePriceFormatter } from "@/lib/currency-store";
 
 const searchSchema = z.object({
   shape: z.string().optional(),
