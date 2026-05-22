@@ -501,7 +501,7 @@ function round2(n: number) { return Math.round(n * 100) / 100; }
 // ── Mock seed ────────────────────────────────────────────────────────────────
 function mockLine(over: Partial<CartLine> & { name: string; color: string; unitPrice: number; lens: LensChoice }): CartLine {
   return {
-    lineId: `mock-${over.name.toLowerCase()}-${over.color.toLowerCase()}`, productId: "p-" + over.name.toLowerCase(), qty: 1, size: "M", ...over,
+    lineId: `mock-${over.name.toLowerCase()}-${over.color.toLowerCase()}`, productId: "p-" + over.name.toLowerCase(), qty: 1, ...over,
   };
 }
 

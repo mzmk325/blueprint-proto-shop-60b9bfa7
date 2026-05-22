@@ -166,7 +166,7 @@ function Checkout() {
                           <div className="flex justify-between gap-2">
                             <div>
                               <span className="text-[10px] uppercase tracking-[0.12em] font-semibold bg-secondary px-2 py-0.5">{FULFILLMENT_LABEL[ft]}</span>
-                              <div className="font-medium mt-1">{l.name} <span className="text-xs text-muted-foreground">· {l.color} · {l.size ?? "M"}</span></div>
+                              <div className="font-medium mt-1">{l.name} <span className="text-xs text-muted-foreground">· {l.color}</span></div>
                             </div>
                             <div className="text-right text-sm">{fmt(lineTotal(l))}</div>
                           </div>

@@ -51,10 +51,12 @@ export function promoShortLabel(p: CMSPromotion | null): string {
 export function promoBarCopy(opts: {
   promoBarText?: string;
   promo: CMSPromotion | null;
+  freeShipLabel?: string; // e.g. "Free shipping over £62" — currency-aware
 }): string {
   if (opts.promoBarText && opts.promoBarText.trim()) return opts.promoBarText;
-  if (opts.promo) return `${opts.promo.frontCopy} · Free shipping over $75`;
-  return "First pair 15% off · Free shipping over $75";
+  const ship = opts.freeShipLabel ?? "Free shipping over $75";
+  if (opts.promo) return `${promoShortLabel(opts.promo)} · ${ship}`;
+  return `First pair 15% off · ${ship}`;
 }
 
 // Auto-applied discount calculation.

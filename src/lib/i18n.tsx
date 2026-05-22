@@ -248,6 +248,11 @@ const dict = {
     "cart.rxUploaded": "uploaded",
     "cart.rxManual": "manual entry",
     "cart.rxLater": "send later",
+    // promo (customer-facing auto-discount copy)
+    "promo.firstOrderAuto": "First pair discount automatically applied. No code needed.",
+    "promo.sitewideAuto": "Sitewide discount automatically applied.",
+    "promo.secondHalfAuto": "Second pair 50% off automatically applied.",
+    "promo.freeShipOver": "Free shipping over",
     // mini cart
     "mini.title": "Your cart",
     "mini.empty": "Your cart is empty.",
@@ -779,6 +784,10 @@ const dict = {
     "cart.rxUploaded": "已上传",
     "cart.rxManual": "手动录入",
     "cart.rxLater": "稍后提交",
+    "promo.firstOrderAuto": "新客首单自动享折扣,无需优惠码。",
+    "promo.sitewideAuto": "全站折扣已自动应用。",
+    "promo.secondHalfAuto": "第二副镜框自动半价。",
+    "promo.freeShipOver": "订单满",
     // mini cart
     "mini.title": "购物袋",
     "mini.empty": "购物袋是空的。",
