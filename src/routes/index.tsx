@@ -2,7 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
 
-import { products, shapes, categories } from "@/lib/products";
+import { shapes, categories } from "@/lib/products";
+import {
+  getHomepageCMS,
+  getBestsellers,
+  getNewArrivals,
+  shapeBannerImage,
+} from "@/lib/storefront-cms";
 import { ArrowRight, ShieldCheck, RotateCcw, Truck, Star } from "lucide-react";
 import { useI18n, type TKey } from "@/lib/i18n";
 
@@ -16,9 +22,9 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const heroImg =
+const heroImgFallback =
   "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=2000&q=80";
-const tile = {
+const tileFallback = {
   women: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=900&q=80",
   men: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=900&q=80",
   sunW: "https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&w=900&q=80",
@@ -30,10 +36,32 @@ const editorial = {
   daily: "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=1200&q=80",
 };
 
+// Convert a CMS link like "/category/women-eyeglasses" into a category slug.
+function linkToSlug(link: string): string {
+  const m = link.match(/\/category\/([^/?#]+)/);
+  return m?.[1] ?? "all";
+}
+
 function Home() {
   const { t } = useI18n();
-  const bestsellers = products.slice(0, 4);
-  const newArrivals = products.slice(4, 8);
+  const { heroes, homeCards, shapeBanners } = getHomepageCMS();
+  const hero = heroes[0];
+  const heroImg = hero?.desktopImage || heroImgFallback;
+  const bestsellers = getBestsellers(4);
+  const newArrivals = getNewArrivals(4);
+
+  const tiles = homeCards.length
+    ? homeCards.slice(0, 4).map((c) => ({ slug: linkToSlug(c.link), label: c.title, img: c.image }))
+    : [
+        { slug: "women-eyeglasses", label: t("home.tile.women"),   img: tileFallback.women },
+        { slug: "men-eyeglasses",   label: t("home.tile.men"),     img: tileFallback.men },
+        { slug: "sunglasses",       label: t("home.tile.womenSun"), img: tileFallback.sunW },
+        { slug: "sunglasses",       label: t("home.tile.menSun"),  img: tileFallback.sunM },
+      ];
+
+  const banners = shapeBanners.length
+    ? shapeBanners
+    : shapes.map((s, i) => ({ id: `fb-${s}`, shape: s, image: "", link: `/category/all?shape=${encodeURIComponent(s)}`, sortOrder: i, active: true }));
 
   return (
     <Layout>
@@ -81,12 +109,7 @@ function Home() {
       </section>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 w-full border-b border-border">
-        {[
-          { slug: "women-eyeglasses", label: t("home.tile.women"), img: tile.women },
-          { slug: "men-eyeglasses", label: t("home.tile.men"), img: tile.men },
-          { slug: "sunglasses", label: t("home.tile.womenSun"), img: tile.sunW },
-          { slug: "sunglasses", label: t("home.tile.menSun"), img: tile.sunM },
-        ].map((tt, i) => (
+        {tiles.map((tt, i) => (
           <Link
             key={i}
             to="/category/$slug"
@@ -104,25 +127,42 @@ function Home() {
       </section>
 
       <section className="py-20 lg:py-24 px-6 lg:px-8">
-        <div className="text-center mb-12">
+        <div className="text-center mb-10 lg:mb-12">
           <h2 className="text-3xl md:text-4xl uppercase tracking-tight font-bold">{t("home.shape.title")}</h2>
           <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mt-3">{t("home.shape.sub")}</p>
         </div>
-        <div className="flex justify-start lg:justify-center gap-10 lg:gap-16 overflow-x-auto no-scrollbar pb-4 px-2 max-w-6xl mx-auto">
-          {shapes.map((s) => (
-            <Link
-              key={s}
-              to="/category/$slug"
-              params={{ slug: "all" }}
-              search={{ shape: s }}
-              className="group flex-shrink-0 flex flex-col items-center gap-4"
-            >
-              <div className="w-24 h-24 rounded-full bg-surface flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                <ShapeIcon shape={s} />
-              </div>
-              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold">{t(`shape.${s}` as TKey)}</span>
-            </Link>
-          ))}
+        <div className="max-w-7xl mx-auto">
+          <div
+            className="flex gap-3 md:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory px-6 md:px-0 pb-2"
+            style={{ scrollPaddingLeft: 24 }}
+          >
+            {banners.map((b) => (
+              <Link
+                key={b.id}
+                to="/category/$slug"
+                params={{ slug: "all" }}
+                search={{ shape: b.shape }}
+                className="group relative flex-shrink-0 snap-start overflow-hidden bg-surface
+                           w-[68%] sm:w-[42%] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)]
+                           aspect-[4/5]"
+              >
+                <img
+                  src={shapeBannerImage(b)}
+                  alt={b.shape}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4 text-white">
+                  <h3 className="font-display text-lg md:text-xl tracking-tight font-bold uppercase">
+                    {t(`shape.${b.shape}` as TKey)}
+                  </h3>
+                  <span className="text-[10px] uppercase tracking-[0.22em] opacity-90">
+                    {t("common.shopNow")} →
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -239,25 +279,3 @@ function Home() {
   );
 }
 
-function ShapeIcon({ shape }: { shape: string }) {
-  const common = "fill-none stroke-current";
-  switch (shape) {
-    case "Round":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><circle cx="14" cy="15" r="11" strokeWidth="2" className={common} /><circle cx="46" cy="15" r="11" strokeWidth="2" className={common} /><line x1="25" y1="15" x2="35" y2="15" strokeWidth="2" className={common} /></svg>;
-    case "Square":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><rect x="3" y="5" width="22" height="20" strokeWidth="2" className={common} /><rect x="35" y="5" width="22" height="20" strokeWidth="2" className={common} /><line x1="25" y1="15" x2="35" y2="15" strokeWidth="2" className={common} /></svg>;
-    case "Cat eye":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><path d="M2,18 Q5,5 25,8 Q27,18 14,22 Z" strokeWidth="2" className={common} /><path d="M35,8 Q55,5 58,18 Q46,22 33,18 Z" strokeWidth="2" className={common} /></svg>;
-    case "Aviator":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><path d="M3,8 L25,5 L22,25 L8,25 Z" strokeWidth="2" className={common} /><path d="M35,5 L57,8 L52,25 L38,25 Z" strokeWidth="2" className={common} /></svg>;
-    case "Rectangle":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><rect x="3" y="9" width="22" height="14" strokeWidth="2" className={common} /><rect x="35" y="9" width="22" height="14" strokeWidth="2" className={common} /></svg>;
-    case "Geometric":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><polygon points="3,8 25,6 22,25 5,23" strokeWidth="2" className={common} /><polygon points="35,6 57,8 55,23 38,25" strokeWidth="2" className={common} /></svg>;
-    case "Butterfly":
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><path d="M3,12 Q5,5 25,7 Q26,22 8,24 Z" strokeWidth="2" className={common} /><path d="M35,7 Q55,5 57,12 Q52,24 34,22 Z" strokeWidth="2" className={common} /></svg>;
-    case "Oval":
-    default:
-      return <svg viewBox="0 0 60 30" className="w-12 h-6"><ellipse cx="14" cy="15" rx="11" ry="8" strokeWidth="2" className={common} /><ellipse cx="46" cy="15" rx="11" ry="8" strokeWidth="2" className={common} /></svg>;
-  }
-}
