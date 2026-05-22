@@ -987,8 +987,94 @@ export function useI18n() {
     return {
       locale: "en" as Locale,
       setLocale: () => {},
+} as const;
+
+export type TKey = keyof (typeof dict)["en"];
+
+// Resolve a locale to a dict key. Public European locales fall back to English
+// while the structure is ready for full translation later.
+function resolveDictKey(l: Locale): "en" | "zh" {
+  if (l === "zh" || l === "zh-CN") return "zh";
+  return "en";
+}
+
+type Ctx = {
+  locale: Locale;
+  setLocale: (l: Locale) => void;
+  t: (k: TKey) => string;
+};
+
+const I18nContext = createContext<Ctx | null>(null);
+
+// Read ?preview_lang=zh from URL; if present, persist a flag so the option
+// stays visible across navigations within the session.
+function detectPreviewZh(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("preview_lang") === "zh") {
+      sessionStorage.setItem(PREVIEW_FLAG_KEY, "1");
+      return true;
+    }
+    return sessionStorage.getItem(PREVIEW_FLAG_KEY) === "1";
+  } catch { return false; }
+}
+
+export function isZhPreviewEnabled(): boolean {
+  return detectPreviewZh();
+}
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [locale, setLocaleState] = useState<Locale>("en-US");
+
+  useEffect(() => {
+    try {
+      let saved = localStorage.getItem(STORAGE_KEY) as Locale | null;
+      // migrate legacy "en"/"zh"
+      if (saved === "en") saved = "en-US";
+      if (saved === "zh") saved = "zh-CN";
+      // strip zh if user is no longer in preview mode
+      if (saved === "zh-CN" && !detectPreviewZh()) saved = "en-US";
+      if (saved) setLocaleState(saved);
+    } catch { /* noop */ }
+  }, []);
+
+  // Whenever locale changes, sync display currency.
+  useEffect(() => {
+    const cur = LOCALE_CURRENCY[locale];
+    if (cur) currencyStore.set(cur);
+    try { document.documentElement.lang = htmlLang(locale); } catch { /* noop */ }
+  }, [locale]);
+
+  const setLocale = useCallback((l: Locale) => {
+    setLocaleState(l);
+    try { localStorage.setItem(STORAGE_KEY, l); } catch { /* noop */ }
+  }, []);
+
+  const t = useCallback(
+    (k: TKey) => {
+      const key = resolveDictKey(locale);
+      return (dict[key] as Record<string, string>)[k]
+        ?? (dict.en as Record<string, string>)[k]
+        ?? k;
+    },
+    [locale]
+  );
+
+  const value = useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+}
+
+export function useI18n() {
+  const ctx = useContext(I18nContext);
+  if (!ctx) {
+    return {
+      locale: "en-US" as Locale,
+      setLocale: () => {},
       t: (k: TKey) => (dict.en as Record<string, string>)[k] ?? k,
     };
   }
   return ctx;
 }
+
