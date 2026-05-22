@@ -92,7 +92,7 @@ function CartPage() {
                             "bg-amber-100 text-amber-800"
                           }`}>{FULFILLMENT_LABEL[ft]}</span>
                           <div className="font-medium text-base">{l.name}</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">{l.color}{l.size ? ` · ${l.size}` : ""}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">{l.color}</div>
                         </div>
                         <button onClick={() => cart.remove(l.lineId)} className="text-muted-foreground hover:text-foreground shrink-0" aria-label={t("cart.remove")}><Trash2 className="size-4" /></button>
                       </div>
