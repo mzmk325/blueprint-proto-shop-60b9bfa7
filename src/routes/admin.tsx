@@ -358,7 +358,7 @@ function OrdersList({ orders, onOpen, title }: { orders: Order[]; onOpen: (id: s
                     <Td>{ft === "prescription" ? <RxBadge order={o} /> : <span className="text-xs text-muted-foreground">—</span>}</Td>
                     <Td><StatusBadge status={o.status} /></Td>
                     <Td className="text-xs">{o.shippingInfo?.tracking ?? o.shipping}</Td>
-                    <Td className="text-xs">{na.label}</Td>
+                    <Td className="text-xs">{translateNextAction(na.label)}</Td>
                     <Td className="text-right">
                       <div className="text-sm font-medium">{money(m.gross)}</div>
                       <div className="text-[11px] text-muted-foreground">{m.marginPct}%</div>
