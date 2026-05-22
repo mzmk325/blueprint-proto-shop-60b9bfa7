@@ -5,10 +5,12 @@ import { useCart, cart, cartSubtotal, lineTotal, FREE_SHIPPING_THRESHOLD } from 
 import { getProduct, productImage } from "@/lib/products";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n";
+import { usePriceFormatter } from "@/lib/currency-store";
 
 export function MiniCart() {
   const { lines } = useCart();
   const { t } = useI18n();
+  const fmt = usePriceFormatter();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -44,7 +46,7 @@ export function MiniCart() {
           <>
             <div className="px-1 py-2 text-xs">
               {remaining > 0 ? (
-                <p className="text-muted-foreground mb-1">{t("cart.addMore")} <strong className="text-foreground">${remaining.toFixed(2)}</strong> {t("mini.addFor")}</p>
+                <p className="text-muted-foreground mb-1">{t("cart.addMore")} <strong className="text-foreground">{fmt(remaining)}</strong> {t("mini.addFor")}</p>
               ) : (
                 <p className="text-foreground mb-1">{t("mini.unlocked")}</p>
               )}
@@ -71,7 +73,7 @@ export function MiniCart() {
                           <span className="w-6 text-center">{l.qty}</span>
                           <button onClick={() => cart.setQty(l.lineId, l.qty + 1)} className="size-6">+</button>
                         </div>
-                        <div className="text-sm font-medium">${lineTotal(l).toFixed(2)}</div>
+                        <div className="text-sm font-medium">{fmt(lineTotal(l))}</div>
                       </div>
                     </div>
                   </div>
@@ -80,7 +82,7 @@ export function MiniCart() {
             </div>
 
             <div className="border-t pt-4 space-y-3">
-              <div className="flex justify-between text-sm"><span>{t("cart.subtotal")}</span><span className="font-semibold">${subtotal.toFixed(2)}</span></div>
+              <div className="flex justify-between text-sm"><span>{t("cart.subtotal")}</span><span className="font-semibold">{fmt(subtotal)}</span></div>
               <Link to="/cart" onClick={() => setOpen(false)} className="block text-center border-2 py-2.5 rounded-full text-sm">{t("mini.viewCart")}</Link>
               <Link to="/checkout" onClick={() => setOpen(false)} className="block text-center bg-primary text-primary-foreground py-2.5 rounded-full text-sm font-medium">{t("mini.checkout")}</Link>
             </div>
