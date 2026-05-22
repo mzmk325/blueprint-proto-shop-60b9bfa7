@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
-import { products, shapes, collections, categories } from "@/lib/products";
+import { shapes, collections, categories } from "@/lib/products";
+import { getProductsByCategorySlug, sortStorefrontProducts, getStorefrontCategoryBySlug } from "@/lib/storefront-cms";
 import { z } from "zod";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
