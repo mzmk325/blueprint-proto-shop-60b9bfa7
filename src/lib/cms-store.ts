@@ -315,6 +315,7 @@ function seed(now = SERVER_SEED_NOW): CMSState {
 
 // ── Store ───────────────────────────────────────────────────────────────────
 let state: CMSState = seed();
+let hydrated = false;
 const listeners = new Set<() => void>();
 
 function migrate(s: CMSState): CMSState {
@@ -363,11 +364,15 @@ function subscribe(l: () => void) {
   return () => listeners.delete(l);
 }
 
+function hydrate() {
+  if (hydrated) return;
+  hydrated = true;
+  state = load();
+  listeners.forEach((l) => l());
+}
+
 export function useCMS<T>(selector: (s: CMSState) => T): T {
-  useEffect(() => {
-    state = load();
-    listeners.forEach((l) => l());
-  }, []);
+  useEffect(() => { hydrate(); }, []);
   return useSyncExternalStore(subscribe, () => selector(state), () => selector(state));
 }
 
