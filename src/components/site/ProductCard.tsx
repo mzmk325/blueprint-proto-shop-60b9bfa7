@@ -82,11 +82,12 @@ export function ProductCard({ p }: { p: CardProduct }) {
           <h3 className="font-display text-[15px] font-semibold tracking-tight">{p.name}</h3>
           <div className="flex items-baseline gap-1.5 whitespace-nowrap">
             <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Frame from</span>
-            <span className="font-display text-[15px] font-semibold">${p.price.toFixed(2)}</span>
+            <span className="font-display text-[15px] font-semibold">{fmt(p.price)}</span>
             {isProductOnSale(p) && (
-              <span className="text-[11px] text-muted-foreground line-through">${p.originalPrice!.toFixed(2)}</span>
+              <span className="text-[11px] text-muted-foreground line-through">{fmt(p.originalPrice!)}</span>
             )}
           </div>
+
         </div>
         <p className="text-[11px] text-muted-foreground line-clamp-1 mt-1">{p.descriptor}</p>
         <div className="flex items-center gap-1.5 mt-2.5">
