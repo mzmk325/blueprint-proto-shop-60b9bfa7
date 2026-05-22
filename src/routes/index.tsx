@@ -109,12 +109,7 @@ function Home() {
       </section>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 w-full border-b border-border">
-        {[
-          { slug: "women-eyeglasses", label: t("home.tile.women"), img: tile.women },
-          { slug: "men-eyeglasses", label: t("home.tile.men"), img: tile.men },
-          { slug: "sunglasses", label: t("home.tile.womenSun"), img: tile.sunW },
-          { slug: "sunglasses", label: t("home.tile.menSun"), img: tile.sunM },
-        ].map((tt, i) => (
+        {tiles.map((tt, i) => (
           <Link
             key={i}
             to="/category/$slug"
@@ -132,25 +127,42 @@ function Home() {
       </section>
 
       <section className="py-20 lg:py-24 px-6 lg:px-8">
-        <div className="text-center mb-12">
+        <div className="text-center mb-10 lg:mb-12">
           <h2 className="text-3xl md:text-4xl uppercase tracking-tight font-bold">{t("home.shape.title")}</h2>
           <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mt-3">{t("home.shape.sub")}</p>
         </div>
-        <div className="flex justify-start lg:justify-center gap-10 lg:gap-16 overflow-x-auto no-scrollbar pb-4 px-2 max-w-6xl mx-auto">
-          {shapes.map((s) => (
-            <Link
-              key={s}
-              to="/category/$slug"
-              params={{ slug: "all" }}
-              search={{ shape: s }}
-              className="group flex-shrink-0 flex flex-col items-center gap-4"
-            >
-              <div className="w-24 h-24 rounded-full bg-surface flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                <ShapeIcon shape={s} />
-              </div>
-              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold">{t(`shape.${s}` as TKey)}</span>
-            </Link>
-          ))}
+        <div className="max-w-7xl mx-auto">
+          <div
+            className="flex gap-3 md:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory px-6 md:px-0 pb-2"
+            style={{ scrollPaddingLeft: 24 }}
+          >
+            {banners.map((b) => (
+              <Link
+                key={b.id}
+                to="/category/$slug"
+                params={{ slug: "all" }}
+                search={{ shape: b.shape }}
+                className="group relative flex-shrink-0 snap-start overflow-hidden bg-surface
+                           w-[68%] sm:w-[42%] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)]
+                           aspect-[4/5]"
+              >
+                <img
+                  src={shapeBannerImage(b)}
+                  alt={b.shape}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4 text-white">
+                  <h3 className="font-display text-lg md:text-xl tracking-tight font-bold uppercase">
+                    {t(`shape.${b.shape}` as TKey)}
+                  </h3>
+                  <span className="text-[10px] uppercase tracking-[0.22em] opacity-90">
+                    {t("common.shopNow")} →
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
