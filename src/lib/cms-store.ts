@@ -185,8 +185,7 @@ function isClient() {
   return typeof window !== "undefined";
 }
 
-function seed(): CMSState {
-  const now = isClient() ? Date.now() : SERVER_SEED_NOW;
+function seed(now = SERVER_SEED_NOW): CMSState {
   const cats: CMSCategory[] = [
     { id: "cat-all",   name: "全部眼镜",   nameEn: "All Eyeglasses",     type: "main",     slug: "all",                 image: "", sortOrder: 10, showInNav: true,  showOnHome: false, enabled: true },
     { id: "cat-wom",   name: "女款光学镜", nameEn: "Women's Eyeglasses", type: "gender",   slug: "women-eyeglasses",    image: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800", sortOrder: 20, showInNav: true,  showOnHome: true,  enabled: true },
@@ -337,7 +336,7 @@ function load(): CMSState {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) {
-      const s = seed();
+      const s = seed(Date.now());
       localStorage.setItem(KEY, JSON.stringify(s));
       return s;
     }
