@@ -213,27 +213,27 @@ function LensFlow() {
   }
 
   const stepTitle = (s: Step) => ({
-    "rx-type": "Select prescription type",
-    "rx-entry": "Enter your prescription",
-    "rx-review": "Review your prescription",
-    "fn": "Lens function",
-    "thick": "Lens thickness",
-    "addon": "Add-ons",
+    "rx-type": t("lens.step.rxType"),
+    "rx-entry": t("lens.step.rxEntry"),
+    "rx-review": t("lens.reviewTitle"),
+    "fn": t("lens.step.fn"),
+    "thick": t("lens.step.thick"),
+    "addon": t("lens.step.addon"),
   }[s]);
 
   function rxTypeLabelOf(rt: RxType): string {
     return ({
-      "single-vision": "Single Vision",
-      "reading": "Reading",
-      "non-rx": "Non-Prescription",
-      "frame-only": "Frame Only",
+      "single-vision": t("lens.rxLabel.single"),
+      "reading": t("lens.rxLabel.reading"),
+      "non-rx": t("lens.rxLabel.non"),
+      "frame-only": t("lens.rxLabel.frame"),
     } as const)[rt];
   }
 
   const status = computeStatus();
   const nextLabel = idx === steps.length - 1
-    ? (rxType === "frame-only" ? "Add frame to cart" : "Add to cart")
-    : "Continue";
+    ? (rxType === "frame-only" ? t("lens.addFrameCart") : t("lens.addCart"))
+    : t("common.continue");
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
