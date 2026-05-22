@@ -181,10 +181,6 @@ function uid(prefix = "id") { return `${prefix}-${Math.random().toString(36).sli
 
 const SERVER_SEED_NOW = Date.UTC(2026, 0, 1);
 
-function isClient() {
-  return typeof window !== "undefined";
-}
-
 function seed(now = SERVER_SEED_NOW): CMSState {
   const cats: CMSCategory[] = [
     { id: "cat-all",   name: "全部眼镜",   nameEn: "All Eyeglasses",     type: "main",     slug: "all",                 image: "", sortOrder: 10, showInNav: true,  showOnHome: false, enabled: true },
