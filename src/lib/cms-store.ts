@@ -159,7 +159,7 @@ export type CMSAILog = {
   rolledBackAt: number | null;
 };
 
-export const CMS_SCHEMA_VERSION = 2;
+export const CMS_SCHEMA_VERSION = 3;
 
 export type CMSState = {
   schemaVersion: number;
@@ -303,7 +303,7 @@ function seed(now = SERVER_SEED_NOW): CMSState {
       sortOrder: 10 + i * 10,
       active: true,
     })),
-    promoBar: { text: "First pair 15% off · Free shipping over $75", link: "/", active: true },
+    promoBar: { text: "First pair 15% off · {ship}", link: "/", active: true },
     assets: [],
     settings: { newArrivalDays: 30, defaultSort: "sort" },
     aiLogs: [
@@ -323,7 +323,11 @@ function migrate(s: CMSState): CMSState {
   if (v >= CMS_SCHEMA_VERSION) return s;
   // v1 -> v2: replace legacy promo bar copy
   if (s.promoBar && s.promoBar.text === "FREE SHIPPING OVER $75 · USE CODE") {
-    s.promoBar = { ...s.promoBar, text: "First pair 15% off · Free shipping over $75" };
+    s.promoBar = { ...s.promoBar, text: "First pair 15% off · {ship}" };
+  }
+  // v2 -> v3: convert hardcoded "$75" into currency-aware {ship} template
+  if (s.promoBar && typeof s.promoBar.text === "string" && /Free shipping over \$75/i.test(s.promoBar.text)) {
+    s.promoBar = { ...s.promoBar, text: s.promoBar.text.replace(/Free shipping over \$75/gi, "{ship}") };
   }
   s.schemaVersion = CMS_SCHEMA_VERSION;
   return s;
