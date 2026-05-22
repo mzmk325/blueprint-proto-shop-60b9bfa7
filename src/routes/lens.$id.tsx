@@ -297,20 +297,20 @@ function LensFlow() {
                             <button onClick={() => setShowPd(true)} aria-label="help"><HelpCircle className="size-3.5 text-muted-foreground" /></button>
                           </span>
                           <label className="text-xs flex items-center gap-1.5 shrink-0">
-                            <input type="checkbox" checked={twoPd} onChange={(e) => setTwoPd(e.target.checked)} className="size-3.5" /> Dual PD
+                            <input type="checkbox" checked={twoPd} onChange={(e) => setTwoPd(e.target.checked)} className="size-3.5" /> {t("lens.dualPd")}
                           </label>
                         </div>
 
                         {!twoPd ? (
-                          <Select value={pd} onChange={setPd} options={["54","56","57","58","59","60","61","62","63","64","65","66","68"]} placeholder="Select PD (mm)" disabled={dontKnowPd} />
+                          <Select value={pd} onChange={setPd} options={["54","56","57","58","59","60","61","62","63","64","65","66","68"]} placeholder={`${t("lens.pd")} (mm)`} disabled={dontKnowPd} />
                         ) : (
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <div className="text-[11px] text-muted-foreground mb-1">Right PD</div>
+                              <div className="text-[11px] text-muted-foreground mb-1">{t("lens.rightEye")} {t("lens.pd")}</div>
                               <Select value={pdRight} onChange={setPdRight} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
                             </div>
                             <div>
-                              <div className="text-[11px] text-muted-foreground mb-1">Left PD</div>
+                              <div className="text-[11px] text-muted-foreground mb-1">{t("lens.leftEye")} {t("lens.pd")}</div>
                               <Select value={pdLeft} onChange={setPdLeft} options={["27","28","29","30","31","32","33","34"]} placeholder="mm" disabled={dontKnowPd} />
                             </div>
                           </div>
@@ -318,11 +318,11 @@ function LensFlow() {
 
                         <label className="flex items-center gap-2 text-sm">
                           <input type="checkbox" checked={dontKnowPd} onChange={(e) => setDontKnowPd(e.target.checked)} className="size-4" />
-                          I don't know my PD
+                          {t("lens.dontKnowPd")}
                         </label>
                         {dontKnowPd && (
                           <div className="text-xs text-muted-foreground bg-surface p-2.5 border-l-2 border-amber-500">
-                            PD will be marked as <strong>Unknown</strong>. Our team will contact you before production.
+                            {t("lens.unknownPdNote")}
                           </div>
                         )}
 
@@ -330,13 +330,13 @@ function LensFlow() {
                           <label className="flex items-start gap-2 text-sm">
                             <input type="checkbox" checked={hasPrism} onChange={(e) => { setHasPrism(e.target.checked); if (e.target.checked) setRxMethod("upload"); }} className="size-4 mt-0.5" />
                             <span className="flex-1">
-                              My prescription includes prism
+                              {t("lens.includesPrism")}
                               <button onClick={() => setShowPrism(true)} aria-label="help" className="ml-1 align-middle"><HelpCircle className="size-3.5 text-muted-foreground inline" /></button>
                             </span>
                           </label>
                           {hasPrism && (
                             <div className="text-xs text-muted-foreground bg-surface p-2.5 border-l-2 border-sale mt-2">
-                              Prism prescriptions require manual review. Please upload your prescription image.
+                              {t("lens.prismReviewNote")}
                             </div>
                           )}
                         </div>
