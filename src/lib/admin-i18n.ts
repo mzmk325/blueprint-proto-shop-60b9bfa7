@@ -126,3 +126,82 @@ export const L = {
   loading: "加载中…",
   empty: "暂无数据",
 };
+
+// Translate the English nextAction() labels from cart-store.ts into Chinese.
+// We do not touch the cart-store labels themselves because the storefront
+// order detail page and timeline messages stay English-first.
+const NEXT_ACTION_MAP: Record<string, string> = {
+  "Review prescription":                  "审核处方",
+  "Contact customer":                     "联系客户",
+  "Start sourcing":                       "开始采购",
+  "Start frame & lens sourcing":          "开始采购镜框和镜片",
+  "Mark frame ready & ship":              "标记镜框就绪并发货",
+  "Send to local lab":                    "寄送本地工坊",
+  "Follow up with optical shop":          "跟进镜片加工",
+  "Prepare quality check":                "准备质检",
+  "Upload QC photo & approve":            "上传质检照片并通过",
+  "Create Yanwen label & enter tracking": "创建燕文面单并填写单号",
+  "Monitor delivery":                     "监控物流到货",
+  "Close order":                          "关单",
+  "Resolve after-sale":                   "处理售后",
+};
+export function translateNextAction(label: string): string {
+  return NEXT_ACTION_MAP[label] ?? label;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Language & currency presets (preparation only — full i18n in next round)
+// Public storefront = English-first; Chinese is hidden internal preview only.
+// ──────────────────────────────────────────────────────────────────────────────
+export type StorefrontCurrency = "USD" | "EUR" | "GBP" | "CAD" | "AUD" | "CNY";
+
+export type StorefrontLanguage = {
+  code: string;        // e.g. "en-US"
+  name: string;        // 中文显示名
+  nativeName: string;  // 自身语言显示名
+  currency: StorefrontCurrency;
+  enabled: boolean;    // 启用此语言
+  publicVisible: boolean; // 是否在前台语言选择器显示
+  internalPreview?: boolean; // 仅供内部预览
+};
+
+export const DEFAULT_LANGUAGES: StorefrontLanguage[] = [
+  { code: "en-US", name: "英语（美国）",     nativeName: "English (US)",   currency: "USD", enabled: true,  publicVisible: true },
+  { code: "en-GB", name: "英语（英国）",     nativeName: "English (UK)",   currency: "GBP", enabled: true,  publicVisible: true },
+  { code: "de-DE", name: "德语",             nativeName: "Deutsch",        currency: "EUR", enabled: true,  publicVisible: true },
+  { code: "fr-FR", name: "法语",             nativeName: "Français",       currency: "EUR", enabled: true,  publicVisible: true },
+  { code: "es-ES", name: "西班牙语",         nativeName: "Español",        currency: "EUR", enabled: true,  publicVisible: true },
+  { code: "it-IT", name: "意大利语",         nativeName: "Italiano",       currency: "EUR", enabled: true,  publicVisible: true },
+  { code: "nl-NL", name: "荷兰语",           nativeName: "Nederlands",     currency: "EUR", enabled: true,  publicVisible: true },
+  { code: "zh-CN", name: "中文（内部预览）", nativeName: "中文",            currency: "CNY", enabled: true,  publicVisible: false, internalPreview: true },
+];
+
+export type RoundingRule = "none" | "nearest-1" | "nearest-0.5" | "psychological-99" | "psychological-95";
+
+export type StorefrontCurrencyConfig = {
+  code: StorefrontCurrency;
+  symbol: string;
+  name: string;
+  enabled: boolean;
+  baseRate: number;            // 实时汇率占位（vs USD）
+  overrideRate?: number;       // 人工覆盖汇率
+  rounding: RoundingRule;
+};
+
+export const DEFAULT_CURRENCIES: StorefrontCurrencyConfig[] = [
+  { code: "USD", symbol: "$",  name: "美元",     enabled: true,  baseRate: 1,     rounding: "psychological-99" },
+  { code: "EUR", symbol: "€",  name: "欧元",     enabled: true,  baseRate: 0.92,  rounding: "psychological-99" },
+  { code: "GBP", symbol: "£",  name: "英镑",     enabled: true,  baseRate: 0.79,  rounding: "psychological-99" },
+  { code: "CAD", symbol: "C$", name: "加拿大元", enabled: true,  baseRate: 1.36,  rounding: "psychological-99" },
+  { code: "AUD", symbol: "A$", name: "澳元",     enabled: true,  baseRate: 1.52,  rounding: "psychological-99" },
+  { code: "CNY", symbol: "¥",  name: "人民币",   enabled: false, baseRate: 7.2,   rounding: "nearest-1" },
+];
+
+export const ROUNDING_LABEL: Record<RoundingRule, string> = {
+  none: "不取整",
+  "nearest-1": "取整到 1",
+  "nearest-0.5": "取整到 0.5",
+  "psychological-99": "心理价 .99",
+  "psychological-95": "心理价 .95",
+};
+
