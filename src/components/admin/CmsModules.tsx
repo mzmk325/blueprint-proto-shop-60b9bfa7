@@ -496,7 +496,7 @@ function CategoryEditor({ cat, onClose }: { cat: CMSCategory; onClose: () => voi
         </div>
         <div className="flex justify-end gap-2 pt-3 border-t border-border">
           <Btn onClick={onClose}>取消</Btn>
-          <Btn tone="primary" onClick={() => { cms.upsertCategory(c); toast.success("已保存"); onClose(); }}>保存</Btn>
+          <Btn tone="primary" onClick={async () => { await actions.saveCategory(c); toast.success("已保存"); onClose(); }}>保存</Btn>
         </div>
       </div>
     </div>
