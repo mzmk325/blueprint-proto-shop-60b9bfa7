@@ -122,7 +122,7 @@ function Category() {
     : search.sort === "price-asc" ? "price-asc"
     : search.sort === "price-desc" ? "price-desc"
     : "recommend";
-  list = sortStorefrontProducts(list, sortKey);
+  list = sortStorefrontProducts(list, sortKey) as typeof list;
 
   const setParam = (key: string, value?: string) =>
     navigate({ to: "/category/$slug", params: { slug }, search: { ...search, [key]: value } as never });
