@@ -793,11 +793,11 @@ export function AssetsModule() {
                 )}
                 <div className="flex justify-between items-center mt-1.5 gap-1">
                   <button onClick={() => { navigator.clipboard.writeText(a.url); toast.success("URL 已复制"); }} className="text-muted-foreground hover:text-foreground"><Copy className="size-3" /></button>
-                  <Btn size="sm" tone="danger" onClick={() => {
+                  <Btn size="sm" tone="danger" onClick={async () => {
                     if (inUse) {
                       if (!confirm(`此图片正被 ${usages.length} 处使用，删除后这些位置将出现空白。确定继续？`)) return;
                     }
-                    cms.removeAsset(a.id);
+                    await actions.deleteAsset(a.id);
                     toast.success("已删除");
                   }}><Trash2 className="size-3" /></Btn>
                 </div>
