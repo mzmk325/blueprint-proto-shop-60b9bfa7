@@ -206,14 +206,20 @@ function ProductEditor({ product, cats, onClose }: { product: CMSProduct; cats: 
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-4 mb-4">
+      <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
         <div className="flex items-center gap-3">
           <Btn onClick={onClose} tone="ghost">← 返回列表</Btn>
-          <h1 className="text-xl font-semibold">{product.id.startsWith("p-") && cms !== undefined && p.name === product.name ? "编辑商品" : "新建商品"} · {p.name}</h1>
+          <h1 className="text-xl font-semibold">{product.name ? "编辑商品" : "新建商品"} · {p.name}</h1>
           <StatusPill v={p.status} />
         </div>
-        <div className="flex gap-2">
-          <Btn onClick={() => { cms.upsertProduct(p); cms.setProductStatus(p.id, p.status === "published" ? "unpublished" : "published"); toast.success(p.status === "published" ? "已下架" : "已上架"); onClose(); }}>{p.status === "published" ? "下架" : "上架"}</Btn>
+        <div className="flex gap-2 flex-wrap">
+          <a href={`/product/${p.id}?preview=admin`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md font-medium bg-background border border-border hover:bg-secondary px-3 py-1.5 text-xs"><Eye className="size-3.5" /> 预览草稿</a>
+          <a href={`/product/${p.id}?preview=admin&preview_lang=zh`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md font-medium bg-background border border-border hover:bg-secondary px-3 py-1.5 text-xs">中文预览</a>
+          {p.status === "published" && <a href={`/product/${p.id}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md font-medium bg-background border border-border hover:bg-secondary px-3 py-1.5 text-xs"><ExternalLink className="size-3.5" /> 查看线上</a>}
+          <Btn onClick={() => { cms.upsertProduct({ ...p, status: "draft" }); toast.success("已保存为草稿"); onClose(); }}>保存草稿</Btn>
+          {p.status === "published"
+            ? <Btn onClick={() => { cms.upsertProduct({ ...p, status: "unpublished" }); toast.success("已下架"); onClose(); }}><EyeOff className="size-3.5" /> 下架</Btn>
+            : <Btn tone="primary" onClick={() => { const next = { ...p, status: "published" as const, publishedAt: p.publishedAt || Date.now() }; cms.upsertProduct(next); toast.success("已上架"); onClose(); }}><Eye className="size-3.5" /> 上架</Btn>}
           <Btn tone="primary" onClick={save}><Check className="size-3.5" /> 保存</Btn>
         </div>
       </div>
@@ -712,7 +718,7 @@ export function AssetsModule() {
 
   return (
     <div>
-      <PageHeader title="图片素材" desc="集中管理首页/分类/商品/评价等图片资源。当前为占位上传 — 请填入图片 URL。" />
+      <PageHeader title="图片素材" desc="集中管理首页 / 分类 / 商品 / 评价等图片资源。支持通过 URL 添加，并在商品编辑器中直接选用。" />
       <Card title="新增图片">
         <div className="grid grid-cols-[1fr_2fr_auto] gap-2">
           <select className={inputCls} value={newKind} onChange={(e) => setNewKind(e.target.value as CMSAssetKind)}>

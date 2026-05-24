@@ -131,6 +131,7 @@ export type CMSAsset = {
   kind: CMSAssetKind;
   url: string;
   uploadedAt: number;
+  name?: string;
   note?: string;
 };
 
@@ -485,7 +486,8 @@ export const cms = {
   setPromoBar(b: CMSPromoBar) { mutate((s) => { s.promoBar = b; }); },
 
   // assets
-  addAsset(kind: CMSAssetKind, url: string, note?: string) { mutate((s) => { s.assets.unshift({ id: uid("img"), kind, url, uploadedAt: Date.now(), note }); }); },
+  addAsset(kind: CMSAssetKind, url: string, opts?: { name?: string; note?: string }) { mutate((s) => { s.assets.unshift({ id: uid("img"), kind, url, uploadedAt: Date.now(), name: opts?.name, note: opts?.note }); }); },
+  updateAsset(id: string, patch: Partial<Pick<CMSAsset, "name" | "note" | "kind">>) { mutate((s) => { const a = s.assets.find((x) => x.id === id); if (a) Object.assign(a, patch); }); },
   removeAsset(id: string) { mutate((s) => { s.assets = s.assets.filter((a) => a.id !== id); }); },
 
   // settings
