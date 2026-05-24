@@ -1,8 +1,17 @@
+// Category page: DB-FIRST.
+// Uses getCategoryStorefront server fn; maps DB products via dbToStorefront.
+// On DB failure, the route errorComponent shows an error state — we never
+// silently fall back to seed/mock products. The legacy storefront-cms
+// helpers are no longer reachable from this route.
+
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
-import { shapes, collections, categories } from "@/lib/products";
-import { getProductsByCategorySlug, sortStorefrontProducts, getStorefrontCategoryBySlug } from "@/lib/storefront-cms";
+import { shapes, collections } from "@/lib/products";
+import { getCategoryStorefront } from "@/lib/catalog.functions";
+import { dbToStorefront, dbToStorefrontCategory } from "@/lib/storefront-db";
+import { sortStorefrontProducts, type StorefrontSort } from "@/lib/storefront-cms";
 import { z } from "zod";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
@@ -17,15 +26,48 @@ const searchSchema = z.object({
   sort: z.enum(["recommend", "price-asc", "price-desc", "new"]).optional(),
 });
 
+const categoryQuery = (slug: string) =>
+  queryOptions({
+    queryKey: ["category-storefront", slug],
+    queryFn: () => getCategoryStorefront({ data: { slug } }),
+  });
+
 export const Route = createFileRoute("/category/$slug")({
   validateSearch: searchSchema,
-  head: ({ params }) => ({
-    meta: [
-      { title: `${categories.find((c) => c.slug === params.slug)?.title ?? "Shop"} — MIRAVUE` },
-      { name: "description", content: "Browse designer eyewear by shape, color, and style." },
-    ],
-  }),
+  loader: ({ params, context }) =>
+    context.queryClient.ensureQueryData(categoryQuery(params.slug)),
+  head: ({ loaderData, params }) => {
+    const title = loaderData?.category?.name_en ?? params.slug;
+    return {
+      meta: [
+        { title: `${title} — MIRAVUE` },
+        {
+          name: "description",
+          content:
+            loaderData?.category?.seo_description ??
+            "Browse designer eyewear by shape, color, and style.",
+        },
+      ],
+    };
+  },
   component: Category,
+  errorComponent: ({ error, reset }) => (
+    <Layout>
+      <div className="mx-auto max-w-2xl px-6 py-24 text-center">
+        <h1 className="font-display text-3xl mb-3">Category unavailable</h1>
+        <p className="text-sm text-muted-foreground mb-6">
+          We couldn't load this category from the database. Please try again.
+        </p>
+        <p className="text-[11px] text-muted-foreground/70 mb-6 font-mono">{error.message}</p>
+        <button
+          onClick={reset}
+          className="inline-block text-[11px] uppercase tracking-[0.18em] underline underline-offset-4"
+        >
+          Try again
+        </button>
+      </div>
+    </Layout>
+  ),
 });
 
 const COLOR_SWATCHES: Record<string, string> = {
@@ -39,26 +81,23 @@ function Category() {
   const navigate = useNavigate();
   const { t, locale } = useI18n();
   const fmt = usePriceFormatter();
-  const mockCat = categories.find((c) => c.slug === slug);
-  const cmsCat = getStorefrontCategoryBySlug(slug);
-  const cat = mockCat ?? (cmsCat ? { slug, title: cmsCat.title, gender: null as null | "Women" | "Men" } : undefined);
+  const { data } = useSuspenseQuery(categoryQuery(slug));
 
-  let list = getProductsByCategorySlug(slug).filter((p) => {
-    if (search.shape && p.shape !== search.shape) return false;
-    if (search.collection && p.collection !== search.collection) return false;
-    if (search.color && !p.colors.some((c) => c.name === search.color)) return false;
-    return true;
-  });
-  const sortKey = search.sort === "new" ? "new" : search.sort === "price-asc" ? "price-asc" : search.sort === "price-desc" ? "price-desc" : "recommend";
-  list = sortStorefrontProducts(list, sortKey);
+  const cmsCat = data.category ? dbToStorefrontCategory(data.category) : null;
+  // Virtual slugs (all, best-sellers, new-arrivals) don't have a DB category row.
+  const catTitleEn =
+    cmsCat?.title ??
+    (slug === "all"
+      ? "All Frames"
+      : slug === "best-sellers"
+        ? "Bestsellers"
+        : slug === "new-arrivals"
+          ? "New Arrivals"
+          : slug);
 
-  const setParam = (key: string, value?: string) =>
-    navigate({ to: "/category/$slug", params: { slug }, search: { ...search, [key]: value } as never });
-
-  // Localize category title for ZH
+  // ZH overrides for known slugs
   const catTitle = (() => {
-    if (!cat) return t("common.shop");
-    if (locale === "en") return cat.title;
+    if (locale === "en") return catTitleEn;
     const map: Record<string, string> = {
       "all": "全部",
       "women-eyeglasses": "女款光学镜",
@@ -67,8 +106,26 @@ function Category() {
       "best-sellers": "热销榜",
       "new-arrivals": "新品上架",
     };
-    return map[cat.slug] ?? cat.title;
+    return map[slug] ?? cmsCat?.titleZh ?? catTitleEn;
   })();
+
+  // Map DB → storefront shape, then apply client-side filters/sorts.
+  const allProducts = data.products.map(dbToStorefront);
+  let list = allProducts.filter((p) => {
+    if (search.shape && p.shape !== search.shape) return false;
+    if (search.collection && p.collection !== search.collection) return false;
+    if (search.color && !p.colors.some((c) => c.name === search.color)) return false;
+    return true;
+  });
+  const sortKey: StorefrontSort =
+    search.sort === "new" ? "new"
+    : search.sort === "price-asc" ? "price-asc"
+    : search.sort === "price-desc" ? "price-desc"
+    : "recommend";
+  list = sortStorefrontProducts(list, sortKey) as typeof list;
+
+  const setParam = (key: string, value?: string) =>
+    navigate({ to: "/category/$slug", params: { slug }, search: { ...search, [key]: value } as never });
 
   return (
     <Layout>
@@ -83,7 +140,7 @@ function Category() {
             <div>
               <h1 className="font-display text-5xl md:text-7xl tracking-tight leading-[0.95]">{catTitle}</h1>
               <p className="text-sm text-muted-foreground mt-3 max-w-xl">
-                {t("cat.intro")}
+                {cmsCat?.description ?? t("cat.intro")}
               </p>
             </div>
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{list.length} {t("cat.pieces")}</p>
@@ -97,7 +154,6 @@ function Category() {
         </aside>
 
         <div>
-          {/* Mobile filter + sort row */}
           <MobileFilterBar search={search} setParam={setParam} t={t} />
 
           <div className="hidden md:flex items-center justify-between border-b border-border/60 pb-4 mb-8">
@@ -135,7 +191,19 @@ function Category() {
 
           {list.length === 0 && (
             <div className="py-20 text-center text-sm text-muted-foreground">
-              {t("cat.empty")} <button onClick={() => navigate({ to: "/category/$slug", params: { slug }, search: {} })} className="underline">{t("cat.reset")}</button>
+              {allProducts.length === 0
+                ? "No published products in this category yet."
+                : (
+                  <>
+                    {t("cat.empty")}{" "}
+                    <button
+                      onClick={() => navigate({ to: "/category/$slug", params: { slug }, search: {} })}
+                      className="underline"
+                    >
+                      {t("cat.reset")}
+                    </button>
+                  </>
+                )}
             </div>
           )}
         </div>
