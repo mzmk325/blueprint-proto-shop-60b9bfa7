@@ -242,3 +242,175 @@ export const getProductBySlugOrLegacyId = createServerFn({ method: "GET" })
     };
     return { product: full, matchedBy };
   });
+
+// ── Category page: category + published products in it ─────────────────────
+
+export const getCategoryStorefront = createServerFn({ method: "GET" })
+  .inputValidator((input: { slug: string }) =>
+    z.object({ slug: z.string().min(1).max(255) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    // Special virtual slugs map to filters on the full published catalog.
+    const VIRTUAL = new Set(["all", "best-sellers", "new-arrivals"]);
+
+    let categoryRow: PublicCategory | null = null;
+    if (!VIRTUAL.has(data.slug)) {
+      const catRes = await supabaseAdmin
+        .from("categories")
+        .select("*")
+        .eq("slug", data.slug)
+        .eq("is_published", true)
+        .maybeSingle();
+      if (catRes.error) throw new Error(catRes.error.message);
+      categoryRow = (catRes.data as PublicCategory | null) ?? null;
+      if (!categoryRow) return { category: null, products: [] as FullProduct[] };
+    }
+
+    // Pull published products. For named categories, filter by link table.
+    let productIds: string[] | null = null;
+    if (categoryRow) {
+      const linksRes = await supabaseAdmin
+        .from("product_categories")
+        .select("product_id")
+        .eq("category_id", categoryRow.id);
+      if (linksRes.error) throw new Error(linksRes.error.message);
+      productIds = (linksRes.data ?? []).map((r) => r.product_id);
+      if (productIds.length === 0) return { category: categoryRow, products: [] };
+    }
+
+    let query = supabaseAdmin
+      .from("products")
+      .select(PUBLIC_PRODUCT_COLS)
+      .eq("status", "published");
+    if (productIds) query = query.in("id", productIds);
+    if (data.slug === "best-sellers") query = query.eq("is_hot", true);
+    if (data.slug === "new-arrivals") query = query.eq("is_new", true);
+    query = query.order("created_at", { ascending: false });
+
+    const productsRes = await query;
+    if (productsRes.error) throw new Error(productsRes.error.message);
+    const products = (productsRes.data ?? []) as PublicProduct[];
+    if (products.length === 0) return { category: categoryRow, products: [] };
+
+    const ids = products.map((p) => p.id);
+    const [vRes, iRes, lRes] = await Promise.all([
+      supabaseAdmin
+        .from("product_variants")
+        .select("*")
+        .in("product_id", ids)
+        .order("sort_order", { ascending: true }),
+      supabaseAdmin
+        .from("product_images")
+        .select("*")
+        .in("product_id", ids)
+        .order("sort_order", { ascending: true }),
+      supabaseAdmin
+        .from("product_categories")
+        .select("product_id, category_id")
+        .in("product_id", ids),
+    ]);
+    if (vRes.error) throw new Error(vRes.error.message);
+    if (iRes.error) throw new Error(iRes.error.message);
+    if (lRes.error) throw new Error(lRes.error.message);
+
+    const vByP = new Map<string, PublicVariant[]>();
+    for (const v of vRes.data ?? []) {
+      const arr = vByP.get(v.product_id) ?? [];
+      arr.push(v as PublicVariant);
+      vByP.set(v.product_id, arr);
+    }
+    const iByP = new Map<string, PublicImage[]>();
+    for (const im of iRes.data ?? []) {
+      const arr = iByP.get(im.product_id) ?? [];
+      arr.push(im as PublicImage);
+      iByP.set(im.product_id, arr);
+    }
+    const cByP = new Map<string, string[]>();
+    for (const l of lRes.data ?? []) {
+      const arr = cByP.get(l.product_id) ?? [];
+      arr.push(l.category_id);
+      cByP.set(l.product_id, arr);
+    }
+
+    const full: FullProduct[] = products.map((p) => ({
+      ...p,
+      variants: vByP.get(p.id) ?? [],
+      images: iByP.get(p.id) ?? [],
+      category_ids: cByP.get(p.id) ?? [],
+    }));
+
+    return { category: categoryRow, products: full };
+  });
+
+// ── Homepage product sections (bestsellers + new arrivals + featured) ──────
+
+export const getHomepageStorefront = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const productsRes = await supabaseAdmin
+      .from("products")
+      .select(PUBLIC_PRODUCT_COLS)
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(48);
+    if (productsRes.error) throw new Error(productsRes.error.message);
+    const products = (productsRes.data ?? []) as PublicProduct[];
+    if (products.length === 0) {
+      return { bestsellers: [] as FullProduct[], newArrivals: [] as FullProduct[], featured: [] as FullProduct[] };
+    }
+
+    const ids = products.map((p) => p.id);
+    const [vRes, iRes] = await Promise.all([
+      supabaseAdmin
+        .from("product_variants")
+        .select("*")
+        .in("product_id", ids)
+        .order("sort_order", { ascending: true }),
+      supabaseAdmin
+        .from("product_images")
+        .select("*")
+        .in("product_id", ids)
+        .order("sort_order", { ascending: true }),
+    ]);
+    if (vRes.error) throw new Error(vRes.error.message);
+    if (iRes.error) throw new Error(iRes.error.message);
+
+    const vByP = new Map<string, PublicVariant[]>();
+    for (const v of vRes.data ?? []) {
+      const arr = vByP.get(v.product_id) ?? [];
+      arr.push(v as PublicVariant);
+      vByP.set(v.product_id, arr);
+    }
+    const iByP = new Map<string, PublicImage[]>();
+    for (const im of iRes.data ?? []) {
+      const arr = iByP.get(im.product_id) ?? [];
+      arr.push(im as PublicImage);
+      iByP.set(im.product_id, arr);
+    }
+
+    const full: FullProduct[] = products.map((p) => ({
+      ...p,
+      variants: vByP.get(p.id) ?? [],
+      images: iByP.get(p.id) ?? [],
+      category_ids: [],
+    }));
+
+    const bestsellers = full.filter((p) => p.is_hot).slice(0, 4);
+    const newArrivals = full
+      .filter((p) => p.is_new)
+      .sort((a, b) => {
+        const ta = a.published_at ? Date.parse(a.published_at) : 0;
+        const tb = b.published_at ? Date.parse(b.published_at) : 0;
+        return tb - ta;
+      })
+      .slice(0, 4);
+    const featured = full.filter((p) => p.is_featured).slice(0, 4);
+    // Fallback so the section isn't empty before merchandising is set.
+    const pad = (list: FullProduct[]) =>
+      list.length ? list : full.slice(0, Math.min(4, full.length));
+    return {
+      bestsellers: pad(bestsellers),
+      newArrivals: pad(newArrivals),
+      featured: pad(featured),
+    };
+  },
+);

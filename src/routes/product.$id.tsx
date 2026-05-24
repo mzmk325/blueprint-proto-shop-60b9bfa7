@@ -1,10 +1,11 @@
-import { createFileRoute, Link, Navigate, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate, notFound, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { getStorefrontProducts, getStorefrontProduct, getStorefrontProductForPreview, getProductReviews, resolveProductSlug, type StorefrontProduct } from "@/lib/storefront-cms";
+import { getProductBySlugOrLegacyId } from "@/lib/catalog.functions";
 import { useUser, user } from "@/lib/user-store";
 import { Star, Truck, RefreshCw, ShieldCheck, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { useI18n, type TKey } from "@/lib/i18n";
@@ -18,9 +19,23 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/product/$id")({
   validateSearch: searchSchema,
-  loader: ({ params }) => {
-    // Loader only checks existence in any form (incl. drafts) so the route
-    // mounts; visibility gating happens in the component using search params.
+  loader: async ({ params }) => {
+    // DB-first: try to resolve the id (slug OR legacy_id) to a canonical slug
+    // and redirect. Falls back to the seed CMS lookup only if DB has nothing.
+    try {
+      const res = await getProductBySlugOrLegacyId({ data: { key: params.id } });
+      if (res.product) {
+        throw redirect({
+          to: "/product/$slug",
+          params: { slug: res.product.slug },
+          replace: true,
+        });
+      }
+    } catch (e) {
+      // Re-throw redirects; swallow network errors so seed fallback still works.
+      if (e && typeof e === "object" && "isRedirect" in e) throw e;
+      console.error("[product.$id] DB lookup failed", e);
+    }
     const exists = getStorefrontProductForPreview(params.id);
     if (!exists) throw notFound();
     return { id: params.id, name: exists.name, descriptor: exists.descriptor };
@@ -42,6 +57,7 @@ export const Route = createFileRoute("/product/$id")({
     </Layout>
   ),
 });
+
 
 function PDP() {
   const { id } = Route.useParams();
