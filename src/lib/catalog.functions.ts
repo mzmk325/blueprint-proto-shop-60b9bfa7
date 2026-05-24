@@ -28,7 +28,7 @@ export type PublicProduct = {
   descriptor_zh: string | null;
   description_en: string | null;
   description_zh: string | null;
-  selling_points: unknown;
+  selling_points: Array<{ en?: string; zh?: string }> | null;
   seo_title: string | null;
   seo_description: string | null;
   price: number;
