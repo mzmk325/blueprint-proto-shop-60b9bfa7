@@ -131,6 +131,7 @@ export type CMSAsset = {
   kind: CMSAssetKind;
   url: string;
   uploadedAt: number;
+  name?: string;
   note?: string;
 };
 
