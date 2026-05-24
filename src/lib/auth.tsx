@@ -69,6 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => setIsAdmin(false));
   }, [session?.user?.id]);
 
+  // Hydrate catalog from DB whenever auth/admin state changes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    hydrateCatalogFromDb(isAdmin).catch((e) =>
+      console.error("[auth] hydrate failed", e),
+    );
+  }, [isAdmin, session?.user?.id]);
+
   const value = useMemo<AuthState>(
     () => ({
       isAuthenticated: !!session,
