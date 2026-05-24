@@ -56,8 +56,9 @@ function Home() {
   const { heroes, homeCards, shapeBanners } = getHomepageCMS();
   const hero = heroes[0];
   const heroImg = hero?.desktopImage || heroImgFallback;
-  const bestsellers = getBestsellers(4);
-  const newArrivals = getNewArrivals(4);
+  const { data: homepage } = useSuspenseQuery(homepageQuery);
+  const bestsellers = homepage.bestsellers.map(dbToStorefront);
+  const newArrivals = homepage.newArrivals.map(dbToStorefront);
 
   const tiles = homeCards.length
     ? homeCards.slice(0, 4).map((c) => ({ slug: linkToSlug(c.link), label: c.title, img: c.image }))
