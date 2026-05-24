@@ -752,23 +752,42 @@ export function AssetsModule() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {filtered.length === 0 && <p className="col-span-full text-sm text-muted-foreground text-center py-10">该类型下暂无图片。</p>}
-        {filtered.map((a) => (
-          <div key={a.id} className="border border-border rounded-lg overflow-hidden bg-card">
-            <div className="aspect-square bg-secondary"><img src={a.url} alt="" className="w-full h-full object-cover" /></div>
-            <div className="p-2 text-[11px]">
-              <div className="text-muted-foreground">{ASSET_DIMS[a.kind].label}</div>
-              <div className="font-mono truncate">{a.url}</div>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-muted-foreground">{new Date(a.uploadedAt).toLocaleDateString()}</span>
-                <Btn size="sm" tone="danger" onClick={() => cms.removeAsset(a.id)}><Trash2 className="size-3" /></Btn>
+        {filtered.map((a) => {
+          const usages = assetUsages(a.url);
+          const inUse = usages.length > 0;
+          return (
+            <div key={a.id} className="border border-border rounded-lg overflow-hidden bg-card">
+              <div className="aspect-square bg-secondary relative">
+                <img src={a.url} alt={a.name ?? ""} className="w-full h-full object-cover" />
+                {inUse && <span className="absolute top-1.5 left-1.5 text-[10px] px-1.5 py-0.5 rounded bg-emerald-600 text-white">使用中 · {usages.length}</span>}
+              </div>
+              <div className="p-2 text-[11px]">
+                <div className="text-muted-foreground">{ASSET_DIMS[a.kind].label}</div>
+                <div className="font-mono truncate" title={a.url}>{a.url}</div>
+                {inUse && (
+                  <div className="mt-1 text-[10px] text-muted-foreground line-clamp-2" title={usages.map((u) => u.label).join("\n")}>
+                    {usages.slice(0, 2).map((u) => u.label).join(" · ")}{usages.length > 2 ? ` · +${usages.length - 2}` : ""}
+                  </div>
+                )}
+                <div className="flex justify-between items-center mt-1.5 gap-1">
+                  <button onClick={() => { navigator.clipboard.writeText(a.url); toast.success("URL 已复制"); }} className="text-muted-foreground hover:text-foreground"><Copy className="size-3" /></button>
+                  <Btn size="sm" tone="danger" onClick={() => {
+                    if (inUse) {
+                      if (!confirm(`此图片正被 ${usages.length} 处使用，删除后这些位置将出现空白。确定继续？`)) return;
+                    }
+                    cms.removeAsset(a.id);
+                    toast.success("已删除");
+                  }}><Trash2 className="size-3" /></Btn>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
+
 
 // ── 7) 语言与币种 ──────────────────────────────────────────────────────────
 
