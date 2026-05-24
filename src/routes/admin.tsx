@@ -148,8 +148,9 @@ function Sidebar({ view, onView }: { view: ViewKey; onView: (v: ViewKey) => void
         ))}
       </nav>
       <div className="p-3 border-t border-border">
-        <button onClick={() => { if (confirm("重置全部 mock 订单数据？")) cart.resetMock(); }} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
-          <RotateCcw className="size-3.5" /> 重置订单 mock 数据
+        <button onClick={() => { if (confirm("重置全部演示订单数据？此操作仅清除本地订单记录。")) cart.resetMock(); }} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+          <RotateCcw className="size-3.5" /> 重置演示订单
+
         </button>
       </div>
     </aside>
