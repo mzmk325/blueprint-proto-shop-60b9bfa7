@@ -1,18 +1,19 @@
 // All CMS modules in one file to keep admin pages cohesive: 商品 / 分类 / 评价 / 活动 /
-// 首页装修 / 图片素材 / AI 操作台 / 语言与币种. Mock data via cms-store.
+// 首页装修 / 图片素材 / AI 操作台 / 语言与币种.
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
-  cms, useCMS, useCategoriesWithCounts, isNewArrival, activePromotion, ASSET_DIMS,
+  cms, useCMS, useCategoriesWithCounts, isNewArrival, activePromotion, ASSET_DIMS, assetUsages,
   type CMSProduct, type CMSCategory, type CMSReview, type CMSPromotion, type CMSHero,
   type CMSHomeCard, type CMSShapeBanner, type CMSAssetKind, type CMSProductStatus,
 } from "@/lib/cms-store";
 import {
   Plus, Trash2, Copy, Eye, EyeOff, Search, ImagePlus, Sparkles, Upload,
-  RotateCcw, ChevronRight, Pencil, X, Check, ExternalLink, Flame, Star,
+  RotateCcw, ChevronRight, Pencil, X, Check, ExternalLink, Flame, Star, FolderOpen,
 } from "lucide-react";
 import { DEFAULT_LANGUAGES, DEFAULT_CURRENCIES, ROUNDING_LABEL, type RoundingRule, type StorefrontCurrency } from "@/lib/admin-i18n";
+
 
 // ── shared atoms ────────────────────────────────────────────────────────────
 export function PageHeader({ title, desc, action }: { title: string; desc?: string; action?: React.ReactNode }) {
