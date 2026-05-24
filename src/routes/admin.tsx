@@ -161,8 +161,9 @@ function Topbar() {
   return (
     <div className="h-16 bg-background border-b border-border flex items-center justify-between px-6">
       <div className="text-sm text-muted-foreground">眼镜电商运营后台</div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {promo && <span className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-800 dark:text-emerald-200"><Sparkles className="size-3" /> 当前活动：{promo.title}</span>}
+        <a href="/?preview_lang=zh" target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-foreground border border-border rounded-md px-2 py-1">中文预览</a>
         <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">↗ 查看前台</Link>
         <div className="size-8 rounded-full bg-primary text-primary-foreground grid place-items-center text-xs font-bold">M</div>
       </div>
