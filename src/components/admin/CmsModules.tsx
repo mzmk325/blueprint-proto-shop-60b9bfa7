@@ -867,7 +867,7 @@ export function LangCurrencyModule() {
             </tbody>
           </table>
         </div>
-        <p className="text-[11px] text-muted-foreground">基准汇率为占位数据；下一轮接入实时汇率源后此处仅显示当前值，人工覆盖汇率优先生效。</p>
+        <p className="text-[11px] text-muted-foreground">基准汇率为当前后台预设，人工覆盖汇率优先生效。前台始终按此处启用的币种与汇率展示价格。</p>
       </Card>
 
       <Card title="运营参数" className="mb-4">
