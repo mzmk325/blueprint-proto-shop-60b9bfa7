@@ -32,7 +32,8 @@ function LoginPage() {
   // Once signed in AND admin, bounce to /admin (or redirect target).
   useEffect(() => {
     if (!isAuthenticated || !isAdmin) return;
-    navigate({ to: (redirectTo as "/admin" | undefined) ?? "/admin" });
+    const safe = redirectTo && !redirectTo.startsWith("/login") ? redirectTo : "/admin";
+    navigate({ to: safe as "/admin" });
   }, [isAuthenticated, isAdmin, redirectTo, navigate]);
 
   async function onSubmit(e: React.FormEvent) {
