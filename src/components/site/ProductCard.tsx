@@ -5,7 +5,7 @@ import { type Product, isProductOnSale } from "@/lib/products";
 import { useUser, user } from "@/lib/user-store";
 import { useI18n } from "@/lib/i18n";
 import { useActivePromotion, promoShortLabel } from "@/lib/promotions";
-import { getStorefrontProduct, type StorefrontProduct } from "@/lib/storefront-cms";
+import { type StorefrontProduct } from "@/lib/storefront-cms";
 import { usePriceFormatter } from "@/lib/currency-store";
 
 
@@ -19,12 +19,14 @@ export function ProductCard({ p }: { p: CardProduct }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-
-  // Lazily enrich legacy Product callers so variant images always exist.
+  // DB-first: callers (category, homepage, PDP) pass already-enriched products
+  // (StorefrontProduct, typically marked _source:"db"). For legacy callers that
+  // only pass a bare Product, render with empty variants — we no longer reach
+  // into the seed cache to invent images.
   const enriched: StorefrontProduct =
     "variants" in p && Array.isArray((p as StorefrontProduct).variants)
       ? (p as StorefrontProduct)
-      : (getStorefrontProduct(p.id) ?? ({ ...(p as Product), variants: [] } as StorefrontProduct));
+      : ({ ...(p as Product), variants: [] } as StorefrontProduct);
 
   const variants = enriched.variants;
   const [variantIdx, setVariantIdx] = useState(0);
