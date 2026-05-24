@@ -733,14 +733,35 @@ export function AssetsModule() {
     <div>
       <PageHeader title="图片素材" desc="集中管理首页 / 分类 / 商品 / 评价等图片资源。支持通过 URL 添加，并在商品编辑器中直接选用。" />
       <Card title="新增图片">
-        <div className="grid grid-cols-[1fr_2fr_auto] gap-2">
+        <div className="grid grid-cols-[1fr_2fr_auto_auto] gap-2 items-start">
           <select className={inputCls} value={newKind} onChange={(e) => setNewKind(e.target.value as CMSAssetKind)}>
             {(Object.entries(ASSET_DIMS) as [CMSAssetKind, typeof ASSET_DIMS[CMSAssetKind]][]).map(([k, v]) => <option key={k} value={k}>{v.label}（{v.w}×{v.h}）</option>)}
           </select>
           <input className={inputCls} value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="https://… 或粘贴图片 URL" />
-          <Btn tone="primary" onClick={() => { if (newUrl) { cms.addAsset(newKind, newUrl); setNewUrl(""); toast.success("已添加"); } }}><Upload className="size-3.5" /> 添加</Btn>
+          <Btn tone="primary" onClick={async () => { if (newUrl) { await actions.addAssetByUrl(newKind, newUrl); setNewUrl(""); toast.success("已添加"); } }}><Plus className="size-3.5" /> 添加 URL</Btn>
+          <label className="inline-flex items-center gap-1.5 rounded-md font-medium bg-foreground text-background hover:opacity-90 px-3 py-1.5 text-xs cursor-pointer">
+            <Upload className="size-3.5" /> 上传文件
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={async (e) => {
+                const files = Array.from(e.target.files ?? []);
+                e.target.value = "";
+                if (!files.length) return;
+                const tid = toast.loading(`正在上传 ${files.length} 个文件…`);
+                try {
+                  for (const f of files) await actions.uploadAndAddAsset(newKind, f);
+                  toast.success(`已上传 ${files.length} 个文件`, { id: tid });
+                } catch {
+                  toast.error("部分文件上传失败", { id: tid });
+                }
+              }}
+            />
+          </label>
         </div>
-        <p className="text-[11px] text-muted-foreground">推荐尺寸（点击切换类型查看）：{ASSET_DIMS[newKind].label} — {ASSET_DIMS[newKind].w}×{ASSET_DIMS[newKind].h} px</p>
+        <p className="text-[11px] text-muted-foreground">推荐尺寸（点击切换类型查看）：{ASSET_DIMS[newKind].label} — {ASSET_DIMS[newKind].w}×{ASSET_DIMS[newKind].h} px。上传后文件保存至 product-images 储存桶。</p>
       </Card>
 
       <div className="flex gap-2 mt-4 mb-3 flex-wrap">
