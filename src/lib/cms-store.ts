@@ -401,6 +401,28 @@ export function activePromotion(): CMSPromotion | null {
   return [...enabled].sort((a, b) => b.priority - a.priority)[0];
 }
 
+// Find every place an image URL is currently used. Returns a list of human-readable
+// references so the operator can see why a delete is blocked.
+export type AssetUsage = { kind: string; label: string; id: string };
+export function assetUsages(url: string): AssetUsage[] {
+  if (!url) return [];
+  const out: AssetUsage[] = [];
+  for (const p of state.products) {
+    p.variants.forEach((v, vi) => {
+      if (v.images.includes(url)) out.push({ kind: "product", label: `商品「${p.name}」· ${v.color} 变体`, id: `${p.id}:${vi}` });
+    });
+  }
+  for (const c of state.categories) if (c.image === url) out.push({ kind: "category", label: `分类「${c.name}」封面`, id: c.id });
+  for (const h of state.heroes) {
+    if (h.desktopImage === url) out.push({ kind: "hero", label: `首页 Hero「${h.title || h.id}」桌面图`, id: h.id });
+    if (h.mobileImage === url) out.push({ kind: "hero", label: `首页 Hero「${h.title || h.id}」移动图`, id: h.id });
+  }
+  for (const c of state.homeCards) if (c.image === url) out.push({ kind: "home-card", label: `首页卡片「${c.title || c.id}」`, id: c.id });
+  for (const b of state.shapeBanners) if (b.image === url) out.push({ kind: "shape", label: `镜型 Banner「${b.shape}」`, id: b.id });
+  for (const r of state.reviews) if (r.images.includes(url)) out.push({ kind: "review", label: `评价 ${r.user}`, id: r.id });
+  return out;
+
+
 // ── Mutations (cms namespace) ───────────────────────────────────────────────
 function mutate(fn: (s: CMSState) => void) {
   fn(state);
