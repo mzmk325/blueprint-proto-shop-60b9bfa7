@@ -1,8 +1,9 @@
 // Pathless layout that guards every child route. Requires authenticated
-// session AND admin role. Both checks happen on the client because admin
-// routes are not SSR-prerendered for non-admin visitors.
+// session AND admin role. Auth state is hydrated client-side via
+// AuthProvider, so we use <Navigate> rather than throwing redirect()
+// from render (which the route error boundary would catch as an error).
 
-import { createFileRoute, Outlet, redirect, useLocation } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Navigate, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -21,7 +22,7 @@ function AuthGate() {
     );
   }
   if (!isAuthenticated) {
-    throw redirect({ to: "/login", search: { redirect: loc.href } });
+    return <Navigate to="/login" search={{ redirect: loc.href }} replace />;
   }
   if (!isAdmin) {
     return (
