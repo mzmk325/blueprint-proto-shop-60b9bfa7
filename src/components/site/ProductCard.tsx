@@ -45,8 +45,13 @@ export function ProductCard({ p }: { p: CardProduct }) {
     ? ({ to: "/product/$slug", params: { slug } } as const)
     : ({ to: "/product/$id", params: { id: p.id } } as const);
 
+  // Lightweight verification marker: lets admins/devs inspect the DOM and
+  // confirm whether the card was rendered from a DB-mapped product. Not shown
+  // visually anywhere.
+  const sourceMarker = (enriched as { _source?: string })._source ?? "legacy";
+
   return (
-    <div className="group block">
+    <div className="group block" data-product-source={sourceMarker} data-product-id={p.id}>
       <Link {...linkProps} className="block">
         <div
           className="relative aspect-[4/5] overflow-hidden bg-surface"
