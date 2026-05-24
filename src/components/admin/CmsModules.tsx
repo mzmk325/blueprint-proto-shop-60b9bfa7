@@ -453,7 +453,7 @@ export function CategoriesModule() {
                 <td className="px-3 py-3 text-right text-xs">{c.sortOrder}</td>
                 <td className="px-3 py-3">{c.showInNav ? "✓" : "—"}</td>
                 <td className="px-3 py-3">{c.showOnHome ? "✓" : "—"}</td>
-                <td className="px-3 py-3"><Toggle checked={c.enabled} onChange={(v) => cms.upsertCategory({ ...c, enabled: v })} /></td>
+                <td className="px-3 py-3"><Toggle checked={c.enabled} onChange={(v) => { void actions.saveCategory({ ...c, enabled: v }); }} /></td>
                 <td className="px-3 py-3 text-right">
                   <div className="flex justify-end gap-1">
                     <Btn size="sm" onClick={() => setEditing(c)}><Pencil className="size-3" /></Btn>
