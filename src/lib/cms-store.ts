@@ -19,14 +19,16 @@ export type CMSVariant = {
 };
 
 export type CMSProduct = {
-  id: string;
+  id: string;          // DB uuid OR seed legacy id (e.g. "p-jace") before hydration
+  slug?: string;       // canonical URL slug (from DB)
+  legacyId?: string | null; // legacy text id, for backward-compat redirect
   name: string;        // 中文/前台显示名
   nameEn: string;      // 英文名
   subtitle: string;    // 副标题/短卖点
   sku: string;
   status: CMSProductStatus;
   price: number;       // 售价 USD
-  cost: number;        // 成本 USD
+  cost: number;        // 成本 USD (admin-only; never sent to public)
   originalPrice?: number;
   joinSitePromo: boolean;
   publishedAt: number; // 上架时间
