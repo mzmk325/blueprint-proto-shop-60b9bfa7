@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { meIsAdmin } from "./auth-admin.functions";
+import { hydrateCatalogFromDb } from "./cms-store";
 
 export type AuthState = {
   isAuthenticated: boolean;
