@@ -872,7 +872,7 @@ function LabSection({ order }: { order: Order }) {
       <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3">
         <div className="text-muted-foreground">质检照片</div>
         <label className="cursor-pointer text-xs px-3 py-1.5 rounded-md border border-dashed border-border w-fit hover:bg-secondary">
-          {l.qcPhotoName ?? "上传质检照片（占位）"}
+          {l.qcPhotoName ?? "上传质检照片"}
           <input type="file" className="hidden" onChange={(e) => update({ qcPhotoName: e.target.files?.[0]?.name })} />
         </label>
       </div>
