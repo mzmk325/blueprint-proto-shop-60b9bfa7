@@ -138,6 +138,8 @@ export type CMSAsset = {
   uploadedAt: number;
   name?: string;
   note?: string;
+  storagePath?: string;        // present when uploaded to product-images bucket
+  isDbBacked?: boolean;
 };
 
 export const ASSET_DIMS: Record<CMSAssetKind, { label: string; w: number; h: number }> = {
