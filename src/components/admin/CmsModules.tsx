@@ -457,7 +457,7 @@ export function CategoriesModule() {
                 <td className="px-3 py-3 text-right">
                   <div className="flex justify-end gap-1">
                     <Btn size="sm" onClick={() => setEditing(c)}><Pencil className="size-3" /></Btn>
-                    <Btn size="sm" tone="danger" onClick={() => { if (confirm("确认删除分类？")) cms.removeCategory(c.id); }}><Trash2 className="size-3" /></Btn>
+                    <Btn size="sm" tone="danger" onClick={async () => { if (confirm("确认删除分类？")) await actions.deleteCategory(c.id); }}><Trash2 className="size-3" /></Btn>
                   </div>
                 </td>
               </tr>
