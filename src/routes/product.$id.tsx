@@ -1,10 +1,10 @@
-import { createFileRoute, Link, Navigate, notFound, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
-import { getStorefrontProducts, getStorefrontProduct, getStorefrontProductForPreview, getProductReviews, resolveProductSlug, type StorefrontProduct } from "@/lib/storefront-cms";
+import { getStorefrontProducts, getProductReviews, type StorefrontProduct } from "@/lib/storefront-cms";
 import { getProductBySlugOrLegacyId } from "@/lib/catalog.functions";
 import { useUser, user } from "@/lib/user-store";
 import { Star, Truck, RefreshCw, ShieldCheck, Heart, ChevronLeft, ChevronRight } from "lucide-react";
