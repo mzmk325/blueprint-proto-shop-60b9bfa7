@@ -1,7 +1,7 @@
-// Centralized CMS store for the admin backend. localStorage-persisted, mock data
-// designed to feel like a real ecommerce ops system. Seeded from products.ts on
-// first load. Frontend still reads products.ts directly; CMS data is admin-only
-// except for PromoBar and first-order discount (consumed where applicable).
+// Centralized CMS store for the admin backend. localStorage-persisted operational
+// data for the storefront. Seeded from products.ts on first install; the storefront
+// reads from this CMS via storefront-cms bridge (published items only).
+
 
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { products as seedProducts, shapes, categories as seedCategories } from "./products";
