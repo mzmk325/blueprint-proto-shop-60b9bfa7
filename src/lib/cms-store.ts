@@ -261,11 +261,11 @@ function seed(now = SERVER_SEED_NOW): CMSState {
         color: c.name,
         hex: c.hex,
         images: [
-          // mock 3 images per variant
           `https://images.unsplash.com/photo-${["1577803645773-f96470509666", "1574258495973-f010dfbb5371", "1612817159949-195b6eb9e31a"][j % 3]}?w=1200&q=80&fit=crop`,
           `https://images.unsplash.com/photo-${["1556306535-0f09a537f0a3", "1508296695146-257a814070b4", "1551803091-e20673f15770"][j % 3]}?w=1200&q=80&fit=crop`,
         ],
       })),
+
       categoryIds: catIds,
       seoTitle: `${p.name} — ${p.descriptor} | MIRAVUE`,
       seoDesc: `Shop ${p.name} ${p.shape.toLowerCase()} eyeglasses. ${p.descriptor}. Free shipping over $75.`,
