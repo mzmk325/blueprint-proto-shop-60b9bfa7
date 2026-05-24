@@ -197,7 +197,8 @@ function ProductEditor({ product, cats, onClose }: { product: CMSProduct; cats: 
   const update = <K extends keyof CMSProduct>(k: K, v: CMSProduct[K]) => setP((s) => ({ ...s, [k]: v }));
   const save = () => { cms.upsertProduct(p); toast.success("已保存"); onClose(); };
 
-  const reviews = useCMS((s) => s.reviews.filter((r) => r.productId === p.id));
+  const allReviews = useCMS((s) => s.reviews);
+  const reviews = useMemo(() => allReviews.filter((r) => r.productId === p.id), [allReviews, p.id]);
 
   const tabs = [
     ["basic", "基本信息"], ["price", "价格与上架"], ["variants", "颜色与图片"],
