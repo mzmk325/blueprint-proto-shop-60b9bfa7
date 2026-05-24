@@ -989,3 +989,68 @@ export function AIConsoleModule() {
 
 // suppress unused import warning
 void Flame; void Star; void ChevronRight;
+void Pencil; void EyeOff; void Eye; void ExternalLink; void Copy; void FolderOpen;
+
+// ── Asset picker: shared dialog used by product variants & other media slots ──
+function AssetPickerButton({ kind, onPick, variant = "icon" }: { kind: CMSAssetKind; onPick: (url: string) => void; variant?: "icon" | "full" }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      {variant === "icon"
+        ? <Btn size="sm" tone="ghost" onClick={() => setOpen(true)}><FolderOpen className="size-3" /></Btn>
+        : <Btn size="sm" onClick={() => setOpen(true)}><FolderOpen className="size-3" /> 从图片库选取</Btn>}
+      {open && <AssetPickerDialog kind={kind} onClose={() => setOpen(false)} onPick={(u) => { onPick(u); setOpen(false); }} />}
+    </>
+  );
+}
+
+function AssetPickerDialog({ kind, onClose, onPick }: { kind: CMSAssetKind; onClose: () => void; onPick: (url: string) => void }) {
+  const assets = useCMS((s) => s.assets);
+  const [filter, setFilter] = useState<"recommended" | "all">("recommended");
+  const [q, setQ] = useState("");
+  const list = useMemo(() => {
+    let l = filter === "recommended" ? assets.filter((a) => a.kind === kind) : assets;
+    if (q) l = l.filter((a) => (a.url + (a.name ?? "") + (a.note ?? "")).toLowerCase().includes(q.toLowerCase()));
+    return l;
+  }, [assets, filter, q, kind]);
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 grid place-items-center p-4" onClick={onClose}>
+      <div className="bg-card border border-border rounded-xl w-full max-w-4xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="p-4 border-b border-border flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">从图片库选取</h3>
+            <p className="text-[11px] text-muted-foreground">推荐类型：{ASSET_DIMS[kind].label} · {ASSET_DIMS[kind].w}×{ASSET_DIMS[kind].h}</p>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="size-4" /></button>
+        </div>
+        <div className="px-4 py-2.5 border-b border-border flex gap-2 items-center">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-background border border-border rounded-md text-sm flex-1">
+            <Search className="size-3.5 text-muted-foreground" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜索名称 / 备注 / URL" className="bg-transparent outline-none flex-1" />
+          </div>
+          <button onClick={() => setFilter("recommended")} className={`px-3 py-1.5 text-xs rounded-md border ${filter === "recommended" ? "bg-foreground text-background border-foreground" : "border-border"}`}>推荐类型</button>
+          <button onClick={() => setFilter("all")} className={`px-3 py-1.5 text-xs rounded-md border ${filter === "all" ? "bg-foreground text-background border-foreground" : "border-border"}`}>全部</button>
+        </div>
+        <div className="p-4 overflow-y-auto flex-1">
+          {list.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-12">
+              没有匹配的图片。请前往「图片素材」上传，或在编辑器中直接粘贴图片 URL。
+            </p>
+          ) : (
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+              {list.map((a) => (
+                <button key={a.id} onClick={() => onPick(a.url)} className="border border-border rounded-lg overflow-hidden bg-card text-left hover:ring-2 hover:ring-foreground transition">
+                  <div className="aspect-square bg-secondary"><img src={a.url} alt={a.name ?? ""} className="w-full h-full object-cover" /></div>
+                  <div className="p-1.5 text-[10px]">
+                    <div className="text-muted-foreground">{ASSET_DIMS[a.kind].label}</div>
+                    <div className="truncate">{a.name || a.url.split("/").pop()}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
