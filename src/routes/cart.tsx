@@ -97,7 +97,7 @@ function CartPage() {
                         <button onClick={() => cart.remove(l.lineId)} className="text-muted-foreground hover:text-foreground shrink-0" aria-label={t("cart.remove")}><Trash2 className="size-4" /></button>
                       </div>
 
-                      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+                      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs [&_dd]:text-right [&_dd]:break-words [&_dd]:min-w-0">
                         <dt className="text-muted-foreground">{t("cart.framePrice")}</dt>
                         <dd className="text-right">{fmt(l.unitPrice)}</dd>
 
