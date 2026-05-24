@@ -144,8 +144,8 @@ function CartPage() {
                         {isPrescription && t("cart.trustNote")}
                       </p>
 
-                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/60 gap-2">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/60 gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                           <div className="flex items-center border rounded-full">
                             <button onClick={() => cart.setQty(l.lineId, l.qty - 1)} className="size-8">−</button>
                             <span className="w-8 text-center text-sm">{l.qty}</span>
