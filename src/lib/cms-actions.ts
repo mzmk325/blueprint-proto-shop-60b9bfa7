@@ -1,9 +1,10 @@
-// Thin wrappers around cmsDb (server-fn writes) with graceful local fallback
-// for legacy non-UUID seed ids. All admin UI mutations should call these.
+// Admin write wrappers. P0 entities (products, categories, assets, variants,
+// images, product_categories) are DB-REQUIRED: any DB failure throws.
+// localStorage is NEVER used as a fallback source of truth — it would let
+// operators think a change was saved when it only exists in their browser.
 
 import { toast } from "sonner";
 import {
-  cms,
   cmsDb,
   type CMSProduct,
   type CMSCategory,
@@ -12,78 +13,55 @@ import {
 } from "./cms-store";
 import { uploadProductImage } from "./storage";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const isUuid = (s: string) => UUID.test(s);
-
 const errMsg = (e: unknown) =>
   (e as { message?: string })?.message ?? String(e);
 
-export async function saveProduct(p: CMSProduct): Promise<string | null> {
+function fail(prefix: string, e: unknown): never {
+  console.error(`[cms-actions] ${prefix}`, e);
+  toast.error(`${prefix}：${errMsg(e)}`);
+  throw e instanceof Error ? e : new Error(String(e));
+}
+
+export async function saveProduct(p: CMSProduct): Promise<string> {
   try {
-    const id = await cmsDb.upsertProduct(p);
-    return id;
+    return await cmsDb.upsertProduct(p);
   } catch (e) {
-    console.error("[cms-actions] saveProduct", e);
-    toast.error(`保存失败：${errMsg(e)}`);
-    // Local fallback so admins are not blocked while offline.
-    cms.upsertProduct(p);
-    return null;
+    fail("保存商品失败", e);
   }
 }
 
 export async function setProductStatus(id: string, status: CMSProductStatus) {
-  if (isUuid(id)) {
-    try {
-      await cmsDb.setProductStatus(id, status);
-      return;
-    } catch (e) {
-      console.error(e);
-      toast.error(`状态更新失败：${errMsg(e)}`);
-      return;
-    }
+  try {
+    await cmsDb.setProductStatus(id, status);
+  } catch (e) {
+    fail("状态更新失败", e);
   }
-  cms.setProductStatus(id, status);
 }
 
 export async function deleteProduct(id: string) {
-  if (isUuid(id)) {
-    try {
-      await cmsDb.deleteProduct(id);
-      return;
-    } catch (e) {
-      console.error(e);
-      toast.error(`删除失败：${errMsg(e)}`);
-      return;
-    }
+  try {
+    await cmsDb.deleteProduct(id);
+  } catch (e) {
+    fail("删除商品失败", e);
   }
-  cms.removeProduct(id);
 }
 
 export async function saveCategory(c: CMSCategory) {
   try {
     await cmsDb.upsertCategory(c);
   } catch (e) {
-    console.error(e);
-    toast.error(`保存失败：${errMsg(e)}`);
-    cms.upsertCategory(c);
+    fail("保存分类失败", e);
   }
 }
 
 export async function deleteCategory(id: string) {
-  if (isUuid(id)) {
-    try {
-      await cmsDb.deleteCategory(id);
-      return;
-    } catch (e) {
-      console.error(e);
-      toast.error(`删除失败：${errMsg(e)}`);
-      return;
-    }
+  try {
+    await cmsDb.deleteCategory(id);
+  } catch (e) {
+    fail("删除分类失败", e);
   }
-  cms.removeCategory(id);
 }
 
-// Map UI CMSAssetKind → DB asset type enum.
 function dbAssetType(kind: CMSAssetKind): "product" | "category" | "hero" | "home_card" | "other" {
   switch (kind) {
     case "product":
@@ -110,9 +88,7 @@ export async function addAssetByUrl(kind: CMSAssetKind, url: string, name?: stri
       type: dbAssetType(kind),
     });
   } catch (e) {
-    console.error(e);
-    toast.error(`保存失败：${errMsg(e)}`);
-    cms.addAsset(kind, url);
+    fail("保存素材失败", e);
   }
 }
 
@@ -130,9 +106,7 @@ export async function uploadAndAddAsset(kind: CMSAssetKind, file: File) {
       mime_type: up.mime_type,
     });
   } catch (e) {
-    console.error(e);
-    toast.error(`上传失败：${errMsg(e)}`);
-    throw e;
+    fail("上传素材失败", e);
   }
 }
 
@@ -140,7 +114,6 @@ export async function deleteAsset(id: string) {
   try {
     await cmsDb.deleteAsset(id);
   } catch (e) {
-    console.error(e);
-    toast.error(`删除失败：${errMsg(e)}`);
+    fail("删除素材失败", e);
   }
 }
