@@ -177,9 +177,9 @@ export function ProductsModule() {
                       <Btn size="sm" onClick={() => setEditing(p)}><Pencil className="size-3" /> 编辑</Btn>
                       <Btn size="sm" onClick={() => { cms.duplicateProduct(p.id); toast.success("已复制"); }}><Copy className="size-3" /></Btn>
                       {p.status === "published"
-                        ? <Btn size="sm" onClick={() => { cms.setProductStatus(p.id, "unpublished"); toast.success("已下架"); }}><EyeOff className="size-3" /></Btn>
-                        : <Btn size="sm" onClick={() => { cms.setProductStatus(p.id, "published"); toast.success("已上架"); }}><Eye className="size-3" /></Btn>}
-                      <Btn size="sm" tone="danger" onClick={() => { if (confirm(`确认删除商品「${p.name}」？`)) { cms.removeProduct(p.id); toast.success("已删除"); } }}><Trash2 className="size-3" /></Btn>
+                        ? <Btn size="sm" onClick={async () => { await actions.setProductStatus(p.id, "unpublished"); toast.success("已下架"); }}><EyeOff className="size-3" /></Btn>
+                        : <Btn size="sm" onClick={async () => { await actions.setProductStatus(p.id, "published"); toast.success("已上架"); }}><Eye className="size-3" /></Btn>}
+                      <Btn size="sm" tone="danger" onClick={async () => { if (confirm(`确认删除商品「${p.name}」？`)) { await actions.deleteProduct(p.id); toast.success("已删除"); } }}><Trash2 className="size-3" /></Btn>
                     </div>
                   </td>
                 </tr>
