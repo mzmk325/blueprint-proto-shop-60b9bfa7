@@ -394,7 +394,7 @@ function ProductEditor({ product, cats, onClose }: { product: CMSProduct; cats: 
           <Card title="操作">
             <Btn tone="primary" onClick={save}><Check className="size-3.5" /> 保存所有改动</Btn>
             <Btn onClick={() => { cms.duplicateProduct(p.id); toast.success("已复制"); onClose(); }}><Copy className="size-3.5" /> 复制商品</Btn>
-            <Btn tone="danger" onClick={() => { if (confirm("确认删除？")) { cms.removeProduct(p.id); toast.success("已删除"); onClose(); } }}><Trash2 className="size-3.5" /> 删除</Btn>
+            <Btn tone="danger" onClick={async () => { if (confirm("确认删除？")) { await actions.deleteProduct(p.id); toast.success("已删除"); onClose(); } }}><Trash2 className="size-3.5" /> 删除</Btn>
           </Card>
         </div>
       </div>
