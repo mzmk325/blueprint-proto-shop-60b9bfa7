@@ -20,7 +20,7 @@ import {
   HomeCmsModule, AssetsModule, LangCurrencyModule, AIConsoleModule,
 } from "@/components/admin/CmsModules";
 
-export const Route = createFileRoute("/admin")({
+export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "运营后台 — MIRAVUE Admin" }] }),
   component: AdminApp,
 });
