@@ -421,6 +421,9 @@ export function assetUsages(url: string): AssetUsage[] {
   for (const b of state.shapeBanners) if (b.image === url) out.push({ kind: "shape", label: `镜型 Banner「${b.shape}」`, id: b.id });
   for (const r of state.reviews) if (r.images.includes(url)) out.push({ kind: "review", label: `评价 ${r.user}`, id: r.id });
   return out;
+}
+
+
 
 
 // ── Mutations (cms namespace) ───────────────────────────────────────────────
