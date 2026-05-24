@@ -22,7 +22,8 @@ function AuthGate() {
     );
   }
   if (!isAuthenticated) {
-    return <Navigate to="/login" search={{ redirect: loc.href }} replace />;
+    const target = loc.pathname.startsWith("/login") ? "/admin" : loc.pathname;
+    return <Navigate to="/login" search={{ redirect: target }} replace />;
   }
   if (!isAdmin) {
     return (
