@@ -197,7 +197,7 @@ function ProductEditor({ product, cats, onClose }: { product: CMSProduct; cats: 
   const [p, setP] = useState<CMSProduct>(product);
   const [tab, setTab] = useState<"basic" | "price" | "variants" | "cats" | "dims" | "seo" | "reviews">("basic");
   const update = <K extends keyof CMSProduct>(k: K, v: CMSProduct[K]) => setP((s) => ({ ...s, [k]: v }));
-  const save = () => { cms.upsertProduct(p); toast.success("已保存"); onClose(); };
+  const save = async () => { await actions.saveProduct(p); toast.success("已保存"); onClose(); };
 
   const allReviews = useCMS((s) => s.reviews);
   const reviews = useMemo(() => allReviews.filter((r) => r.productId === p.id), [allReviews, p.id]);
