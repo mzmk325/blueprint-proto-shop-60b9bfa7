@@ -1,74 +1,65 @@
-# Miravue: Mock → Real Ecommerce Operating System
+# Phase 2b — Execution Plan
 
-This is a large, multi-area refactor. I'll break it into 6 phases. Each phase ships independently and the build stays green between phases.
+Goal: storefront and admin both read/write from DB, without redesigning the admin UI you just verified. The `cms-store` becomes a hydrated cache of DB state for in-scope tables (products / categories / assets / variants / images); out-of-scope tables (heroes, home cards, shape banners, reviews, promotions, AI logs) stay localStorage-only until later phases.
 
-## Phase 1 — CMS as source of truth for storefront
+## What I will ship in this turn
 
-**Goal:** Admin CMS products fully drive `/product/:id`, category pages, cards, search.
+### 1. DB hydration into cms-store
+- Add `slug` and `legacyId` to `CMSProduct` (non-breaking — existing UI ignores them).
+- Add `hydrateCatalogFromDb()` that calls `listPublishedCatalog` (public) **or** `adminListCatalog` (when admin) and maps DB rows → CMS shape, replacing only `products` / `categories` / `assets` slices. Out-of-scope slices preserved.
+- Auto-hydrate once on app boot from `__root.tsx`; re-hydrate when auth changes (admin sees drafts).
+- Add `localOverlay` skip for hydrate so an admin mid-edit doesn't get clobbered.
 
-- Extend `cms-store.ts` product schema with everything the storefront needs that's currently only on static seed: `descriptor`, `description`, `sellingPoints`, `seoTitle`, `seoDescription`, `status: 'draft' | 'published' | 'unpublished'`, `originalPrice`, `gender`, `shape`, `material`.
-- Migrate existing seed products into CMS on first load (one-time idempotent seed) so every storefront-visible product is a CMSProduct. Keep `products.ts` as the seed source only.
-- Rewrite `storefront-cms.ts`:
-  - `getStorefrontProducts()` returns **only** `status === 'published'` CMS products (no mock fallback for public consumers).
-  - Add `getStorefrontProductForView(id, { preview })` that returns drafts/unpublished only when `preview === 'admin'`.
-  - `getProductsByCategorySlug`, `getBestsellers`, `getNewArrivals` filter by published status.
-- Update `product.$id.tsx`:
-  - Read `?preview=admin` via `validateSearch`.
-  - If product is draft/unpublished and not in preview, render a clean "Product unavailable" state (not 404 hard crash).
-  - Show a yellow admin banner in preview mode: "Draft preview · not visible to customers".
-- Update `category.$slug.tsx` and `ProductCard.tsx` to consume the CMS-published list.
+### 2. Slug routing + legacy compat
+- New route file `src/routes/product.$slug.tsx` — canonical PDP, loads via `getProductBySlugOrLegacyId`.
+- Modify `src/routes/product.$id.tsx` to: if `id` resolves to a DB row, redirect (301-style `replace`) to `/product/<slug>`. If still found only in seed (pre-hydrate), render as today.
+- Add canonical `<link rel=canonical>` in slug route head.
 
-## Phase 2 — Production product editor
+### 3. ProductCard switch
+- `ProductCard` uses `slug` when present, falls back to legacy `id`.
 
-In `CmsModules.tsx` ProductsModule:
-- Replace status toggles with explicit `Draft / Published / Unpublished` status pill + actions: **Save Draft**, **Publish**, **Unpublish**, **Preview** (opens `/product/:id?preview=admin`), **View Live** (only when published), **Duplicate**, **Delete**.
-- Add fields for: descriptor, long description, selling points list, SEO title/description, originalPrice, gender/shape/material, badges, featured/hot, newOverride.
-- Variant editor: add/remove/reorder variants; per-variant image list with add (from library or URL), reorder (up/down), remove.
-- Replace any "saved locally" / "mock" / "demo" copy with operational wording.
-- After publish, show toast with link to live URL.
+### 4. Admin write-through (in-scope only)
+Replace the synchronous bodies of these `cms.*` methods with server-fn calls + re-hydrate:
+- `upsertProduct`, `setProductStatus`, `removeProduct` → `upsertProduct` / `setProductStatus` / `deleteProduct` + `setProductCategories` + `upsertVariants` + `setProductImages`
+- `upsertCategory`, `removeCategory` → `upsertCategory` / `deleteCategory`
+- `addAsset`, `removeAsset` → `createAsset` / `deleteAsset`
+- Methods become `async` and return a Promise. CmsModules call sites are updated to `await` and `toast.error` on failure.
+- Out-of-scope mutations (heroes, promoBar, reviews, promotions, aiLogs, homeCards, shapeBanners, settings) remain localStorage-only.
 
-## Phase 3 — Mobile PDP fixes
+### 5. Real Storage upload
+- Add `src/lib/storage.ts` with `uploadProductImage(file): Promise<{ url, storage_path, width, height, mime_type, size_bytes }>` using the browser supabase client + `product-images` bucket.
+- Wire into the Image Library "Upload" button so it actually uploads + calls `createAsset` + refreshes.
 
-In `product.$id.tsx`:
-- **Mobile gallery:** add swipeable carousel using existing embla (`carousel.tsx`). Active index resets when variant changes. Show `1 / N` counter + horizontal thumbnail strip below. Keep desktop unchanged (detect via `useIsMobile`).
-- **Sticky CTA:** make the existing bottom bar appear only after primary CTA scrolls out of viewport, using `IntersectionObserver` on the primary CTA. Add `pb-24 md:pb-0` to the page so it doesn't cover footer/recs.
-- **Accordion jump bug:** the current accordion likely uses `<a href="#...">` or anchor scroll. Replace with Radix `Accordion` from `components/ui/accordion.tsx`, buttons get `type="button"`, no anchor hash, no scrollIntoView on toggle.
+### 6. Seed variants + product_images
+- New migration: backfill `product_variants` + `product_images` for the seeded `products` rows so the storefront has real DB images on day one.
 
-## Phase 4 — Admin Chinese preview entry & wording cleanup
+## Explicitly NOT in this turn
+- AI Console / orders / reviews / promotions / shipping / after-sales (your queue says skip).
+- Hero / home cards / shape banners / promo bar admin (still localStorage — out of P0 scope).
+- Visual redesign of admin or storefront.
+- Migrating existing `localStorage` admin user data into DB (the DB seed is the new truth).
 
-- Add a "Preview" group in admin topbar (in `admin.tsx`): **Open Chinese Storefront**, **Open English Storefront**. In the product editor row add **Preview in Chinese** (`/product/:id?preview_lang=zh&preview=admin`).
-- `LanguageSwitcher.tsx`: keep zh-CN hidden unless `sessionStorage.preview_lang === 'zh'` is set (already reads URL param; persist to session and surface).
-- Sweep critical UI for mock/demo/placeholder/占位/mock 数据/仅保存到本地/未来接入 in admin + storefront; replace with operating wording. Leave AI Console as "Not enabled yet".
+## Risk + rollback
+- If a write-through fails mid-turn, the admin UI shows a toast error and the local state is rolled back to the last hydrated snapshot.
+- The legacy `/product/:id` route remains functional for any external link (redirects to slug if DB resolves, else renders seed).
 
-## Phase 5 — Image library (operational v1)
+## Verification checklist (run AFTER ship)
+I will not claim P0 done until each step passes:
 
-Extend `cms-store.ts` with an `assets` collection:
-```ts
-type CMSAsset = {
-  id, url, name, note, type: AssetType,
-  width?, height?, createdAt,
-}
-```
-- `AssetsModule` in `CmsModules.tsx`: grid view, type filter dropdown, search by name/url/note, add-by-URL form (with auto-detect dimensions via `new Image()`), copy URL button, delete with usage-check, recommended dimensions hint per type.
-- **Usage tracking:** compute on-the-fly by scanning products/variants/heroes/homeCards/shapeBanners/reviews for the URL. Show "Used in: …" chips. Block delete when used (with override-confirm).
-- **Product editor integration:** image input becomes a combo — "Select from library" opens a dialog (filter type=variant), or paste URL manually. Selected images appear as reorderable list with remove.
+1. Sign in as admin (claim-first if needed).
+2. Create new product (draft) → appears in admin grid.
+3. Open `/product/:slug?preview=admin` while signed in → renders.
+4. Open same `/product/:slug` in a private window (signed out) → 404 (draft not public).
+5. Publish product → public `/product/:slug` renders, refresh works, new-tab works.
+6. Open legacy `/product/:legacy_id` → 301-style redirect to canonical slug.
+7. Link product to category → product appears on `/category/:slug`.
+8. Upload image via Image Library → file lands in `product-images` bucket, `assets` row created.
+9. Attach asset URL to a variant → PDP shows the uploaded image after refresh.
+10. Unpublish product → public URL 404s, admin preview still renders.
+11. Network-tab the public `/product/:slug` request → response payload contains no `cost` field.
 
-## Phase 6 — QA & polish
+If any step fails I will fix in a follow-up turn and not call P0 done.
 
-- Run build, fix TS errors.
-- Walk the user's validation checklist: create draft → preview → publish → category appears → edit → unpublish → gone publicly; mobile gallery swipe; sticky CTA visibility; accordion first-tap; Chinese preview from admin; image library add + select.
+## Confirm
 
-## Technical notes
-
-- Migration of seed → CMS runs in `cms-store.ts` initial state hydration; uses a version flag in localStorage so it only runs once. Existing users keep their data.
-- `status` defaults to `'published'` for seeded products so nothing disappears.
-- Storefront helpers stay synchronous (read CMS snapshot, no network) — keeps existing component shape.
-- No backend changes — everything remains client-side CMS. The user can later swap the store for a real API without changing storefront components.
-
-## Out of scope
-
-- AI Console expansion (explicitly deferred).
-- Real auth, real persistence beyond localStorage (CMS already persists to localStorage; that's "real enough" for ops until a backend is wired).
-- Checkout/cart/lens flows untouched.
-
-Estimated edits: ~10–12 files, ~2000 lines net. I'll ship in the phase order above and verify build after each phase.
+Reply **"ship 2b"** to execute exactly the above. If you want any item cut or added, say so and I'll revise before writing code.
