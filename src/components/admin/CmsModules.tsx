@@ -13,6 +13,7 @@ import {
   RotateCcw, ChevronRight, Pencil, X, Check, ExternalLink, Flame, Star, FolderOpen,
 } from "lucide-react";
 import { DEFAULT_LANGUAGES, DEFAULT_CURRENCIES, ROUNDING_LABEL, type RoundingRule, type StorefrontCurrency } from "@/lib/admin-i18n";
+import * as actions from "@/lib/cms-actions";
 
 
 // ── shared atoms ────────────────────────────────────────────────────────────
@@ -176,9 +177,9 @@ export function ProductsModule() {
                       <Btn size="sm" onClick={() => setEditing(p)}><Pencil className="size-3" /> 编辑</Btn>
                       <Btn size="sm" onClick={() => { cms.duplicateProduct(p.id); toast.success("已复制"); }}><Copy className="size-3" /></Btn>
                       {p.status === "published"
-                        ? <Btn size="sm" onClick={() => { cms.setProductStatus(p.id, "unpublished"); toast.success("已下架"); }}><EyeOff className="size-3" /></Btn>
-                        : <Btn size="sm" onClick={() => { cms.setProductStatus(p.id, "published"); toast.success("已上架"); }}><Eye className="size-3" /></Btn>}
-                      <Btn size="sm" tone="danger" onClick={() => { if (confirm(`确认删除商品「${p.name}」？`)) { cms.removeProduct(p.id); toast.success("已删除"); } }}><Trash2 className="size-3" /></Btn>
+                        ? <Btn size="sm" onClick={async () => { await actions.setProductStatus(p.id, "unpublished"); toast.success("已下架"); }}><EyeOff className="size-3" /></Btn>
+                        : <Btn size="sm" onClick={async () => { await actions.setProductStatus(p.id, "published"); toast.success("已上架"); }}><Eye className="size-3" /></Btn>}
+                      <Btn size="sm" tone="danger" onClick={async () => { if (confirm(`确认删除商品「${p.name}」？`)) { await actions.deleteProduct(p.id); toast.success("已删除"); } }}><Trash2 className="size-3" /></Btn>
                     </div>
                   </td>
                 </tr>
@@ -196,7 +197,7 @@ function ProductEditor({ product, cats, onClose }: { product: CMSProduct; cats: 
   const [p, setP] = useState<CMSProduct>(product);
   const [tab, setTab] = useState<"basic" | "price" | "variants" | "cats" | "dims" | "seo" | "reviews">("basic");
   const update = <K extends keyof CMSProduct>(k: K, v: CMSProduct[K]) => setP((s) => ({ ...s, [k]: v }));
-  const save = () => { cms.upsertProduct(p); toast.success("已保存"); onClose(); };
+  const save = async () => { await actions.saveProduct(p); toast.success("已保存"); onClose(); };
 
   const allReviews = useCMS((s) => s.reviews);
   const reviews = useMemo(() => allReviews.filter((r) => r.productId === p.id), [allReviews, p.id]);
@@ -218,10 +219,10 @@ function ProductEditor({ product, cats, onClose }: { product: CMSProduct; cats: 
           <a href={`/product/${p.id}?preview=admin`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md font-medium bg-background border border-border hover:bg-secondary px-3 py-1.5 text-xs"><Eye className="size-3.5" /> 预览草稿</a>
           <a href={`/product/${p.id}?preview=admin&preview_lang=zh`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md font-medium bg-background border border-border hover:bg-secondary px-3 py-1.5 text-xs">中文预览</a>
           {p.status === "published" && <a href={`/product/${p.id}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md font-medium bg-background border border-border hover:bg-secondary px-3 py-1.5 text-xs"><ExternalLink className="size-3.5" /> 查看线上</a>}
-          <Btn onClick={() => { cms.upsertProduct({ ...p, status: "draft" }); toast.success("已保存为草稿"); onClose(); }}>保存草稿</Btn>
+          <Btn onClick={async () => { await actions.saveProduct({ ...p, status: "draft" }); toast.success("已保存为草稿"); onClose(); }}>保存草稿</Btn>
           {p.status === "published"
-            ? <Btn onClick={() => { cms.upsertProduct({ ...p, status: "unpublished" }); toast.success("已下架"); onClose(); }}><EyeOff className="size-3.5" /> 下架</Btn>
-            : <Btn tone="primary" onClick={() => { const next = { ...p, status: "published" as const, publishedAt: p.publishedAt || Date.now() }; cms.upsertProduct(next); toast.success("已上架"); onClose(); }}><Eye className="size-3.5" /> 上架</Btn>}
+            ? <Btn onClick={async () => { await actions.saveProduct({ ...p, status: "unpublished" }); toast.success("已下架"); onClose(); }}><EyeOff className="size-3.5" /> 下架</Btn>
+            : <Btn tone="primary" onClick={async () => { const next = { ...p, status: "published" as const, publishedAt: p.publishedAt || Date.now() }; await actions.saveProduct(next); toast.success("已上架"); onClose(); }}><Eye className="size-3.5" /> 上架</Btn>}
           <Btn tone="primary" onClick={save}><Check className="size-3.5" /> 保存</Btn>
         </div>
       </div>
@@ -393,7 +394,7 @@ function ProductEditor({ product, cats, onClose }: { product: CMSProduct; cats: 
           <Card title="操作">
             <Btn tone="primary" onClick={save}><Check className="size-3.5" /> 保存所有改动</Btn>
             <Btn onClick={() => { cms.duplicateProduct(p.id); toast.success("已复制"); onClose(); }}><Copy className="size-3.5" /> 复制商品</Btn>
-            <Btn tone="danger" onClick={() => { if (confirm("确认删除？")) { cms.removeProduct(p.id); toast.success("已删除"); onClose(); } }}><Trash2 className="size-3.5" /> 删除</Btn>
+            <Btn tone="danger" onClick={async () => { if (confirm("确认删除？")) { await actions.deleteProduct(p.id); toast.success("已删除"); onClose(); } }}><Trash2 className="size-3.5" /> 删除</Btn>
           </Card>
         </div>
       </div>
@@ -452,11 +453,11 @@ export function CategoriesModule() {
                 <td className="px-3 py-3 text-right text-xs">{c.sortOrder}</td>
                 <td className="px-3 py-3">{c.showInNav ? "✓" : "—"}</td>
                 <td className="px-3 py-3">{c.showOnHome ? "✓" : "—"}</td>
-                <td className="px-3 py-3"><Toggle checked={c.enabled} onChange={(v) => cms.upsertCategory({ ...c, enabled: v })} /></td>
+                <td className="px-3 py-3"><Toggle checked={c.enabled} onChange={(v) => { void actions.saveCategory({ ...c, enabled: v }); }} /></td>
                 <td className="px-3 py-3 text-right">
                   <div className="flex justify-end gap-1">
                     <Btn size="sm" onClick={() => setEditing(c)}><Pencil className="size-3" /></Btn>
-                    <Btn size="sm" tone="danger" onClick={() => { if (confirm("确认删除分类？")) cms.removeCategory(c.id); }}><Trash2 className="size-3" /></Btn>
+                    <Btn size="sm" tone="danger" onClick={async () => { if (confirm("确认删除分类？")) await actions.deleteCategory(c.id); }}><Trash2 className="size-3" /></Btn>
                   </div>
                 </td>
               </tr>
@@ -495,7 +496,7 @@ function CategoryEditor({ cat, onClose }: { cat: CMSCategory; onClose: () => voi
         </div>
         <div className="flex justify-end gap-2 pt-3 border-t border-border">
           <Btn onClick={onClose}>取消</Btn>
-          <Btn tone="primary" onClick={() => { cms.upsertCategory(c); toast.success("已保存"); onClose(); }}>保存</Btn>
+          <Btn tone="primary" onClick={async () => { await actions.saveCategory(c); toast.success("已保存"); onClose(); }}>保存</Btn>
         </div>
       </div>
     </div>
@@ -732,14 +733,35 @@ export function AssetsModule() {
     <div>
       <PageHeader title="图片素材" desc="集中管理首页 / 分类 / 商品 / 评价等图片资源。支持通过 URL 添加，并在商品编辑器中直接选用。" />
       <Card title="新增图片">
-        <div className="grid grid-cols-[1fr_2fr_auto] gap-2">
+        <div className="grid grid-cols-[1fr_2fr_auto_auto] gap-2 items-start">
           <select className={inputCls} value={newKind} onChange={(e) => setNewKind(e.target.value as CMSAssetKind)}>
             {(Object.entries(ASSET_DIMS) as [CMSAssetKind, typeof ASSET_DIMS[CMSAssetKind]][]).map(([k, v]) => <option key={k} value={k}>{v.label}（{v.w}×{v.h}）</option>)}
           </select>
           <input className={inputCls} value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="https://… 或粘贴图片 URL" />
-          <Btn tone="primary" onClick={() => { if (newUrl) { cms.addAsset(newKind, newUrl); setNewUrl(""); toast.success("已添加"); } }}><Upload className="size-3.5" /> 添加</Btn>
+          <Btn tone="primary" onClick={async () => { if (newUrl) { await actions.addAssetByUrl(newKind, newUrl); setNewUrl(""); toast.success("已添加"); } }}><Plus className="size-3.5" /> 添加 URL</Btn>
+          <label className="inline-flex items-center gap-1.5 rounded-md font-medium bg-foreground text-background hover:opacity-90 px-3 py-1.5 text-xs cursor-pointer">
+            <Upload className="size-3.5" /> 上传文件
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={async (e) => {
+                const files = Array.from(e.target.files ?? []);
+                e.target.value = "";
+                if (!files.length) return;
+                const tid = toast.loading(`正在上传 ${files.length} 个文件…`);
+                try {
+                  for (const f of files) await actions.uploadAndAddAsset(newKind, f);
+                  toast.success(`已上传 ${files.length} 个文件`, { id: tid });
+                } catch {
+                  toast.error("部分文件上传失败", { id: tid });
+                }
+              }}
+            />
+          </label>
         </div>
-        <p className="text-[11px] text-muted-foreground">推荐尺寸（点击切换类型查看）：{ASSET_DIMS[newKind].label} — {ASSET_DIMS[newKind].w}×{ASSET_DIMS[newKind].h} px</p>
+        <p className="text-[11px] text-muted-foreground">推荐尺寸（点击切换类型查看）：{ASSET_DIMS[newKind].label} — {ASSET_DIMS[newKind].w}×{ASSET_DIMS[newKind].h} px。上传后文件保存至 product-images 储存桶。</p>
       </Card>
 
       <div className="flex gap-2 mt-4 mb-3 flex-wrap">
@@ -771,11 +793,11 @@ export function AssetsModule() {
                 )}
                 <div className="flex justify-between items-center mt-1.5 gap-1">
                   <button onClick={() => { navigator.clipboard.writeText(a.url); toast.success("URL 已复制"); }} className="text-muted-foreground hover:text-foreground"><Copy className="size-3" /></button>
-                  <Btn size="sm" tone="danger" onClick={() => {
+                  <Btn size="sm" tone="danger" onClick={async () => {
                     if (inUse) {
                       if (!confirm(`此图片正被 ${usages.length} 处使用，删除后这些位置将出现空白。确定继续？`)) return;
                     }
-                    cms.removeAsset(a.id);
+                    await actions.deleteAsset(a.id);
                     toast.success("已删除");
                   }}><Trash2 className="size-3" /></Btn>
                 </div>
