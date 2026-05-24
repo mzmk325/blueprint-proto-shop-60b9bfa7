@@ -211,7 +211,7 @@ export const getProductBySlugOrLegacyId = createServerFn({ method: "GET" })
       if (row) matchedBy = "legacy";
     }
 
-    if (!row) return { product: null, matchedBy: null as const };
+    if (!row) return { product: null, matchedBy: null as "slug" | "legacy" | null };
 
     const [vRes, iRes, lRes] = await Promise.all([
       supabaseAdmin
