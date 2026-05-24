@@ -188,9 +188,41 @@ export function getStorefrontProduct(id: string): StorefrontProduct | undefined 
   return p;
 }
 
+// Lookup by slug (canonical URL) — published only.
+export function getStorefrontProductBySlug(slug: string): StorefrontProduct | undefined {
+  const s = safeCMS();
+  const match = s?.products.find((cp) => cp.slug === slug);
+  if (!match) return undefined;
+  return getStorefrontProduct(match.id);
+}
+
+// Lookup by legacy id — published only, returns the product so caller can redirect.
+export function getStorefrontProductByLegacyId(legacyId: string): StorefrontProduct | undefined {
+  const s = safeCMS();
+  const match = s?.products.find((cp) => cp.legacyId === legacyId || cp.id === legacyId);
+  if (!match) return undefined;
+  return getStorefrontProduct(match.id);
+}
+
 // Admin/preview read — returns drafts and unpublished too.
 export function getStorefrontProductForPreview(id: string): StorefrontProduct | undefined {
   return allEnriched().find((x) => x.id === id);
+}
+
+// Admin/preview read by slug.
+export function getStorefrontProductForPreviewBySlug(slug: string): StorefrontProduct | undefined {
+  const s = safeCMS();
+  const match = s?.products.find((cp) => cp.slug === slug);
+  if (!match) return undefined;
+  return getStorefrontProductForPreview(match.id);
+}
+
+// Resolve the canonical slug for a product id OR legacy id. Used by the legacy
+// /product/:id route to redirect to /product/:slug.
+export function resolveProductSlug(idOrLegacy: string): string | undefined {
+  const s = safeCMS();
+  const match = s?.products.find((cp) => cp.id === idOrLegacy || cp.legacyId === idOrLegacy);
+  return match?.slug;
 }
 
 export function getBestsellers(limit = 4): StorefrontProduct[] {

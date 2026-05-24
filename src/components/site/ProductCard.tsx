@@ -36,9 +36,16 @@ export function ProductCard({ p }: { p: CardProduct }) {
   const wished = mounted && wishlist.includes(p.id);
   const promoLabel = promo ? promoShortLabel(promo) : "";
 
+  // Prefer slug-based canonical URL when available; fall back to legacy id route.
+  const slug = (enriched as { slug?: string }).slug;
+
+  const linkProps = slug
+    ? ({ to: "/product/$slug", params: { slug } } as const)
+    : ({ to: "/product/$id", params: { id: p.id } } as const);
+
   return (
     <div className="group block">
-      <Link to="/product/$id" params={{ id: p.id }} className="block">
+      <Link {...linkProps} className="block">
         <div
           className="relative aspect-[4/5] overflow-hidden bg-surface"
           onMouseEnter={() => setHover(true)}

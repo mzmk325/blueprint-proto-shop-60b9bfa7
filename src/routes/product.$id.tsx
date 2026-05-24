@@ -1,10 +1,10 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate, notFound } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { Layout } from "@/components/site/Layout";
 import { ProductCard } from "@/components/site/ProductCard";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
-import { getStorefrontProducts, getStorefrontProduct, getStorefrontProductForPreview, getProductReviews, type StorefrontProduct } from "@/lib/storefront-cms";
+import { getStorefrontProducts, getStorefrontProduct, getStorefrontProductForPreview, getProductReviews, resolveProductSlug, type StorefrontProduct } from "@/lib/storefront-cms";
 import { useUser, user } from "@/lib/user-store";
 import { Star, Truck, RefreshCw, ShieldCheck, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { useI18n, type TKey } from "@/lib/i18n";
@@ -48,6 +48,20 @@ function PDP() {
   const { preview } = Route.useSearch();
   const isPreview = preview === "admin";
 
+  // Backward compat: if the URL id resolves to a canonical slug (and they
+  // differ), redirect to /product/:slug — keeps old links working.
+  const canonicalSlug = resolveProductSlug(id);
+  if (canonicalSlug && canonicalSlug !== id) {
+    return (
+      <Navigate
+        to="/product/$slug"
+        params={{ slug: canonicalSlug }}
+        search={isPreview ? { preview: "admin" } : {}}
+        replace
+      />
+    );
+  }
+
   const p = isPreview ? getStorefrontProductForPreview(id) : getStorefrontProduct(id);
 
   if (!p) {
@@ -67,6 +81,8 @@ function PDP() {
 
   return <PDPBody p={p} isPreview={isPreview} />;
 }
+
+export { PDPBody };
 
 function PDPBody({ p, isPreview }: { p: StorefrontProduct; isPreview: boolean }) {
   const variants = p.variants.length ? p.variants : p.colors.map((c) => ({ color: c.name, hex: c.hex, images: [] as string[] }));
