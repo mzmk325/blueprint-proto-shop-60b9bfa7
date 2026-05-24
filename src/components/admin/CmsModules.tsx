@@ -309,8 +309,9 @@ function ProductEditor({ product, cats, onClose }: { product: CMSProduct; cats: 
                         <div key={ii} className="flex gap-2 items-center">
                           {img ? <img src={img} alt="" className="size-10 rounded-md object-cover bg-secondary" /> : <div className="size-10 rounded-md bg-secondary grid place-items-center text-muted-foreground"><ImagePlus className="size-3.5" /></div>}
                           <input className={inputCls} value={img} placeholder="粘贴图片 URL 或点击右侧从图片库选取" onChange={(e) => { const a = [...p.variants]; const im = [...v.images]; im[ii] = e.target.value; a[i] = { ...v, images: im }; update("variants", a); }} />
-                          <AssetPickerButton kind="product" onPick={(url) => { const a = [...p.variants]; const im = [...v.images]; im[ii] = url; a[i] = { ...v, images: im }; update("variants", a); }} />
-                          <Btn size="sm" tone="ghost" onClick={() => { const a = [...p.variants]; a[i] = { ...v, images: ii === 0 ? v.images : [v.images[ii], ...v.images.slice(0, ii), ...v.images.slice(ii + 1)] }; update("variants", a); }} disabled={ii === 0} title="设为主图">↑</Btn>
+                          <AssetPickerButton kind="product" onPick={(url: string) => { const a = [...p.variants]; const im = [...v.images]; im[ii] = url; a[i] = { ...v, images: im }; update("variants", a); }} />
+                          <Btn size="sm" tone="ghost" onClick={() => { const a = [...p.variants]; a[i] = { ...v, images: ii === 0 ? v.images : [v.images[ii], ...v.images.slice(0, ii), ...v.images.slice(ii + 1)] }; update("variants", a); }} disabled={ii === 0}>↑</Btn>
+
                           <Btn size="sm" tone="ghost" onClick={() => { const a = [...p.variants]; a[i] = { ...v, images: v.images.filter((_, j) => j !== ii) }; update("variants", a); }}><X className="size-3" /></Btn>
                         </div>
                       ))}
