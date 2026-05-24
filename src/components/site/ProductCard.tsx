@@ -36,10 +36,28 @@ export function ProductCard({ p }: { p: CardProduct }) {
   const wished = mounted && wishlist.includes(p.id);
   const promoLabel = promo ? promoShortLabel(promo) : "";
 
+  // Prefer slug-based canonical URL when available; fall back to legacy id route.
+  const slug = (enriched as { slug?: string }).slug;
+
   return (
     <div className="group block">
-      <Link to="/product/$id" params={{ id: p.id }} className="block">
-        <div
+      {slug ? (
+        <Link to="/product/$slug" params={{ slug }} className="block">
+          <ProductCardMedia
+            img0={img0} img1={img1} hover={hover} setHover={setHover}
+            p={p} promoLabel={promoLabel} wished={wished} t={t}
+          />
+          <ProductCardInfo p={p} fmt={fmt} />
+        </Link>
+      ) : (
+        <Link to="/product/$id" params={{ id: p.id }} className="block">
+          <ProductCardMedia
+            img0={img0} img1={img1} hover={hover} setHover={setHover}
+            p={p} promoLabel={promoLabel} wished={wished} t={t}
+          />
+          <ProductCardInfo p={p} fmt={fmt} />
+        </Link>
+      )}
           className="relative aspect-[4/5] overflow-hidden bg-surface"
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
