@@ -81,8 +81,8 @@ function CartPage() {
                   : l.lens.rx.pd || "—";
 
                 return (
-                  <div key={l.lineId} className="flex gap-4 border rounded-xl p-4 bg-card">
-                    <img src={p ? productImage(p) : ""} alt="" className="size-28 rounded-lg bg-secondary shrink-0" />
+                  <div key={l.lineId} className="flex gap-3 sm:gap-4 border rounded-xl p-3 sm:p-4 bg-card">
+                    <img src={p ? productImage(p) : ""} alt="" className="size-20 sm:size-28 rounded-lg bg-secondary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between gap-2">
                         <div className="min-w-0">
