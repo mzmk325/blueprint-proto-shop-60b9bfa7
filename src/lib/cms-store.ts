@@ -546,3 +546,393 @@ export function useCategoriesWithCounts() {
 
 // Re-export seed for tests
 export { seedCategories };
+
+// ════════════════════════════════════════════════════════════════════════════
+// DB HYDRATION + WRITE-THROUGH (Phase 2b)
+// ════════════════════════════════════════════════════════════════════════════
+// The CMS store now treats the DB as source of truth for products, categories,
+// variants/images, and assets. Other slices (heroes, home cards, shape banners,
+// promo bar, reviews, promotions, AI logs, settings) remain localStorage-only
+// until later phases.
+
+import {
+  listPublishedCatalog,
+  type FullProduct,
+  type PublicCategory,
+} from "./catalog.functions";
+import {
+  adminListCatalog,
+  upsertProduct as fnUpsertProduct,
+  setProductStatus as fnSetProductStatus,
+  deleteProduct as fnDeleteProduct,
+  setProductCategories as fnSetProductCategories,
+  upsertVariants as fnUpsertVariants,
+  setProductImages as fnSetProductImages,
+  upsertCategory as fnUpsertCategory,
+  deleteCategory as fnDeleteCategory,
+  createAsset as fnCreateAsset,
+  deleteAsset as fnDeleteAsset,
+} from "./catalog-admin.functions";
+
+// ── Mapping: DB row → CMS shape ────────────────────────────────────────────
+
+type DbProductRow = FullProduct & {
+  cost?: number | null; // present in admin listing
+};
+
+function dbProductToCms(p: DbProductRow): CMSProduct {
+  // Group images by variant for the CMS variant.images structure.
+  const imagesByVariant = new Map<string | null, string[]>();
+  // Sort: primary first, then by sort_order.
+  const sorted = [...p.images].sort((a, b) => {
+    if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
+    return a.sort_order - b.sort_order;
+  });
+  for (const im of sorted) {
+    const key = im.variant_id ?? null;
+    const arr = imagesByVariant.get(key) ?? [];
+    arr.push(im.url);
+    imagesByVariant.set(key, arr);
+  }
+  const fallbackImages = imagesByVariant.get(null) ?? [];
+
+  const variants: CMSVariant[] = p.variants.length
+    ? p.variants.map((v) => ({
+        color: v.name_en,
+        hex: v.color_hex ?? "#1a1a1a",
+        images: imagesByVariant.get(v.id) ?? fallbackImages,
+      }))
+    : [{
+        color: "Default",
+        hex: "#1a1a1a",
+        images: fallbackImages,
+      }];
+
+  return {
+    id: p.id,
+    slug: p.slug,
+    legacyId: p.legacy_id,
+    name: p.name_zh || p.name_en,
+    nameEn: p.name_en,
+    subtitle: p.descriptor_en ?? "",
+    sku: p.variants[0]?.sku ?? "",
+    status: p.status,
+    price: Number(p.price),
+    cost: p.cost != null ? Number(p.cost) : 0,
+    originalPrice: p.original_price != null ? Number(p.original_price) : undefined,
+    joinSitePromo: true,
+    publishedAt: p.published_at ? new Date(p.published_at).getTime() : new Date(p.created_at).getTime(),
+    sortOrder: 100,
+    featured: !!p.is_featured,
+    hot: !!p.is_hot,
+    newOverride: p.is_new ? "force-in" : "auto",
+    material: p.material ?? "Acetate",
+    shape: p.shape ?? "Square",
+    faceShape: [],
+    styleTags: [],
+    description: p.description_en ?? "",
+    bullets: (p.selling_points ?? [])
+      .map((sp) => sp.en || sp.zh || "")
+      .filter(Boolean),
+    dims: {
+      frameWidth: p.frame_width_mm ?? 140,
+      lensWidth: p.lens_width_mm ?? 52,
+      lensHeight: p.lens_height_mm ?? 42,
+      bridge: p.bridge_mm ?? 18,
+      temple: p.temple_length_mm ?? 145,
+      weight: p.weight_g != null ? `${p.weight_g}g` : "22g",
+    },
+    variants,
+    categoryIds: p.category_ids,
+    seoTitle: p.seo_title ?? "",
+    seoDesc: p.seo_description ?? "",
+  };
+}
+
+function dbCategoryToCms(c: PublicCategory & { sort_order?: number }): CMSCategory {
+  return {
+    id: c.id,
+    name: c.name_zh || c.name_en,
+    nameEn: c.name_en,
+    type: "main",
+    slug: c.slug,
+    image: c.hero_image_url ?? "",
+    sortOrder: c.sort_order ?? 0,
+    showInNav: c.is_published,
+    showOnHome: false,
+    enabled: c.is_published,
+    description: c.description_zh ?? undefined,
+    descriptionEn: c.description_en ?? undefined,
+    isDbBacked: true,
+  };
+}
+
+type DbAssetRow = {
+  id: string;
+  url: string;
+  name: string;
+  note: string | null;
+  type: string;
+  storage_path?: string | null;
+  created_at: string;
+};
+
+function dbAssetToCms(a: DbAssetRow): CMSAsset {
+  const kindMap: Record<string, CMSAssetKind> = {
+    product: "product",
+    category: "category",
+    hero: "hero-desktop",
+    home_card: "category",
+    other: "product",
+  };
+  return {
+    id: a.id,
+    kind: kindMap[a.type] ?? "product",
+    url: a.url,
+    uploadedAt: new Date(a.created_at).getTime(),
+    name: a.name,
+    note: a.note ?? undefined,
+    storagePath: a.storage_path ?? undefined,
+    isDbBacked: true,
+  };
+}
+
+// ── Hydration ──────────────────────────────────────────────────────────────
+
+let hydrating: Promise<void> | null = null;
+
+/**
+ * Pull catalog from DB and overwrite products/categories/assets slices.
+ * If `asAdmin` true, includes drafts/unpublished. Idempotent — concurrent calls
+ * share the same in-flight promise.
+ */
+export async function hydrateCatalogFromDb(asAdmin = false): Promise<void> {
+  if (hydrating) return hydrating;
+  hydrating = (async () => {
+    try {
+      if (asAdmin) {
+        const res = await adminListCatalog();
+        const linksByProduct = new Map<string, string[]>();
+        for (const l of res.links ?? []) {
+          const arr = linksByProduct.get(l.product_id as string) ?? [];
+          arr.push(l.category_id as string);
+          linksByProduct.set(l.product_id as string, arr);
+        }
+        const variantsByProduct = new Map<string, any[]>();
+        for (const v of res.variants ?? []) {
+          const arr = variantsByProduct.get(v.product_id as string) ?? [];
+          arr.push(v);
+          variantsByProduct.set(v.product_id as string, arr);
+        }
+        const imagesByProduct = new Map<string, any[]>();
+        for (const i of res.images ?? []) {
+          const arr = imagesByProduct.get(i.product_id as string) ?? [];
+          arr.push(i);
+          imagesByProduct.set(i.product_id as string, arr);
+        }
+        const full: DbProductRow[] = (res.products ?? []).map((p: any) => ({
+          ...(p as any),
+          variants: variantsByProduct.get(p.id as string) ?? [],
+          images: imagesByProduct.get(p.id as string) ?? [],
+          category_ids: linksByProduct.get(p.id as string) ?? [],
+        }));
+        state = {
+          ...state,
+          products: full.map(dbProductToCms),
+          categories: (res.categories ?? []).map((c: any) => dbCategoryToCms(c)),
+          assets: (res.assets ?? []).map((a: any) => dbAssetToCms(a)),
+        };
+      } else {
+        const res = await listPublishedCatalog();
+        state = {
+          ...state,
+          products: res.products.map((p) => dbProductToCms(p as DbProductRow)),
+          categories: res.categories.map(dbCategoryToCms),
+          assets: (res.assets ?? []).map((a: any) => dbAssetToCms(a)),
+        };
+      }
+      emit();
+    } catch (err) {
+      console.error("[cms-store] hydration failed:", err);
+    } finally {
+      hydrating = null;
+    }
+  })();
+  return hydrating;
+}
+
+// Helper: convert CMSProduct → server fn upsert input.
+function cmsProductToDbInput(p: CMSProduct) {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(p.id);
+  const weightG = parseFloat(p.dims.weight.replace(/[^\d.]/g, "")) || null;
+  return {
+    id: isUuid ? p.id : undefined,
+    slug: p.slug || (p.nameEn || p.name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 64) || `p-${Date.now().toString(36)}`,
+    legacy_id: p.legacyId ?? null,
+    name_en: p.nameEn || p.name,
+    name_zh: p.name || null,
+    descriptor_en: p.subtitle || null,
+    descriptor_zh: null,
+    description_en: p.description || null,
+    description_zh: null,
+    selling_points: p.bullets.map((b) => ({ en: b })),
+    seo_title: p.seoTitle || null,
+    seo_description: p.seoDesc || null,
+    price: p.price,
+    original_price: p.originalPrice ?? null,
+    cost: p.cost,
+    currency: "USD",
+    gender: null,
+    shape: p.shape,
+    material: p.material,
+    badges: [] as string[],
+    is_featured: p.featured,
+    is_hot: p.hot,
+    is_new: p.newOverride === "force-in",
+    frame_width_mm: p.dims.frameWidth || null,
+    lens_width_mm: p.dims.lensWidth || null,
+    lens_height_mm: p.dims.lensHeight || null,
+    bridge_mm: p.dims.bridge || null,
+    temple_length_mm: p.dims.temple || null,
+    weight_g: weightG,
+    status: p.status,
+  };
+}
+
+// ── DB-backed admin mutations ──────────────────────────────────────────────
+// Each function (a) performs the DB write, (b) re-hydrates as admin. The legacy
+// `cms.*` sync methods continue to mutate local state so the existing admin UI
+// remains responsive while the DB write is in flight.
+
+export const cmsDb = {
+  async upsertProduct(p: CMSProduct, opts?: { variantHexByColor?: Record<string, string> }) {
+    const input = cmsProductToDbInput(p);
+    const { id: productId } = await fnUpsertProduct({ data: input });
+
+    // Sync variants
+    const variantInputs = p.variants.map((v, i) => ({
+      name_en: v.color,
+      color_hex: v.hex,
+      sort_order: i,
+      stock: 100,
+    }));
+    const varRes = await fnUpsertVariants({
+      data: { product_id: productId, variants: variantInputs },
+    });
+
+    // Map variant id by color for image attach
+    const varIdByColor = new Map<string, string>();
+    for (const v of varRes.variants ?? []) {
+      varIdByColor.set((v as any).name_en, (v as any).id);
+    }
+
+    // Sync images (flatten variant images → product_images with variant_id)
+    const images: Array<{
+      url: string;
+      variant_id: string | null;
+      is_primary: boolean;
+      sort_order: number;
+    }> = [];
+    p.variants.forEach((v, vi) => {
+      const vid = varIdByColor.get(v.color) ?? null;
+      v.images.filter(Boolean).forEach((url, ii) => {
+        images.push({
+          url,
+          variant_id: vid,
+          is_primary: vi === 0 && ii === 0,
+          sort_order: vi * 10 + ii,
+        });
+      });
+    });
+    await fnSetProductImages({ data: { product_id: productId, images } });
+
+    // Sync categories — only DB-backed category ids (uuids)
+    const dbCatIds = p.categoryIds.filter((cid) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(cid),
+    );
+    await fnSetProductCategories({
+      data: { product_id: productId, category_ids: dbCatIds },
+    });
+
+    await hydrateCatalogFromDb(true);
+    return productId;
+  },
+
+  async setProductStatus(id: string, status: CMSProductStatus) {
+    if (!/^[0-9a-f]{8}-/i.test(id)) throw new Error("Product is not DB-backed yet");
+    await fnSetProductStatus({ data: { id, status } });
+    await hydrateCatalogFromDb(true);
+  },
+
+  async deleteProduct(id: string) {
+    if (!/^[0-9a-f]{8}-/i.test(id)) throw new Error("Product is not DB-backed yet");
+    await fnDeleteProduct({ data: { id } });
+    await hydrateCatalogFromDb(true);
+  },
+
+  async upsertCategory(c: CMSCategory) {
+    const isUuid = /^[0-9a-f]{8}-/i.test(c.id);
+    const { id } = await fnUpsertCategory({
+      data: {
+        id: isUuid ? c.id : undefined,
+        slug: c.slug,
+        name_en: c.nameEn || c.name,
+        name_zh: c.name || null,
+        description_en: c.descriptionEn ?? null,
+        description_zh: c.description ?? null,
+        hero_image_url: c.image || null,
+        seo_title: null,
+        seo_description: null,
+        sort_order: c.sortOrder,
+        is_published: c.enabled,
+      },
+    });
+    await hydrateCatalogFromDb(true);
+    return id;
+  },
+
+  async deleteCategory(id: string) {
+    if (!/^[0-9a-f]{8}-/i.test(id)) throw new Error("Category is not DB-backed yet");
+    await fnDeleteCategory({ data: { id } });
+    await hydrateCatalogFromDb(true);
+  },
+
+  async createAsset(input: {
+    url: string;
+    storage_path?: string;
+    name: string;
+    note?: string;
+    type?: "product" | "category" | "hero" | "home_card" | "other";
+    width?: number | null;
+    height?: number | null;
+    size_bytes?: number | null;
+    mime_type?: string | null;
+  }) {
+    const row = await fnCreateAsset({
+      data: {
+        url: input.url,
+        storage_path: input.storage_path ?? null,
+        name: input.name,
+        note: input.note ?? null,
+        type: input.type ?? "product",
+        width: input.width ?? null,
+        height: input.height ?? null,
+        size_bytes: input.size_bytes ?? null,
+        mime_type: input.mime_type ?? null,
+      },
+    });
+    await hydrateCatalogFromDb(true);
+    return row;
+  },
+
+  async deleteAsset(id: string) {
+    if (!/^[0-9a-f]{8}-/i.test(id)) {
+      // Local-only legacy asset — just remove from state
+      cms.removeAsset(id);
+      return;
+    }
+    await fnDeleteAsset({ data: { id } });
+    await hydrateCatalogFromDb(true);
+  },
+};
+
