@@ -1,18 +1,19 @@
 // All CMS modules in one file to keep admin pages cohesive: 商品 / 分类 / 评价 / 活动 /
-// 首页装修 / 图片素材 / AI 操作台 / 语言与币种. Mock data via cms-store.
+// 首页装修 / 图片素材 / AI 操作台 / 语言与币种.
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
-  cms, useCMS, useCategoriesWithCounts, isNewArrival, activePromotion, ASSET_DIMS,
+  cms, useCMS, useCategoriesWithCounts, isNewArrival, activePromotion, ASSET_DIMS, assetUsages,
   type CMSProduct, type CMSCategory, type CMSReview, type CMSPromotion, type CMSHero,
   type CMSHomeCard, type CMSShapeBanner, type CMSAssetKind, type CMSProductStatus,
 } from "@/lib/cms-store";
 import {
   Plus, Trash2, Copy, Eye, EyeOff, Search, ImagePlus, Sparkles, Upload,
-  RotateCcw, ChevronRight, Pencil, X, Check, ExternalLink, Flame, Star,
+  RotateCcw, ChevronRight, Pencil, X, Check, ExternalLink, Flame, Star, FolderOpen,
 } from "lucide-react";
 import { DEFAULT_LANGUAGES, DEFAULT_CURRENCIES, ROUNDING_LABEL, type RoundingRule, type StorefrontCurrency } from "@/lib/admin-i18n";
+
 
 // ── shared atoms ────────────────────────────────────────────────────────────
 export function PageHeader({ title, desc, action }: { title: string; desc?: string; action?: React.ReactNode }) {
@@ -299,18 +300,28 @@ function ProductEditor({ product, cats, onClose }: { product: CMSProduct; cats: 
                     <Btn tone="danger" size="sm" onClick={() => update("variants", p.variants.filter((_, j) => j !== i))}><Trash2 className="size-3" /></Btn>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1.5">图片 URL（建议 1200×1200 / 1600×1600）</div>
+                    <div className="text-xs text-muted-foreground mb-1.5 flex items-center justify-between">
+                      <span>图片 URL（建议 1200×1200 / 1600×1600）</span>
+                      <span className="text-[10px]">共 {v.images.length} 张</span>
+                    </div>
                     <div className="space-y-1.5">
                       {v.images.map((img, ii) => (
                         <div key={ii} className="flex gap-2 items-center">
                           {img ? <img src={img} alt="" className="size-10 rounded-md object-cover bg-secondary" /> : <div className="size-10 rounded-md bg-secondary grid place-items-center text-muted-foreground"><ImagePlus className="size-3.5" /></div>}
-                          <input className={inputCls} value={img} placeholder="https://…" onChange={(e) => { const a = [...p.variants]; const im = [...v.images]; im[ii] = e.target.value; a[i] = { ...v, images: im }; update("variants", a); }} />
+                          <input className={inputCls} value={img} placeholder="粘贴图片 URL 或点击右侧从图片库选取" onChange={(e) => { const a = [...p.variants]; const im = [...v.images]; im[ii] = e.target.value; a[i] = { ...v, images: im }; update("variants", a); }} />
+                          <AssetPickerButton kind="product" onPick={(url: string) => { const a = [...p.variants]; const im = [...v.images]; im[ii] = url; a[i] = { ...v, images: im }; update("variants", a); }} />
+                          <Btn size="sm" tone="ghost" onClick={() => { const a = [...p.variants]; a[i] = { ...v, images: ii === 0 ? v.images : [v.images[ii], ...v.images.slice(0, ii), ...v.images.slice(ii + 1)] }; update("variants", a); }} disabled={ii === 0}>↑</Btn>
+
                           <Btn size="sm" tone="ghost" onClick={() => { const a = [...p.variants]; a[i] = { ...v, images: v.images.filter((_, j) => j !== ii) }; update("variants", a); }}><X className="size-3" /></Btn>
                         </div>
                       ))}
-                      <Btn size="sm" onClick={() => { const a = [...p.variants]; a[i] = { ...v, images: [...v.images, ""] }; update("variants", a); }}><Plus className="size-3" /> 添加图片</Btn>
+                      <div className="flex gap-2">
+                        <Btn size="sm" onClick={() => { const a = [...p.variants]; a[i] = { ...v, images: [...v.images, ""] }; update("variants", a); }}><Plus className="size-3" /> 添加空槽位</Btn>
+                        <AssetPickerButton kind="product" onPick={(url: string) => { const a = [...p.variants]; a[i] = { ...v, images: [...v.images, url] }; update("variants", a); }} variant="full" />
+                      </div>
                     </div>
                   </div>
+
                 </div>
               ))}
             </Card>
@@ -741,23 +752,42 @@ export function AssetsModule() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {filtered.length === 0 && <p className="col-span-full text-sm text-muted-foreground text-center py-10">该类型下暂无图片。</p>}
-        {filtered.map((a) => (
-          <div key={a.id} className="border border-border rounded-lg overflow-hidden bg-card">
-            <div className="aspect-square bg-secondary"><img src={a.url} alt="" className="w-full h-full object-cover" /></div>
-            <div className="p-2 text-[11px]">
-              <div className="text-muted-foreground">{ASSET_DIMS[a.kind].label}</div>
-              <div className="font-mono truncate">{a.url}</div>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-muted-foreground">{new Date(a.uploadedAt).toLocaleDateString()}</span>
-                <Btn size="sm" tone="danger" onClick={() => cms.removeAsset(a.id)}><Trash2 className="size-3" /></Btn>
+        {filtered.map((a) => {
+          const usages = assetUsages(a.url);
+          const inUse = usages.length > 0;
+          return (
+            <div key={a.id} className="border border-border rounded-lg overflow-hidden bg-card">
+              <div className="aspect-square bg-secondary relative">
+                <img src={a.url} alt={a.name ?? ""} className="w-full h-full object-cover" />
+                {inUse && <span className="absolute top-1.5 left-1.5 text-[10px] px-1.5 py-0.5 rounded bg-emerald-600 text-white">使用中 · {usages.length}</span>}
+              </div>
+              <div className="p-2 text-[11px]">
+                <div className="text-muted-foreground">{ASSET_DIMS[a.kind].label}</div>
+                <div className="font-mono truncate" title={a.url}>{a.url}</div>
+                {inUse && (
+                  <div className="mt-1 text-[10px] text-muted-foreground line-clamp-2" title={usages.map((u) => u.label).join("\n")}>
+                    {usages.slice(0, 2).map((u) => u.label).join(" · ")}{usages.length > 2 ? ` · +${usages.length - 2}` : ""}
+                  </div>
+                )}
+                <div className="flex justify-between items-center mt-1.5 gap-1">
+                  <button onClick={() => { navigator.clipboard.writeText(a.url); toast.success("URL 已复制"); }} className="text-muted-foreground hover:text-foreground"><Copy className="size-3" /></button>
+                  <Btn size="sm" tone="danger" onClick={() => {
+                    if (inUse) {
+                      if (!confirm(`此图片正被 ${usages.length} 处使用，删除后这些位置将出现空白。确定继续？`)) return;
+                    }
+                    cms.removeAsset(a.id);
+                    toast.success("已删除");
+                  }}><Trash2 className="size-3" /></Btn>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
+
 
 // ── 7) 语言与币种 ──────────────────────────────────────────────────────────
 
@@ -837,7 +867,7 @@ export function LangCurrencyModule() {
             </tbody>
           </table>
         </div>
-        <p className="text-[11px] text-muted-foreground">基准汇率为占位数据；下一轮接入实时汇率源后此处仅显示当前值，人工覆盖汇率优先生效。</p>
+        <p className="text-[11px] text-muted-foreground">基准汇率为当前后台预设，人工覆盖汇率优先生效。前台始终按此处启用的币种与汇率展示价格。</p>
       </Card>
 
       <Card title="运营参数" className="mb-4">
@@ -978,3 +1008,68 @@ export function AIConsoleModule() {
 
 // suppress unused import warning
 void Flame; void Star; void ChevronRight;
+void Pencil; void EyeOff; void Eye; void ExternalLink; void Copy; void FolderOpen;
+
+// ── Asset picker: shared dialog used by product variants & other media slots ──
+function AssetPickerButton({ kind, onPick, variant = "icon" }: { kind: CMSAssetKind; onPick: (url: string) => void; variant?: "icon" | "full" }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      {variant === "icon"
+        ? <Btn size="sm" tone="ghost" onClick={() => setOpen(true)}><FolderOpen className="size-3" /></Btn>
+        : <Btn size="sm" onClick={() => setOpen(true)}><FolderOpen className="size-3" /> 从图片库选取</Btn>}
+      {open && <AssetPickerDialog kind={kind} onClose={() => setOpen(false)} onPick={(u) => { onPick(u); setOpen(false); }} />}
+    </>
+  );
+}
+
+function AssetPickerDialog({ kind, onClose, onPick }: { kind: CMSAssetKind; onClose: () => void; onPick: (url: string) => void }) {
+  const assets = useCMS((s) => s.assets);
+  const [filter, setFilter] = useState<"recommended" | "all">("recommended");
+  const [q, setQ] = useState("");
+  const list = useMemo(() => {
+    let l = filter === "recommended" ? assets.filter((a) => a.kind === kind) : assets;
+    if (q) l = l.filter((a) => (a.url + (a.name ?? "") + (a.note ?? "")).toLowerCase().includes(q.toLowerCase()));
+    return l;
+  }, [assets, filter, q, kind]);
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 grid place-items-center p-4" onClick={onClose}>
+      <div className="bg-card border border-border rounded-xl w-full max-w-4xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="p-4 border-b border-border flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">从图片库选取</h3>
+            <p className="text-[11px] text-muted-foreground">推荐类型：{ASSET_DIMS[kind].label} · {ASSET_DIMS[kind].w}×{ASSET_DIMS[kind].h}</p>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="size-4" /></button>
+        </div>
+        <div className="px-4 py-2.5 border-b border-border flex gap-2 items-center">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-background border border-border rounded-md text-sm flex-1">
+            <Search className="size-3.5 text-muted-foreground" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜索名称 / 备注 / URL" className="bg-transparent outline-none flex-1" />
+          </div>
+          <button onClick={() => setFilter("recommended")} className={`px-3 py-1.5 text-xs rounded-md border ${filter === "recommended" ? "bg-foreground text-background border-foreground" : "border-border"}`}>推荐类型</button>
+          <button onClick={() => setFilter("all")} className={`px-3 py-1.5 text-xs rounded-md border ${filter === "all" ? "bg-foreground text-background border-foreground" : "border-border"}`}>全部</button>
+        </div>
+        <div className="p-4 overflow-y-auto flex-1">
+          {list.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-12">
+              没有匹配的图片。请前往「图片素材」上传，或在编辑器中直接粘贴图片 URL。
+            </p>
+          ) : (
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+              {list.map((a) => (
+                <button key={a.id} onClick={() => onPick(a.url)} className="border border-border rounded-lg overflow-hidden bg-card text-left hover:ring-2 hover:ring-foreground transition">
+                  <div className="aspect-square bg-secondary"><img src={a.url} alt={a.name ?? ""} className="w-full h-full object-cover" /></div>
+                  <div className="p-1.5 text-[10px]">
+                    <div className="text-muted-foreground">{ASSET_DIMS[a.kind].label}</div>
+                    <div className="truncate">{a.name || a.url.split("/").pop()}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

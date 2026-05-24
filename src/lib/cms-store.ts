@@ -1,7 +1,7 @@
-// Centralized CMS store for the admin backend. localStorage-persisted, mock data
-// designed to feel like a real ecommerce ops system. Seeded from products.ts on
-// first load. Frontend still reads products.ts directly; CMS data is admin-only
-// except for PromoBar and first-order discount (consumed where applicable).
+// Centralized CMS store for the admin backend. localStorage-persisted operational
+// data for the storefront. Seeded from products.ts on first install; the storefront
+// reads from this CMS via storefront-cms bridge (published items only).
+
 
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { products as seedProducts, shapes, categories as seedCategories } from "./products";
@@ -261,11 +261,11 @@ function seed(now = SERVER_SEED_NOW): CMSState {
         color: c.name,
         hex: c.hex,
         images: [
-          // mock 3 images per variant
           `https://images.unsplash.com/photo-${["1577803645773-f96470509666", "1574258495973-f010dfbb5371", "1612817159949-195b6eb9e31a"][j % 3]}?w=1200&q=80&fit=crop`,
           `https://images.unsplash.com/photo-${["1556306535-0f09a537f0a3", "1508296695146-257a814070b4", "1551803091-e20673f15770"][j % 3]}?w=1200&q=80&fit=crop`,
         ],
       })),
+
       categoryIds: catIds,
       seoTitle: `${p.name} — ${p.descriptor} | MIRAVUE`,
       seoDesc: `Shop ${p.name} ${p.shape.toLowerCase()} eyeglasses. ${p.descriptor}. Free shipping over $75.`,
@@ -400,6 +400,31 @@ export function activePromotion(): CMSPromotion | null {
   if (enabled.length === 0) return null;
   return [...enabled].sort((a, b) => b.priority - a.priority)[0];
 }
+
+// Find every place an image URL is currently used. Returns a list of human-readable
+// references so the operator can see why a delete is blocked.
+export type AssetUsage = { kind: string; label: string; id: string };
+export function assetUsages(url: string): AssetUsage[] {
+  if (!url) return [];
+  const out: AssetUsage[] = [];
+  for (const p of state.products) {
+    p.variants.forEach((v, vi) => {
+      if (v.images.includes(url)) out.push({ kind: "product", label: `商品「${p.name}」· ${v.color} 变体`, id: `${p.id}:${vi}` });
+    });
+  }
+  for (const c of state.categories) if (c.image === url) out.push({ kind: "category", label: `分类「${c.name}」封面`, id: c.id });
+  for (const h of state.heroes) {
+    if (h.desktopImage === url) out.push({ kind: "hero", label: `首页 Hero「${h.title || h.id}」桌面图`, id: h.id });
+    if (h.mobileImage === url) out.push({ kind: "hero", label: `首页 Hero「${h.title || h.id}」移动图`, id: h.id });
+  }
+  for (const c of state.homeCards) if (c.image === url) out.push({ kind: "home-card", label: `首页卡片「${c.title || c.id}」`, id: c.id });
+  for (const b of state.shapeBanners) if (b.image === url) out.push({ kind: "shape", label: `镜型 Banner「${b.shape}」`, id: b.id });
+  for (const r of state.reviews) if (r.images.includes(url)) out.push({ kind: "review", label: `评价 ${r.user}`, id: r.id });
+  return out;
+}
+
+
+
 
 // ── Mutations (cms namespace) ───────────────────────────────────────────────
 function mutate(fn: (s: CMSState) => void) {

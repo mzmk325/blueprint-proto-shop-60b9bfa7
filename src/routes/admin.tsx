@@ -148,8 +148,9 @@ function Sidebar({ view, onView }: { view: ViewKey; onView: (v: ViewKey) => void
         ))}
       </nav>
       <div className="p-3 border-t border-border">
-        <button onClick={() => { if (confirm("重置全部 mock 订单数据？")) cart.resetMock(); }} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
-          <RotateCcw className="size-3.5" /> 重置订单 mock 数据
+        <button onClick={() => { if (confirm("重置全部演示订单数据？此操作仅清除本地订单记录。")) cart.resetMock(); }} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+          <RotateCcw className="size-3.5" /> 重置演示订单
+
         </button>
       </div>
     </aside>
@@ -760,7 +761,7 @@ function RxReviewSection({ order }: { order: Order }) {
       {rx?.method === "upload" && (
         <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3">
           <div className="text-muted-foreground">图片预览</div>
-          <div className="h-32 rounded-md border border-dashed border-border bg-muted/30 grid place-items-center text-xs text-muted-foreground">[ 处方图片预览占位 ]</div>
+          <div className="h-32 rounded-md border border-dashed border-border bg-muted/30 grid place-items-center text-xs text-muted-foreground">{rx.fileName ? `已上传：${rx.fileName}（点击查看大图）` : "客户尚未上传处方图片"}</div>
         </div>
       )}
       {rx?.od && (
@@ -871,7 +872,7 @@ function LabSection({ order }: { order: Order }) {
       <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-1 sm:gap-3">
         <div className="text-muted-foreground">质检照片</div>
         <label className="cursor-pointer text-xs px-3 py-1.5 rounded-md border border-dashed border-border w-fit hover:bg-secondary">
-          {l.qcPhotoName ?? "上传质检照片（占位）"}
+          {l.qcPhotoName ?? "上传质检照片"}
           <input type="file" className="hidden" onChange={(e) => update({ qcPhotoName: e.target.files?.[0]?.name })} />
         </label>
       </div>
