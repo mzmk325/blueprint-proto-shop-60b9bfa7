@@ -317,7 +317,7 @@ function ProductEditor({ product, cats, onClose }: { product: CMSProduct; cats: 
                       ))}
                       <div className="flex gap-2">
                         <Btn size="sm" onClick={() => { const a = [...p.variants]; a[i] = { ...v, images: [...v.images, ""] }; update("variants", a); }}><Plus className="size-3" /> 添加空槽位</Btn>
-                        <AssetPickerButton kind="product" onPick={(url) => { const a = [...p.variants]; a[i] = { ...v, images: [...v.images, url] }; update("variants", a); }} variant="full" />
+                        <AssetPickerButton kind="product" onPick={(url: string) => { const a = [...p.variants]; a[i] = { ...v, images: [...v.images, url] }; update("variants", a); }} variant="full" />
                       </div>
                     </div>
                   </div>
