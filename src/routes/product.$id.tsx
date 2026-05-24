@@ -20,30 +20,22 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/product/$id")({
   validateSearch: searchSchema,
   loader: async ({ params }) => {
-    // DB-first: try to resolve the id (slug OR legacy_id) to a canonical slug
-    // and redirect. Falls back to the seed CMS lookup only if DB has nothing.
-    try {
-      const res = await getProductBySlugOrLegacyId({ data: { key: params.id } });
-      if (res.product) {
-        throw redirect({
-          to: "/product/$slug",
-          params: { slug: res.product.slug },
-          replace: true,
-        });
-      }
-    } catch (e) {
-      // Re-throw redirects; swallow network errors so seed fallback still works.
-      if (e && typeof e === "object" && "isRedirect" in e) throw e;
-      console.error("[product.$id] DB lookup failed", e);
+    // DB-FIRST legacy compatibility: resolve any id (slug OR legacy_id) to the
+    // canonical /product/:slug URL. We intentionally do NOT fall back to the
+    // seed CMS — if it isn't in the DB, it isn't a real product.
+    const res = await getProductBySlugOrLegacyId({ data: { key: params.id } });
+    if (res.product) {
+      throw redirect({
+        to: "/product/$slug",
+        params: { slug: res.product.slug },
+        replace: true,
+      });
     }
-    const exists = getStorefrontProductForPreview(params.id);
-    if (!exists) throw notFound();
-    return { id: params.id, name: exists.name, descriptor: exists.descriptor };
+    throw notFound();
   },
-  head: ({ loaderData }) => ({
+  head: ({ params }) => ({
     meta: [
-      { title: `${loaderData?.name ?? "Frame"} — MIRAVUE` },
-      { name: "description", content: loaderData?.descriptor ?? "" },
+      { title: `${params.id} — MIRAVUE` },
     ],
   }),
   component: PDP,
@@ -60,42 +52,15 @@ export const Route = createFileRoute("/product/$id")({
 
 
 function PDP() {
-  const { id } = Route.useParams();
-  const { preview } = Route.useSearch();
-  const isPreview = preview === "admin";
-
-  // Backward compat: if the URL id resolves to a canonical slug (and they
-  // differ), redirect to /product/:slug — keeps old links working.
-  const canonicalSlug = resolveProductSlug(id);
-  if (canonicalSlug && canonicalSlug !== id) {
-    return (
-      <Navigate
-        to="/product/$slug"
-        params={{ slug: canonicalSlug }}
-        search={isPreview ? { preview: "admin" } : {}}
-        replace
-      />
-    );
-  }
-
-  const p = isPreview ? getStorefrontProductForPreview(id) : getStorefrontProduct(id);
-
-  if (!p) {
-    return (
-      <Layout>
-        <div className="mx-auto max-w-2xl px-6 py-24 text-center">
-          <h1 className="font-display text-3xl mb-3">Product unavailable</h1>
-          <p className="text-sm text-muted-foreground mb-6">
-            This product is currently {getStorefrontProductForPreview(id)?.status === "draft" ? "in draft" : "unpublished"} and not visible to customers.
-            Append <code>?preview=admin</code> to view it from the admin.
-          </p>
-          <Link to="/category/$slug" params={{ slug: "all" }} className="inline-block text-[11px] uppercase tracking-[0.18em] underline underline-offset-4">Browse all frames</Link>
-        </div>
-      </Layout>
-    );
-  }
-
-  return <PDPBody p={p} isPreview={isPreview} />;
+  // The loader either redirects to /product/:slug or throws notFound. This
+  // body only renders if neither happens, which shouldn't occur in practice.
+  return (
+    <Layout>
+      <div className="mx-auto max-w-2xl px-6 py-24 text-center">
+        <h1 className="font-display text-3xl mb-3">Redirecting…</h1>
+      </div>
+    </Layout>
+  );
 }
 
 export { PDPBody };
