@@ -1,10 +1,8 @@
-// Storefront ↔ CMS bridge layer. Single source of truth for storefront reads.
-//
-// Reads from the in-memory CMS snapshot (cms-store) when available, otherwise
-// falls back to the static mock catalog in products.ts. Returns objects that
-// are backward-compatible with the existing Product shape, but enriched with
-// per-variant image arrays so ProductCard / PDP can do hover swap and color
-// gallery switching.
+// Storefront ↔ CMS bridge layer. The CMS store is the source of truth for the
+// storefront. Static seed products in products.ts only exist to make the very
+// first load show something — once CMS state is hydrated (which happens
+// automatically on first render), every public storefront read goes through
+// this file and respects publish status.
 
 import {
   products as mockProducts,
@@ -36,6 +34,7 @@ export type StorefrontVariant = {
 
 export type StorefrontProduct = Product & {
   variants: StorefrontVariant[];      // enriched (always present)
+  status?: "draft" | "published" | "unpublished";
   publishedAt?: number;
   featured?: boolean;
   hot?: boolean;
@@ -58,22 +57,30 @@ function safeCMS() {
   try { return cmsSnapshot(); } catch { return null; }
 }
 
-// Decorate a base Product with CMS-side variant images, dims, flags.
-function enrichProduct(p: Product, cmsP?: CMSProduct): StorefrontProduct {
-  // Build variants: prefer CMS variant.images, fall back to SVG productImage.
-  const variants: StorefrontVariant[] = (cmsP?.variants?.length
+function makeVariants(cmsP: CMSProduct | undefined, base?: Product): StorefrontVariant[] {
+  const raw = cmsP?.variants?.length
     ? cmsP.variants
-    : p.colors.map((c) => ({ color: c.name, hex: c.hex, images: [] }))
-  ).map((v, i) => {
+    : (base?.colors ?? []).map((c) => ({ color: c.name, hex: c.hex, images: [] as string[] }));
+  return raw.map((v, i) => {
     const imgs = (v.images ?? []).filter(Boolean);
-    if (imgs.length === 0) imgs.push(productImage(p, i));
-    if (imgs.length === 1) imgs.push(imgs[0]); // ensure hover has a fallback
+    if (imgs.length === 0 && base) imgs.push(productImage(base, i));
+    if (imgs.length === 0) {
+      // pure CMS product with no images yet — generic placeholder
+      const hex = v.hex || "#222";
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><rect width='200' height='200' fill='#f3ede4'/><circle cx='80' cy='100' r='28' fill='none' stroke='${hex}' stroke-width='5'/><circle cx='150' cy='100' r='28' fill='none' stroke='${hex}' stroke-width='5'/><path d='M108 100 q11 -6 22 0' fill='none' stroke='${hex}' stroke-width='4' stroke-linecap='round'/></svg>`;
+      imgs.push(`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`);
+    }
+    if (imgs.length === 1) imgs.push(imgs[0]); // hover fallback
     return { color: v.color, hex: v.hex, images: imgs };
   });
+}
 
+// Decorate a base Product with CMS-side variant images, dims, flags.
+function enrichProduct(p: Product, cmsP?: CMSProduct): StorefrontProduct {
   return {
     ...p,
-    variants,
+    variants: makeVariants(cmsP, p),
+    status: cmsP?.status,
     publishedAt: cmsP?.publishedAt,
     featured: cmsP?.featured,
     hot: cmsP?.hot,
@@ -84,32 +91,116 @@ function enrichProduct(p: Product, cmsP?: CMSProduct): StorefrontProduct {
   };
 }
 
+// Convert a CMS-only product (no static seed) into a StorefrontProduct.
+function cmsToStorefront(cp: CMSProduct): StorefrontProduct {
+  const collection = ((["Bold", "Dark", "Daily", "El Dorado"] as const).includes(cp.styleTags[0] as never)
+    ? cp.styleTags[0]
+    : "Daily") as Product["collection"];
+  const gender = ((["Women", "Men", "Unisex"] as const).includes(cp.styleTags[1] as never)
+    ? cp.styleTags[1]
+    : "Unisex") as Product["gender"];
+  const shape = (([
+    "Rectangle", "Square", "Round", "Aviator", "Cat eye", "Geometric", "Butterfly", "Oval",
+  ] as const).includes(cp.shape as never) ? cp.shape : "Square") as Product["shape"];
+  const colors = cp.variants.length
+    ? cp.variants.map((v) => ({ name: v.color, hex: v.hex }))
+    : [{ name: "Black", hex: "#1a1a1a" }];
+  const badge: Product["badge"] | undefined = cp.hot
+    ? "BESTSELLER"
+    : cp.newOverride === "force-in"
+      ? "NEW"
+      : undefined;
+  const saleEnabled = !!cp.originalPrice && cp.originalPrice > cp.price;
+  const base: Product = {
+    id: cp.id,
+    name: cp.nameEn || cp.name,
+    descriptor: cp.subtitle || cp.description.slice(0, 80),
+    price: cp.price,
+    originalPrice: cp.originalPrice,
+    shape,
+    gender,
+    colors,
+    collection,
+    material: cp.material || "Acetate",
+    badge,
+    saleEnabled,
+    dims: {
+      frameWidth: cp.dims.frameWidth,
+      lensHeight: cp.dims.lensHeight,
+      lensWidth: cp.dims.lensWidth,
+      bridge: cp.dims.bridge,
+      temple: cp.dims.temple,
+    },
+    weight: cp.dims.weight,
+    modelCode: cp.sku,
+  };
+  return {
+    ...base,
+    variants: makeVariants(cp, base),
+    status: cp.status,
+    publishedAt: cp.publishedAt,
+    featured: cp.featured,
+    hot: cp.hot,
+    newOverride: cp.newOverride,
+    isNew: cmsIsNewArrival(cp),
+    categoryIds: cp.categoryIds,
+    measurements: { ...cp.dims },
+  };
+}
+
+// Build the full enriched catalog, CMS-first. Includes draft & unpublished —
+// callers must filter as appropriate.
 function allEnriched(): StorefrontProduct[] {
   const s = safeCMS();
-  return mockProducts.map((p) => enrichProduct(p, s?.products.find((x) => x.id === p.id)));
+  const cmsProducts = s?.products ?? [];
+  const result: StorefrontProduct[] = [];
+  const seen = new Set<string>();
+
+  for (const cp of cmsProducts) {
+    seen.add(cp.id);
+    const base = getMockProduct(cp.id);
+    result.push(base ? enrichProduct(base, cp) : cmsToStorefront(cp));
+  }
+  // Safety net: any seed product not yet in CMS (first paint before hydrate)
+  for (const p of mockProducts) {
+    if (!seen.has(p.id)) result.push(enrichProduct(p));
+  }
+  return result;
+}
+
+function publishedOnly(list: StorefrontProduct[]): StorefrontProduct[] {
+  // If a product has no CMS status (pre-hydration seed paint), treat as published
+  // so the storefront isn't empty during first render.
+  return list.filter((p) => !p.status || p.status === "published");
 }
 
 // ── Products ────────────────────────────────────────────────────────────────
 
 export function getStorefrontProducts(): StorefrontProduct[] {
-  return allEnriched();
+  return publishedOnly(allEnriched());
 }
 
+// Public read — strips drafts/unpublished. Returns undefined for missing/hidden.
 export function getStorefrontProduct(id: string): StorefrontProduct | undefined {
-  const base = getMockProduct(id);
-  if (!base) return undefined;
-  const s = safeCMS();
-  return enrichProduct(base, s?.products.find((x) => x.id === id));
+  const p = allEnriched().find((x) => x.id === id);
+  if (!p) return undefined;
+  if (p.status && p.status !== "published") return undefined;
+  return p;
+}
+
+// Admin/preview read — returns drafts and unpublished too.
+export function getStorefrontProductForPreview(id: string): StorefrontProduct | undefined {
+  return allEnriched().find((x) => x.id === id);
 }
 
 export function getBestsellers(limit = 4): StorefrontProduct[] {
-  const all = allEnriched();
+  const all = getStorefrontProducts();
   const hot = all.filter((p) => p.hot || p.badge === "BESTSELLER");
   return (hot.length ? hot : all).slice(0, limit);
 }
 
 export function getNewArrivals(limit = 4): StorefrontProduct[] {
-  const all = allEnriched();
+  const all = getStorefrontProducts();
   const newer = all
     .filter((p) => p.isNew)
     .sort((a, b) => (b.publishedAt ?? 0) - (a.publishedAt ?? 0));
@@ -117,7 +208,7 @@ export function getNewArrivals(limit = 4): StorefrontProduct[] {
 }
 
 export function getProductsByCategorySlug(slug: string): StorefrontProduct[] {
-  const all = allEnriched();
+  const all = getStorefrontProducts();
   if (slug === "all") return all;
   if (slug === "best-sellers") return all.filter((p) => p.hot || p.badge === "BESTSELLER");
   if (slug === "new-arrivals") return all.filter((p) => p.isNew);
@@ -215,4 +306,40 @@ export function getProductReviews(productId: string): CMSReview[] {
 
 export function getActivePromotion(): CMSPromotion | null {
   return cmsActivePromotion();
+}
+
+// ── Image library helpers ───────────────────────────────────────────────────
+
+/**
+ * Where, across the CMS, is this image URL referenced? Used by the image
+ * library to show usage chips and to gate destructive deletes.
+ */
+export function assetUsages(url: string): string[] {
+  if (!url) return [];
+  const s = safeCMS();
+  if (!s) return [];
+  const out: string[] = [];
+  for (const p of s.products) {
+    for (const v of p.variants) {
+      if (v.images.includes(url)) {
+        out.push(`${p.nameEn || p.name} · ${v.color}`);
+      }
+    }
+  }
+  for (const h of s.heroes) {
+    if (h.desktopImage === url || h.mobileImage === url) out.push(`Hero · ${h.title || h.id}`);
+  }
+  for (const c of s.homeCards) {
+    if (c.image === url) out.push(`Home card · ${c.title || c.id}`);
+  }
+  for (const b of s.shapeBanners) {
+    if (b.image === url) out.push(`Shape · ${b.shape}`);
+  }
+  for (const c of s.categories) {
+    if (c.image === url) out.push(`Category · ${c.nameEn || c.name}`);
+  }
+  for (const r of s.reviews) {
+    if (r.images.includes(url)) out.push(`Review · ${r.user}`);
+  }
+  return out;
 }
