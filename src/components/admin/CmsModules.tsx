@@ -718,7 +718,7 @@ export function AssetsModule() {
 
   return (
     <div>
-      <PageHeader title="图片素材" desc="集中管理首页/分类/商品/评价等图片资源。当前为占位上传 — 请填入图片 URL。" />
+      <PageHeader title="图片素材" desc="集中管理首页 / 分类 / 商品 / 评价等图片资源。支持通过 URL 添加，并在商品编辑器中直接选用。" />
       <Card title="新增图片">
         <div className="grid grid-cols-[1fr_2fr_auto] gap-2">
           <select className={inputCls} value={newKind} onChange={(e) => setNewKind(e.target.value as CMSAssetKind)}>
