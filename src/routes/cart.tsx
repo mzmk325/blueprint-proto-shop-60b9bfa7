@@ -81,8 +81,8 @@ function CartPage() {
                   : l.lens.rx.pd || "—";
 
                 return (
-                  <div key={l.lineId} className="flex gap-4 border rounded-xl p-4 bg-card">
-                    <img src={p ? productImage(p) : ""} alt="" className="size-28 rounded-lg bg-secondary shrink-0" />
+                  <div key={l.lineId} className="flex gap-3 sm:gap-4 border rounded-xl p-3 sm:p-4 bg-card">
+                    <img src={p ? productImage(p) : ""} alt="" className="size-20 sm:size-28 rounded-lg bg-secondary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between gap-2">
                         <div className="min-w-0">
@@ -97,7 +97,7 @@ function CartPage() {
                         <button onClick={() => cart.remove(l.lineId)} className="text-muted-foreground hover:text-foreground shrink-0" aria-label={t("cart.remove")}><Trash2 className="size-4" /></button>
                       </div>
 
-                      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+                      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs [&_dd]:text-right [&_dd]:break-words [&_dd]:min-w-0">
                         <dt className="text-muted-foreground">{t("cart.framePrice")}</dt>
                         <dd className="text-right">{fmt(l.unitPrice)}</dd>
 
@@ -144,8 +144,8 @@ function CartPage() {
                         {isPrescription && t("cart.trustNote")}
                       </p>
 
-                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/60 gap-2">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/60 gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                           <div className="flex items-center border rounded-full">
                             <button onClick={() => cart.setQty(l.lineId, l.qty - 1)} className="size-8">−</button>
                             <span className="w-8 text-center text-sm">{l.qty}</span>
