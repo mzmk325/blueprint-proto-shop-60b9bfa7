@@ -61,6 +61,9 @@ export type CMSCategory = {
   showInNav: boolean;
   showOnHome: boolean;
   enabled: boolean;
+  description?: string;        // optional rich description (DB-backed)
+  descriptionEn?: string;
+  isDbBacked?: boolean;        // present in DB (drives admin write-through)
 };
 
 export type CMSReview = {
